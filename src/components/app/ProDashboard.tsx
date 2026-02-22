@@ -1,0 +1,183 @@
+"use client";
+
+import { useState } from "react";
+
+const PRO_TABS = [
+  { id: "courses", label: "CE Courses" },
+  { id: "events", label: "Events" },
+  { id: "careers", label: "Careers" },
+  { id: "network", label: "Network" },
+] as const;
+
+type ProTab = (typeof PRO_TABS)[number]["id"];
+
+export function ProDashboard() {
+  const [tab, setTab] = useState<ProTab>("courses");
+
+  return (
+    <div className="space-y-6 pb-20">
+      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, Jennifer</h1>
+      <p className="text-[13px] text-[var(--ink-muted)] -mt-5 mb-6">RN · St. Luke&apos;s Hospital · Houston, TX · <span className="inline-flex align-middle rounded-full bg-[var(--teal-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--teal)]">Texas License</span></p>
+
+      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))] mb-6">
+        {[
+          { label: "Courses", val: "4", note: "Available", noteClass: "text-[var(--green)]" },
+          { label: "Requests", val: "1", note: "Pending", noteClass: "text-[var(--coral)]" },
+          { label: "Reps", val: "2", note: "Connected", noteClass: "text-[var(--blue)]" },
+          { label: "CE Hours", val: "12", note: "This year", noteClass: "text-[var(--green)]" },
+          { label: "Events", val: "2", note: "Near you", noteClass: "text-[var(--blue)]" },
+          { label: "Jobs", val: "3", note: "New", noteClass: "text-[var(--green)]" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-5 transition-shadow hover:shadow-[var(--shadow)]">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ink-muted)] mb-1">{s.label}</div>
+            <div className="font-[family-name:var(--font-fraunces)] text-[28px] font-extrabold text-[var(--ink)]">{s.val}</div>
+            <div className={`text-[11px] font-medium ${s.noteClass}`}>{s.note}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-1 mb-4 p-1 bg-[var(--cream)] rounded-[var(--r)] overflow-x-auto">
+        {PRO_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={`shrink-0 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer font-sans whitespace-nowrap transition-colors ${
+              tab === t.id ? "bg-white text-[var(--ink)] shadow-[var(--shadow-sm)]" : "bg-transparent text-[var(--ink-soft)]"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "courses" && (
+        <>
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>
+              <button type="button" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--teal-dark)]" onClick={() => alert("Request CE modal")}>+ Request CE</button>
+            </div>
+            <p className="text-[11px] text-[var(--ink-muted)] mb-3">Courses for <strong className="text-[var(--blue)]">Nursing</strong> in <strong className="text-[var(--blue)]">Texas</strong></p>
+            {[
+              { name: "Ethics in Caring for the Elderly", meta: "2 hrs · Marcus Johnson · 30 days", type: "Free", typeClass: "bg-[var(--green-glow)] text-[var(--green)]" },
+              { name: "Palliative Care Fundamentals", meta: "3 hrs · Marcus Johnson · 45 days", type: "Free", typeClass: "bg-[var(--green-glow)] text-[var(--green)]" },
+              { name: "Chronic Disease Management", meta: "2 hrs · Jessica Chen · 60 days", type: "50% Off", typeClass: "bg-[var(--gold-glow)] text-[#B8860B]" },
+              { name: "Advanced Wound Care", meta: "4 hrs · NursingCE.com", type: "Partner", typeClass: "bg-[var(--blue-glow)] text-[var(--blue)]" },
+            ].map((c) => (
+              <div key={c.name} className="flex justify-between items-center gap-2 p-4 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] mb-2">
+                <div>
+                  <div className="font-bold text-[13px] text-[var(--ink)] mb-0.5">{c.name}</div>
+                  <div className="text-[10px] text-[var(--ink-muted)]">{c.meta}</div>
+                  <div className="flex gap-1.5 flex-wrap mt-1">
+                    <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Nursing</span>
+                    <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--blue-glow)] text-[var(--blue)]">TX</span>
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${c.typeClass}`}>{c.type}</span>
+                  </div>
+                </div>
+                <button type="button" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white shrink-0" onClick={() => alert("Redirecting to CE provider...")}>Access</button>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+            <div className="border-b border-[var(--border)] pb-3 mb-4">
+              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Requests</h2>
+            </div>
+            <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4">
+              <div className="flex justify-between items-start gap-2 mb-2">
+                <div>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">Ethics CE (2 hrs)</div>
+                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">To Marcus Johnson</div>
+                </div>
+                <span className="rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
+              </div>
+              <div className="text-xs text-[var(--ink-soft)]"><strong className="text-[var(--ink)]">Deadline:</strong> End of month · TX · Nursing</div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {tab === "events" && (
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="border-b border-[var(--border)] pb-3 mb-4">
+            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Events Near You</h2>
+          </div>
+          {[
+            { name: "Ethics Lunch & Learn", meta: "Feb 20, 12 PM · Memorial Medical", host: "Marcus Johnson", ce: "2 hrs Ethics" },
+            { name: "Palliative Care In-Service", meta: "Feb 27, 1 PM · St. Luke's", host: "Marcus Johnson", ce: "3 hrs Palliative" },
+          ].map((e) => (
+            <div key={e.name} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
+              <div className="flex justify-between items-start gap-2 mb-2">
+                <div>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">{e.name}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">{e.meta}</div>
+                </div>
+                <span className="rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Open</span>
+              </div>
+              <div className="text-xs text-[var(--ink-soft)] mb-2"><strong className="text-[var(--ink)]">Host:</strong> {e.host} · <strong className="text-[var(--ink)]">CE:</strong> {e.ce}</div>
+              <div className="flex gap-1.5 flex-wrap mb-2">
+                <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Nursing</span>
+                <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--blue-glow)] text-[var(--blue)]">TX</span>
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                <button type="button" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("RSVP confirmed!")}>RSVP</button>
+                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Details</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "careers" && (
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="border-b border-[var(--border)] pb-3 mb-4">
+            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Career Opportunities</h2>
+          </div>
+          <p className="text-[11px] text-[var(--ink-muted)] mb-3">Positions shared by sales reps in your network</p>
+          {[
+            { name: "RN Case Manager — Hospice", meta: "Compassionate Care · Houston, TX", detail: "Full-time · Shared by Marcus Johnson · 2 days ago", badge: "New" },
+            { name: "Weekend RN — Home Health", meta: "Gulf Coast HH · Houston, TX", detail: "Part-time · Shared by Marcus Johnson · 3 days ago", badge: "New" },
+            { name: "MSW — Inpatient Hospice", meta: "Serenity Hospice · Katy, TX", detail: "Full-time · Shared by Jessica Chen", badge: "1 wk ago" },
+          ].map((j) => (
+            <div key={j.name} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
+              <div className="flex justify-between items-start gap-2 mb-2">
+                <div>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">{j.name}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">{j.meta}</div>
+                </div>
+                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold ${j.badge === "New" ? "bg-[var(--green-glow)] text-[var(--green)]" : "bg-[var(--blue-glow)] text-[var(--blue)]"}`}>{j.badge}</span>
+              </div>
+              <div className="text-xs text-[var(--ink-soft)] mb-2">{j.detail}</div>
+              <div className="flex gap-1.5 flex-wrap">
+                <button type="button" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("Interest submitted!")}>Interested</button>
+                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Details</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === "network" && (
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="border-b border-[var(--border)] pb-3 mb-4">
+            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Network</h2>
+          </div>
+          {[
+            { initials: "MJ", name: "Marcus Johnson", meta: "Sales Rep · Houston", last: "3 CEs, 2 events, 1 job shared", ok: true },
+            { initials: "JC", name: "Jessica Chen", meta: "Sales Rep · Dallas", last: "1 CE, 1 job shared", ok: true },
+          ].map((r) => (
+            <div key={r.name} className="grid grid-cols-[auto_1fr_auto] gap-3 p-3.5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center mb-2">
+              <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{r.initials}</div>
+              <div>
+                <div className="font-bold text-[13px] text-[var(--ink)]">{r.name}</div>
+                <div className="text-[11px] text-[var(--ink-muted)]">{r.meta}</div>
+                <div className={`text-[10px] font-semibold mt-1 ${r.ok ? "text-[var(--green)]" : "text-[var(--coral)]"}`}>{r.last}</div>
+              </div>
+              <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Message</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

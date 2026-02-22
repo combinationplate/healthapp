@@ -1,0 +1,30 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# next
+.next/
+out/
+
+# misc
+.DS_Store
+*.pem
+debug.log
+npm-debug.log*
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# types
+next-env.d.ts

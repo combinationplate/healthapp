@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0b1222;
+  --ink-soft: #3b4963;
+  --ink-muted: #7a8ba8;
+  --white: #fff;
+  --cream: #f6f5f0;
+  --sage: #e8ede6;
+  --blue: #2455ff;
+  --blue-dark: #1a3fcc;
+  --blue-glow: rgba(36, 85, 255, 0.1);
+  --teal: #0d9488;
+  --teal-dark: #0f766e;
+  --teal-glow: rgba(13, 148, 136, 0.1);
+  --coral: #e8604c;
+  --gold: #d4a853;
+  --green: #16a34a;
+  --purple: #7c3aed;
+  --border: rgba(11, 18, 34, 0.08);
+  --r: 10px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--white);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes heartbeat-line {
+  from { stroke-dashoffset: 200; }
+  to { stroke-dashoffset: 0; }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
