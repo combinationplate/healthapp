@@ -4,11 +4,13 @@ type Props = { userName: string };
 
 export function ManagerDashboard({ userName }: Props) {
   return (
-    <div className="space-y-6 pb-20">
-      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
-      <p className="text-[13px] text-[var(--ink-muted)] -mt-5 mb-6">Texas Region · 8 representatives</p>
+    <div className="space-y-5 pb-20">
+      <div className="mb-2">
+        <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
+        <p className="text-[13px] text-[var(--ink-muted)] mt-1">Texas Region · 8 representatives</p>
+      </div>
 
-      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))] mb-6">
+      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
         {[
           { label: "Team Points", val: "847", note: "↑ 23%", noteClass: "text-[var(--green)]" },
           { label: "Touchpoints", val: "142", note: "This week", noteClass: "text-[var(--blue)]" },
@@ -25,7 +27,7 @@ export function ManagerDashboard({ userName }: Props) {
         ))}
       </div>
 
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 mb-4">
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
         <div className="border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Team Leaderboard</h2>
         </div>
@@ -47,7 +49,7 @@ export function ManagerDashboard({ userName }: Props) {
         ))}
       </div>
 
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 mb-4">
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Credit Usage</h2>
           <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Redirecting to purchase credits...")}>Purchase Credits</button>
@@ -67,7 +69,7 @@ export function ManagerDashboard({ userName }: Props) {
         </div>
       </div>
 
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
         <div className="border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Upcoming Events</h2>
         </div>

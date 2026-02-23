@@ -23,11 +23,13 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
   const welcomeName = displayName(userName ?? "");
 
   return (
-    <div className="space-y-6 pb-20">
-      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
-      <p className="text-[13px] text-[var(--ink-muted)] -mt-5 mb-6">RN · St. Luke&apos;s Hospital · Houston, TX · <span className="inline-flex align-middle rounded-full bg-[var(--teal-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--teal)]">Texas License</span></p>
+    <div className="space-y-5 pb-20">
+      <div className="mb-2">
+        <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
+        <p className="text-[13px] text-[var(--ink-muted)] mt-1">RN · St. Luke&apos;s Hospital · Houston, TX · <span className="inline-flex align-middle rounded-full bg-[var(--teal-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--teal)]">Texas License</span></p>
+      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {[
           { label: "Courses", val: "4", note: "Available", noteClass: "text-[var(--green)]" },
           { label: "Requests", val: "1", note: "Pending", noteClass: "text-[var(--coral)]" },
@@ -61,7 +63,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
 
       {tab === "courses" && (
         <>
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>
               <button type="button" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--teal-dark)]" onClick={() => alert("Request CE modal")}>+ Request CE</button>
@@ -87,7 +89,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
               </div>
             ))}
           </div>
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Requests</h2>
             </div>
@@ -106,7 +108,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
       )}
 
       {tab === "events" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Events Near You</h2>
           </div>
@@ -137,7 +139,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
       )}
 
       {tab === "careers" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Career Opportunities</h2>
           </div>
@@ -166,24 +168,26 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
       )}
 
       {tab === "network" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
-          <div className="border-b border-[var(--border)] pb-3 mb-4">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+          <div className="border-b border-[var(--border)] pb-3 mb-3">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Network</h2>
           </div>
-          {[
-            { initials: "MJ", name: "Marcus Johnson", meta: "Sales Rep · Houston", last: "3 CEs, 2 events, 1 job shared", ok: true },
-            { initials: "JC", name: "Jessica Chen", meta: "Sales Rep · Dallas", last: "1 CE, 1 job shared", ok: true },
-          ].map((r) => (
-            <div key={r.name} className="grid grid-cols-[auto_1fr_auto] gap-3 p-3.5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center mb-2">
-              <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{r.initials}</div>
-              <div>
-                <div className="font-bold text-[13px] text-[var(--ink)]">{r.name}</div>
-                <div className="text-[11px] text-[var(--ink-muted)]">{r.meta}</div>
-                <div className={`text-[10px] font-semibold mt-1 ${r.ok ? "text-[var(--green)]" : "text-[var(--coral)]"}`}>{r.last}</div>
+          <div className="space-y-0">
+            {[
+              { initials: "MJ", name: "Marcus Johnson", meta: "Sales Rep · Houston", last: "3 CEs, 2 events, 1 job shared", ok: true },
+              { initials: "JC", name: "Jessica Chen", meta: "Sales Rep · Dallas", last: "1 CE, 1 job shared", ok: true },
+            ].map((r) => (
+              <div key={r.name} className="grid grid-cols-[auto_1fr_auto] gap-3 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">{r.initials}</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-[13px] text-[var(--ink)]">{r.name}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">{r.meta}</div>
+                  <div className={`text-[10px] font-semibold mt-1 ${r.ok ? "text-[var(--green)]" : "text-[var(--coral)]"}`}>{r.last}</div>
+                </div>
+                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)] shrink-0">Message</button>
               </div>
-              <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Message</button>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>

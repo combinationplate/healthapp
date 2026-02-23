@@ -66,6 +66,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setAddSaving(true);
     setAddError(null);
     const supabase = createClient();
+    const emailNorm = addForm.email.trim().toLowerCase();
+    const existing = professionals.find((p) => p.email.toLowerCase() === emailNorm);
+    if (existing) {
+      setAddError("This professional is already in your network.");
+      setAddSaving(false);
+      return;
+    }
     const { error } = await supabase.from("professionals").insert({
       rep_id: repId,
       name: addForm.name.trim(),
@@ -85,11 +92,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }
 
   return (
-    <div className="space-y-6 pb-20">
-      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
-      <p className="text-[13px] text-[var(--ink-muted)] -mt-5 mb-6">Houston Territory, Texas</p>
+    <div className="space-y-5 pb-20">
+      <div className="mb-2">
+        <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
+        <p className="text-[13px] text-[var(--ink-muted)] mt-1">Houston Territory, Texas</p>
+      </div>
 
-      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))] mb-6">
+      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
         {[
           { label: "Points", val: "248", note: "#1 on team", noteClass: "text-[var(--green)]" },
           { label: "Touchpoints", val: "24", note: "+6 this week", noteClass: "text-[var(--green)]" },
@@ -106,8 +115,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
         ))}
       </div>
 
-      {/* My Network section - always visible below stats */}
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5 mb-6">
+      {/* My Network section - list preview */}
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-3">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
           <div className="flex gap-1.5 flex-wrap">
@@ -116,28 +125,28 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </div>
         </div>
         {loading ? (
-          <p className="text-sm text-[var(--ink-muted)]">Loading…</p>
+          <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
         ) : professionals.length === 0 ? (
-          <p className="text-sm text-[var(--ink-muted)] mb-2">No professionals in your network yet.</p>
+          <p className="text-sm text-[var(--ink-muted)] py-2">No professionals in your network yet. Click &quot;+ Add Professional&quot; to add one.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {professionals.slice(0, 6).map((pro) => (
-              <div key={pro.id} className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--cream)] p-2.5 flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-[10px]">{initials(pro.name)}</div>
+          <div className="space-y-1">
+            {professionals.slice(0, 5).map((pro) => (
+              <div key={pro.id} className="grid grid-cols-[auto_1fr] gap-3 py-2.5 px-2 rounded-[var(--r)] border border-transparent hover:bg-[var(--cream)] hover:border-[var(--border)] items-center">
+                <div className="w-9 h-9 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
                 <div className="min-w-0">
-                  <div className="font-semibold text-[12px] text-[var(--ink)] truncate">{pro.name}</div>
-                  <div className="text-[10px] text-[var(--ink-muted)] truncate">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
+                  <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
                 </div>
               </div>
             ))}
-            {professionals.length > 6 && (
-              <button type="button" className="col-span-2 sm:col-span-3 text-xs font-semibold text-[var(--blue)] hover:underline pt-1" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
+            {professionals.length > 5 && (
+              <button type="button" className="text-xs font-semibold text-[var(--blue)] hover:underline pt-2 pb-1 block" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
             )}
           </div>
         )}
       </div>
 
-      <div className="flex gap-1 mb-4 p-1 bg-[var(--cream)] rounded-[var(--r)] overflow-x-auto">
+      <div className="flex gap-1 p-1 bg-[var(--cream)] rounded-[var(--r)] overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -153,7 +162,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       </div>
 
       {tab === "discover" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking Resources</h2>
           </div>
@@ -183,6 +192,18 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               <div className="flex gap-1.5 flex-wrap">
                 <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Invitation sent to " + pro.name)}>Invite</button>
+                <button
+                  type="button"
+                  className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)]"
+                  onClick={() => {
+                    const facility = pro.meta.split(" · ")[0] ?? "";
+                    setAddForm((f) => ({ ...f, name: pro.name, facility, email: "", phone: "", discipline: f.discipline }));
+                    setAddError(null);
+                    setAddOpen(true);
+                  }}
+                >
+                  Add to network
+                </button>
                 <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)]">Profile</button>
               </div>
             </div>
@@ -191,7 +212,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "requests" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
           </div>
@@ -218,7 +239,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "events" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Events</h2>
             <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Plan Event modal")}>+ Plan Event</button>
@@ -248,7 +269,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
       {tab === "distribute" && (
         <div className="space-y-4">
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
             </div>
@@ -279,7 +300,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </button>
             </div>
           </div>
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
             </div>
@@ -293,15 +314,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "network" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-3">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
             <div className="flex gap-1.5 flex-wrap">
               <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Import CSV</button>
-              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => setAddOpen(true)}>+ Add</button>
+              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
             </div>
           </div>
-          <div className="flex gap-1.5 flex-wrap mb-3.5">
+          <div className="flex gap-1.5 flex-wrap mb-3">
             {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
               <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "bg-white text-[var(--ink-soft)]"}`}>
                 {f} {f === "All" ? `(${professionals.length})` : ""}
@@ -309,28 +330,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
             ))}
           </div>
           {loading ? (
-            <p className="text-sm text-[var(--ink-muted)]">Loading…</p>
+            <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
           ) : professionals.length === 0 ? (
-            <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet. Click &quot;+ Add&quot; to add one.</p>
+            <p className="text-sm text-[var(--ink-muted)] py-2">No professionals in your network yet. Click &quot;+ Add Professional&quot; to add one.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            <div className="space-y-0">
               {professionals
                 .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
                 .map((pro) => (
-                  <div key={pro.id} className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--cream)] p-2.5 flex flex-col gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-[10px]">{initials(pro.name)}</div>
-                      <div className="min-w-0">
-                        <div className="font-semibold text-[12px] text-[var(--ink)] truncate">{pro.name}</div>
-                        <div className="text-[10px] text-[var(--ink-muted)] truncate">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
-                      </div>
+                  <div key={pro.id} className="grid grid-cols-[auto_1fr_auto] gap-3 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">{initials(pro.name)}</div>
+                    <div className="min-w-0">
+                      <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
+                      <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
+                      {pro.discipline && (
+                        <span className="inline-block mt-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{pro.discipline}</span>
+                      )}
                     </div>
-                    {pro.discipline && (
-                      <span className="rounded px-1.5 py-0.5 text-[9px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)] w-fit">{pro.discipline}</span>
-                    )}
-                    <div className="flex gap-1 flex-wrap mt-0.5">
-                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-2.5 py-1 text-[10px] font-semibold text-white">CE</button>
-                      <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-2.5 py-1 text-[10px] font-semibold text-[var(--ink-soft)]">Log</button>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3 py-1.5 text-[11px] font-semibold text-white">CE</button>
+                      <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[var(--ink-soft)]">Log</button>
                     </div>
                   </div>
                 ))}
