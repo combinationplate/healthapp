@@ -1,7 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Routing:
+ *   /           → landing page (public)
+ *   /login      → login page (public; redirect to /app if already authenticated)
+ *   /signup     → signup page (public; redirect to /app if already authenticated)
+ *   /app        → dashboard (protected; redirect to /login if not authenticated)
+ *   /dashboard  → redirect to /app
+ *   Any other protected path: redirect to /login with redirect param
+ */
+
 type Cookie = { name: string; value: string; options?: Record<string, unknown> };
+
+const LOGIN_PATH = "/login";
+const APP_PATH = "/app";
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -14,7 +27,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -27,29 +40,30 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Consolidate /dashboard into /app: redirect to app
-  if (request.nextUrl.pathname === "/dashboard") {
+  const pathname = request.nextUrl.pathname;
+
+  // /dashboard → /app (consolidate)
+  if (pathname === "/dashboard") {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.pathname = APP_PATH;
     return NextResponse.redirect(url);
   }
 
-  // Protect /app: redirect to login if not authenticated
-  if (request.nextUrl.pathname.startsWith("/app") && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(url);
+  // Protected routes: /app and anything under it → /login if not authenticated
+  if (pathname === APP_PATH || pathname.startsWith(APP_PATH + "/")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = LOGIN_PATH;
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
+    return response;
   }
 
-  // Redirect logged-in users from login/signup to app
-  if (
-    (request.nextUrl.pathname === "/login" ||
-      request.nextUrl.pathname === "/signup") &&
-    user
-  ) {
+  // Logged-in users visiting login or signup → /app
+  if ((pathname === LOGIN_PATH || pathname === "/signup") && user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/app";
+    url.pathname = APP_PATH;
     return NextResponse.redirect(url);
   }
 
