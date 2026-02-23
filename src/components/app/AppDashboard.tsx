@@ -9,13 +9,14 @@ import { RoleSelector } from "./RoleSelector";
 type Role = "manager" | "rep" | "professional";
 
 type Props = {
+  userId?: string;
   userEmail: string;
   userDisplayName?: string | null;
   /** Role from profile: user is redirected to this dashboard after login */
   initialRole?: Role | null;
 };
 
-export function AppDashboard({ userEmail, userDisplayName, initialRole = null }: Props) {
+export function AppDashboard({ userId, userEmail, userDisplayName, initialRole = null }: Props) {
   const [role, setRole] = useState<Role | null>(initialRole ?? null);
 
   if (role === null) {
@@ -40,7 +41,7 @@ export function AppDashboard({ userEmail, userDisplayName, initialRole = null }:
     return (
       <>
         {switchRole}
-        <RepDashboard />
+        <RepDashboard repId={userId} />
       </>
     );
   }

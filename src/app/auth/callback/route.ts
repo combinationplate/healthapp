@@ -24,6 +24,10 @@ export async function GET(request: Request) {
         { id: data.user.id, role, full_name: fullName, updated_at: new Date().toISOString() },
         { onConflict: "id" }
       );
+      await supabase.from("users").upsert(
+        { id: data.user.id, email: data.user.email ?? "", role, name: fullName },
+        { onConflict: "id" }
+      );
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

@@ -28,9 +28,15 @@ export default async function AppPage() {
   }
 
   const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
+  const role = profile.role;
+  await supabase.from("users").upsert(
+    { id: user.id, email: user.email ?? "", role, name: displayName ?? "" },
+    { onConflict: "id" }
+  );
 
   return (
     <AppDashboard
+      userId={user.id}
       userEmail={user.email ?? ""}
       userDisplayName={displayName ?? null}
       initialRole={profile.role}

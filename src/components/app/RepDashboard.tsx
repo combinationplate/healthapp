@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const TABS = [
   { id: "discover", label: "Discover" },
@@ -12,9 +13,76 @@ const TABS = [
 
 type RepTab = (typeof TABS)[number]["id"];
 
-export function RepDashboard() {
+export type ProfessionalRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  facility: string | null;
+  discipline: string | null;
+  rep_id: string;
+  created_at: string;
+};
+
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export function RepDashboard({ repId }: { repId?: string }) {
   const [tab, setTab] = useState<RepTab>("discover");
   const [filter, setFilter] = useState("All");
+  const [professionals, setProfessionals] = useState<ProfessionalRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", facility: "", discipline: "" });
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const fetchProfessionals = useCallback(async () => {
+    if (!repId) return;
+    setLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("professionals")
+      .select("id, name, email, phone, facility, discipline, rep_id, created_at")
+      .eq("rep_id", repId)
+      .order("created_at", { ascending: false });
+    setLoading(false);
+    if (!error) setProfessionals((data as ProfessionalRow[]) ?? []);
+  }, [repId]);
+
+  useEffect(() => {
+    fetchProfessionals();
+  }, [fetchProfessionals]);
+
+  async function handleAddProfessional(e: React.FormEvent) {
+    e.preventDefault();
+    if (!repId) return;
+    setAddSaving(true);
+    setAddError(null);
+    const supabase = createClient();
+    const { error } = await supabase.from("professionals").insert({
+      rep_id: repId,
+      name: addForm.name.trim(),
+      email: addForm.email.trim(),
+      phone: addForm.phone.trim() || null,
+      facility: addForm.facility.trim() || null,
+      discipline: addForm.discipline.trim() || null,
+    });
+    setAddSaving(false);
+    if (error) {
+      setAddError(error.message);
+      return;
+    }
+    setAddForm({ name: "", email: "", phone: "", facility: "", discipline: "" });
+    setAddOpen(false);
+    fetchProfessionals();
+  }
 
   return (
     <div className="space-y-6 pb-20">
@@ -199,36 +267,93 @@ export function RepDashboard() {
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
             <div className="flex gap-1.5 flex-wrap">
               <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Import CSV</button>
-              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("Add Professional modal")}>+ Add</button>
+              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => setAddOpen(true)}>+ Add</button>
             </div>
           </div>
           <div className="flex gap-1.5 flex-wrap mb-3.5">
-            {["All (45)", "Nursing (22)", "Social Work (10)", "Case Mgmt (8)", "PT/OT/SLP (5)"].map((f) => (
-              <button key={f} type="button" className={`rounded-full px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] ${filter === "All" && f.startsWith("All") ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "bg-white text-[var(--ink-soft)]"}`}>{f}</button>
+            {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
+              <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "bg-white text-[var(--ink-soft)]"}`}>
+                {f} {f === "All" ? `(${professionals.length})` : ""}
+              </button>
             ))}
           </div>
-          {[
-            { initials: "JL", name: "Jennifer Lopez, RN", meta: "St. Luke's · Case Mgr", last: "Last: 2d ago (CE sent)", lastClass: "text-[var(--coral)]" },
-            { initials: "MC", name: "Michael Chen, MSW", meta: "Harmony Hospice · Social Worker", last: "Last: 5d ago (Call)", lastClass: "text-[var(--coral)]" },
-            { initials: "AT", name: "Angela Thompson, PT", meta: "Houston Rehab · PT", last: "Last: 12d ago (Visit)", lastClass: "text-[var(--coral)]" },
-          ].map((pro) => (
-            <div key={pro.name} className="grid grid-cols-[auto_1fr_auto] gap-3 p-3.5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center mb-2">
-              <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{pro.initials}</div>
-              <div>
-                <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                <div className="text-[11px] text-[var(--ink-muted)] flex gap-2 flex-wrap">{pro.meta}</div>
-                <div className="flex gap-1.5 flex-wrap mt-1">
-                  <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Nursing</span>
-                  <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--blue-glow)] text-[var(--blue)]">TX</span>
+          {loading ? (
+            <p className="text-sm text-[var(--ink-muted)]">Loading…</p>
+          ) : professionals.length === 0 ? (
+            <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet. Click &quot;+ Add&quot; to add one.</p>
+          ) : (
+            professionals
+              .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
+              .map((pro) => (
+                <div key={pro.id} className="grid grid-cols-[auto_1fr_auto] gap-3 p-3.5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center mb-2">
+                  <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
+                  <div>
+                    <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
+                    <div className="text-[11px] text-[var(--ink-muted)] flex gap-2 flex-wrap">
+                      {[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}
+                    </div>
+                    {pro.discipline && (
+                      <div className="flex gap-1.5 flex-wrap mt-1">
+                        <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{pro.discipline}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white">CE</button>
+                    <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Log</button>
+                  </div>
                 </div>
-                <div className={`text-[10px] font-semibold mt-1 ${pro.lastClass}`}>{pro.last}</div>
-              </div>
-              <div className="flex gap-1 flex-wrap">
-                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white">CE</button>
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Log</button>
-              </div>
+              ))
+          )}
+        </div>
+      )}
+
+      {/* Add Professional modal */}
+      {addOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !addSaving && setAddOpen(false)}>
+          <div className="w-[92%] max-w-[560px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">Add Professional</h3>
+              <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !addSaving && setAddOpen(false)} aria-label="Close">×</button>
             </div>
-          ))}
+            <form onSubmit={handleAddProfessional} className="grid gap-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Name</label>
+                <input type="text" required value={addForm.name} onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))} placeholder="Jennifer Lopez, RN" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Email</label>
+                <input type="email" required value={addForm.email} onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))} placeholder="jennifer@hospital.com" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Facility</label>
+                  <input type="text" value={addForm.facility} onChange={(e) => setAddForm((f) => ({ ...f, facility: e.target.value }))} placeholder="St. Luke's Hospital" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Discipline</label>
+                  <select value={addForm.discipline} onChange={(e) => setAddForm((f) => ({ ...f, discipline: e.target.value }))} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm">
+                    <option value="">Select…</option>
+                    <option value="Nursing">Nursing</option>
+                    <option value="Social Work">Social Work</option>
+                    <option value="Case Mgmt">Case Mgmt</option>
+                    <option value="PT">PT</option>
+                    <option value="OT">OT</option>
+                    <option value="SLP">SLP</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Phone</label>
+                <input type="tel" value={addForm.phone} onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))} placeholder="555-0100" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
+              </div>
+              {addError && <p className="text-sm text-[var(--coral)]">{addError}</p>}
+              <div className="flex gap-2 justify-end pt-2">
+                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)]" onClick={() => !addSaving && setAddOpen(false)}>Cancel</button>
+                <button type="submit" disabled={addSaving} className="rounded-[var(--r)] bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{addSaving ? "Saving…" : "Add"}</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
