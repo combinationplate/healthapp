@@ -106,6 +106,37 @@ export function RepDashboard({ repId }: { repId?: string }) {
         ))}
       </div>
 
+      {/* My Network section - always visible below stats */}
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
+          <div className="flex gap-1.5 flex-wrap">
+            <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]" onClick={() => setTab("network")}>View all</button>
+            <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+          </div>
+        </div>
+        {loading ? (
+          <p className="text-sm text-[var(--ink-muted)]">Loading…</p>
+        ) : professionals.length === 0 ? (
+          <p className="text-sm text-[var(--ink-muted)] mb-2">No professionals in your network yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {professionals.slice(0, 5).map((pro) => (
+              <div key={pro.id} className="grid grid-cols-[auto_1fr] gap-3 p-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center">
+                <div className="w-[36px] h-[36px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
+                <div>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
+                </div>
+              </div>
+            ))}
+            {professionals.length > 5 && (
+              <button type="button" className="text-xs font-semibold text-[var(--blue)] hover:underline" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-1 mb-4 p-1 bg-[var(--cream)] rounded-[var(--r)] overflow-x-auto">
         {TABS.map((t) => (
           <button
