@@ -48,7 +48,7 @@ export function AppDashboard({ userId, userEmail, userDisplayName, initialRole =
   return (
     <>
       {switchRole}
-      <ProDashboard />
+      <ProDashboard userName={userDisplayName ?? userEmail} />
     </>
   );
 }
