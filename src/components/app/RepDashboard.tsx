@@ -107,8 +107,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
       </div>
 
       {/* My Network section - always visible below stats */}
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 mb-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-3">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
           <div className="flex gap-1.5 flex-wrap">
             <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]" onClick={() => setTab("network")}>View all</button>
@@ -120,18 +120,18 @@ export function RepDashboard({ repId }: { repId?: string }) {
         ) : professionals.length === 0 ? (
           <p className="text-sm text-[var(--ink-muted)] mb-2">No professionals in your network yet.</p>
         ) : (
-          <div className="space-y-2">
-            {professionals.slice(0, 5).map((pro) => (
-              <div key={pro.id} className="grid grid-cols-[auto_1fr] gap-3 p-3 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center">
-                <div className="w-[36px] h-[36px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
-                <div>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                  <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {professionals.slice(0, 6).map((pro) => (
+              <div key={pro.id} className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--cream)] p-2.5 flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-[10px]">{initials(pro.name)}</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-[12px] text-[var(--ink)] truncate">{pro.name}</div>
+                  <div className="text-[10px] text-[var(--ink-muted)] truncate">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
                 </div>
               </div>
             ))}
-            {professionals.length > 5 && (
-              <button type="button" className="text-xs font-semibold text-[var(--blue)] hover:underline" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
+            {professionals.length > 6 && (
+              <button type="button" className="col-span-2 sm:col-span-3 text-xs font-semibold text-[var(--blue)] hover:underline pt-1" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
             )}
           </div>
         )}
@@ -313,28 +313,28 @@ export function RepDashboard({ repId }: { repId?: string }) {
           ) : professionals.length === 0 ? (
             <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet. Click &quot;+ Add&quot; to add one.</p>
           ) : (
-            professionals
-              .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
-              .map((pro) => (
-                <div key={pro.id} className="grid grid-cols-[auto_1fr_auto] gap-3 p-3.5 rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] items-center mb-2">
-                  <div className="w-[38px] h-[38px] rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
-                  <div>
-                    <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                    <div className="text-[11px] text-[var(--ink-muted)] flex gap-2 flex-wrap">
-                      {[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {professionals
+                .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
+                .map((pro) => (
+                  <div key={pro.id} className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--cream)] p-2.5 flex flex-col gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-[10px]">{initials(pro.name)}</div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-[12px] text-[var(--ink)] truncate">{pro.name}</div>
+                        <div className="text-[10px] text-[var(--ink-muted)] truncate">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
+                      </div>
                     </div>
                     {pro.discipline && (
-                      <div className="flex gap-1.5 flex-wrap mt-1">
-                        <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{pro.discipline}</span>
-                      </div>
+                      <span className="rounded px-1.5 py-0.5 text-[9px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)] w-fit">{pro.discipline}</span>
                     )}
+                    <div className="flex gap-1 flex-wrap mt-0.5">
+                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-2.5 py-1 text-[10px] font-semibold text-white">CE</button>
+                      <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-2.5 py-1 text-[10px] font-semibold text-[var(--ink-soft)]">Log</button>
+                    </div>
                   </div>
-                  <div className="flex gap-1 flex-wrap">
-                    <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white">CE</button>
-                    <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Log</button>
-                  </div>
-                </div>
-              ))
+                ))}
+            </div>
           )}
         </div>
       )}

@@ -33,7 +33,7 @@ export default async function AppLayout({
           </nav>
         </div>
       </header>
-      <main className="mx-auto max-w-[1320px] px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-[1320px] px-8 py-8 sm:px-10">{children}</main>
     </div>
   );
 }
