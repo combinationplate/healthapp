@@ -11,15 +11,23 @@ const PRO_TABS = [
 
 type ProTab = (typeof PRO_TABS)[number]["id"];
 
-export function ProDashboard() {
+function displayName(nameOrEmail: string): string {
+  if (!nameOrEmail) return "there";
+  const trimmed = nameOrEmail.trim();
+  if (trimmed.includes("@")) return trimmed.split("@")[0];
+  return trimmed.split(/\s+/)[0] ?? trimmed;
+}
+
+export function ProDashboard({ userName }: { userName?: string | null }) {
   const [tab, setTab] = useState<ProTab>("courses");
+  const welcomeName = displayName(userName ?? "");
 
   return (
     <div className="space-y-6 pb-20">
-      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, Jennifer</h1>
+      <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
       <p className="text-[13px] text-[var(--ink-muted)] -mt-5 mb-6">RN · St. Luke&apos;s Hospital · Houston, TX · <span className="inline-flex align-middle rounded-full bg-[var(--teal-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--teal)]">Texas License</span></p>
 
-      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))] mb-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
         {[
           { label: "Courses", val: "4", note: "Available", noteClass: "text-[var(--green)]" },
           { label: "Requests", val: "1", note: "Pending", noteClass: "text-[var(--coral)]" },
@@ -28,7 +36,7 @@ export function ProDashboard() {
           { label: "Events", val: "2", note: "Near you", noteClass: "text-[var(--blue)]" },
           { label: "Jobs", val: "3", note: "New", noteClass: "text-[var(--green)]" },
         ].map((s) => (
-          <div key={s.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-5 transition-shadow hover:shadow-[var(--shadow)]">
+          <div key={s.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,.04)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,.06)]">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ink-muted)] mb-1">{s.label}</div>
             <div className="font-[family-name:var(--font-fraunces)] text-[28px] font-extrabold text-[var(--ink)]">{s.val}</div>
             <div className={`text-[11px] font-medium ${s.noteClass}`}>{s.note}</div>
