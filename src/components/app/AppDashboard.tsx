@@ -11,10 +11,12 @@ type Role = "manager" | "rep" | "professional";
 type Props = {
   userEmail: string;
   userDisplayName?: string | null;
+  /** Role from profile: user is redirected to this dashboard after login */
+  initialRole?: Role | null;
 };
 
-export function AppDashboard({ userEmail, userDisplayName }: Props) {
-  const [role, setRole] = useState<Role | null>(null);
+export function AppDashboard({ userEmail, userDisplayName, initialRole = null }: Props) {
+  const [role, setRole] = useState<Role | null>(initialRole ?? null);
 
   if (role === null) {
     return <RoleSelector onSelect={setRole} />;

@@ -22,11 +22,13 @@ export default function SignupPage() {
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
+    // Map signup type to role: sales -> rep, hcp -> professional
+    const role = type === "sales" ? "rep" : "professional";
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, account_type: type },
+        data: { full_name: fullName, account_type: type, role },
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
       },
     });

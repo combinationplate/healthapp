@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+function roleFromMetadata(metadata: Record<string, unknown> | undefined): "manager" | "rep" | "professional" {
+  const role = metadata?.role as string | undefined;
+  if (role === "manager" || role === "rep" || role === "professional") return role;
+  const accountType = (metadata?.account_type as string) ?? "";
+  if (accountType.toLowerCase() === "sales") return "rep";
+  return "professional";
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -8,8 +16,14 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data.user) {
+      const role = roleFromMetadata(data.user.user_metadata);
+      const fullName = (data.user.user_metadata?.full_name as string) ?? "";
+      await supabase.from("profiles").upsert(
+        { id: data.user.id, role, full_name: fullName, updated_at: new Date().toISOString() },
+        { onConflict: "id" }
+      );
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
