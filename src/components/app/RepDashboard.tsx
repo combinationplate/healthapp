@@ -11,6 +11,16 @@ const TABS = [
   { id: "network", label: "Network" },
 ] as const;
 
+const CE_COURSES = [
+  { id: "ethics", name: "Ethics in Caring for the Elderly", hours: 2 },
+  { id: "palliative", name: "Palliative and Hospice Care", hours: 3 },
+  { id: "mental-health", name: "Mental Health and The Elderly", hours: 2 },
+  { id: "chronic", name: "Chronic Disease Management", hours: 2 },
+  { id: "patient-safety", name: "Patient Safety", hours: 2 },
+] as const;
+
+const CE_DISCOUNTS = ["100% Free", "50% Off", "25% Off"] as const;
+
 type RepTab = (typeof TABS)[number]["id"];
 
 export type ProfessionalRow = {
@@ -42,6 +52,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", facility: "", discipline: "" });
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [sendCeOpen, setSendCeOpen] = useState(false);
+  const [sendCePro, setSendCePro] = useState<ProfessionalRow | null>(null);
+  const [sendCeCourse, setSendCeCourse] = useState<string>(CE_COURSES[0].id);
+  const [sendCeDiscount, setSendCeDiscount] = useState<string>(CE_DISCOUNTS[0]);
+  const [sendCeMessage, setSendCeMessage] = useState("");
+  const [sendCeSaving, setSendCeSaving] = useState(false);
+  const [sendCeError, setSendCeError] = useState<string | null>(null);
+  const [sendCeSuccess, setSendCeSuccess] = useState(false);
 
   const fetchProfessionals = useCallback(async () => {
     if (!repId) return;
@@ -89,6 +107,57 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setAddForm({ name: "", email: "", phone: "", facility: "", discipline: "" });
     setAddOpen(false);
     fetchProfessionals();
+  }
+
+  function openSendCeModal(pro: ProfessionalRow | null) {
+    setSendCePro(pro ?? (professionals.length === 1 ? professionals[0] : null));
+    setSendCeCourse(CE_COURSES[0].id);
+    setSendCeDiscount(CE_DISCOUNTS[0]);
+    setSendCeMessage("");
+    setSendCeError(null);
+    setSendCeSuccess(false);
+    setSendCeOpen(true);
+  }
+
+  async function handleSendCe(e: React.FormEvent) {
+    e.preventDefault();
+    if (professionals.length > 1 && !sendCePro) {
+      setSendCeError("Select a professional.");
+      return;
+    }
+    const pro = sendCePro ?? (professionals.length > 0 ? professionals[0] : null);
+    if (!repId || !pro) {
+      setSendCeError("Add a professional to your network first.");
+      return;
+    }
+    setSendCeSaving(true);
+    setSendCeError(null);
+    try {
+      const res = await fetch("/api/ce/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          professionalId: pro.id,
+          repId,
+          courseId: sendCeCourse,
+          discount: sendCeDiscount,
+          personalMessage: sendCeMessage.trim() || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSendCeError(data.error ?? "Failed to send CE");
+        return;
+      }
+      setSendCeSuccess(true);
+      setTimeout(() => {
+        setSendCeOpen(false);
+        setSendCeSuccess(false);
+      }, 2000);
+    } finally {
+      setSendCeSaving(false);
+    }
   }
 
   return (
@@ -230,7 +299,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               <div className="text-xs text-[var(--ink-soft)] mb-2.5"><strong className="text-[var(--ink)]">Requested:</strong> {r.requested} · <strong className="text-[var(--ink)]">Deadline:</strong> {r.deadline}</div>
               <div className="flex gap-1.5 flex-wrap">
-                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("Send CE modal")}>Send CE</button>
+                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => openSendCeModal(professionals.find((p) => p.name.toLowerCase().includes(r.name.split(",")[0].trim().toLowerCase())) ?? null)}>Send CE</button>
                 <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Message</button>
               </div>
             </div>
@@ -348,13 +417,78 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       )}
                     </div>
                     <div className="flex gap-1.5 shrink-0">
-                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3 py-1.5 text-[11px] font-semibold text-white">CE</button>
+                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3 py-1.5 text-[11px] font-semibold text-white" onClick={() => openSendCeModal(pro)}>CE</button>
                       <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[var(--ink-soft)]">Log</button>
                     </div>
                   </div>
                 ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Send CE modal */}
+      {sendCeOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !sendCeSaving && setSendCeOpen(false)}>
+          <div className="w-[92%] max-w-[480px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">Send CE Course</h3>
+              <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !sendCeSaving && setSendCeOpen(false)} aria-label="Close">×</button>
+            </div>
+            {sendCeSuccess ? (
+              <p className="text-[var(--green)] font-semibold py-4">CE sent successfully. +5 points added.</p>
+            ) : (
+              <form onSubmit={handleSendCe} className="grid gap-4">
+                {!sendCePro && professionals.length > 1 && (
+                  <div>
+                    <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Send to</label>
+                    <select
+                      required
+                      value={sendCePro?.id ?? ""}
+                      onChange={(e) => setSendCePro(professionals.find((p) => p.id === e.target.value) ?? null)}
+                      className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm"
+                    >
+                      <option value="">Select professional…</option>
+                      {professionals.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name} · {p.email}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {sendCePro && (
+                  <p className="text-[13px] text-[var(--ink-muted)]">To: <strong className="text-[var(--ink)]">{sendCePro.name}</strong> ({sendCePro.email})</p>
+                )}
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Course</label>
+                  <select value={sendCeCourse} onChange={(e) => setSendCeCourse(e.target.value)} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" required>
+                    {CE_COURSES.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.hours}hrs)</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Discount</label>
+                  <div className="flex flex-wrap gap-2">
+                    {CE_DISCOUNTS.map((d) => (
+                      <label key={d} className="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="discount" value={d} checked={sendCeDiscount === d} onChange={() => setSendCeDiscount(d)} className="rounded-full" />
+                        <span className="text-sm">{d}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Personal message (optional)</label>
+                  <textarea value={sendCeMessage} onChange={(e) => setSendCeMessage(e.target.value)} placeholder="Add a note for the professional…" rows={3} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm resize-none" />
+                </div>
+                {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
+                <div className="flex gap-2 justify-end pt-1">
+                  <button type="button" className="rounded-[var(--r)] border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)]" onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
+                  <button type="submit" disabled={sendCeSaving} className="rounded-[var(--r)] bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{sendCeSaving ? "Sending…" : "Send CE"}</button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
       )}
 
