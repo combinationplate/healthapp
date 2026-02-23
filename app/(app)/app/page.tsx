@@ -29,8 +29,10 @@ export default async function AppPage() {
 
   const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
   const role = profile.role;
+  // users.role accepts only manager | rep | professional
+  const userTableRole = role === "manager" || role === "rep" || role === "professional" ? role : "manager";
   await supabase.from("users").upsert(
-    { id: user.id, email: user.email ?? "", role, name: displayName ?? "" },
+    { id: user.id, email: user.email ?? "", role: userTableRole, name: displayName ?? "" },
     { onConflict: "id" }
   );
 

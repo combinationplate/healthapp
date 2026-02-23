@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+/** Returns a role valid for both profiles and users tables (manager | rep | professional). */
 function roleFromMetadata(metadata: Record<string, unknown> | undefined): "manager" | "rep" | "professional" {
   const role = metadata?.role as string | undefined;
   if (role === "manager" || role === "rep" || role === "professional") return role;
   const accountType = (metadata?.account_type as string) ?? "";
   if (accountType.toLowerCase() === "sales") return "rep";
+  if (accountType.toLowerCase() === "manager") return "manager";
   return "professional";
 }
 
