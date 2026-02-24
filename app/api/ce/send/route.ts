@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     }
 
     const resendKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <onboarding@resend.dev>";
+    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
     const link = "https://hiscornerstone.com";
 
     if (resendKey) {
