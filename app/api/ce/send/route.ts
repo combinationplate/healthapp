@@ -3,12 +3,25 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 const COURSES = [
-  { id: "ethics", name: "Ethics in Caring for the Elderly", hours: 2 },
-  { id: "palliative", name: "Palliative and Hospice Care", hours: 3 },
-  { id: "mental-health", name: "Mental Health and The Elderly", hours: 2 },
-  { id: "chronic", name: "Chronic Disease Management", hours: 2 },
-  { id: "patient-safety", name: "Patient Safety", hours: 2 },
+  { id: "ethics", name: "Ethics in Caring for the Elderly", hours: 2, productId: 3664 },
+  { id: "palliative", name: "Palliative and Hospice Care", hours: 3, productId: 20204 },
+  { id: "mental-health", name: "Mental Health and The Elderly", hours: 2, productId: 3715 },
+  { id: "chronic", name: "Chronic Disease Management", hours: 2, productId: 7672 },
+  { id: "patient-safety", name: "Patient Safety", hours: 2, productId: 5065 },
 ] as const;
+
+const CART_BASE = "https://hiscornerstone.com/cart/";
+function courseAccessUrl(productId: number, couponCode: string): string {
+  const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
+  return `${CART_BASE}?${params.toString()}`;
+}
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 const DISCOUNTS = ["100% Free", "50% Off", "25% Off"] as const;
 
@@ -108,18 +121,31 @@ export async function POST(request: Request) {
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
-    const link = "https://hiscornerstone.com";
+    const accessUrl = courseAccessUrl(course.productId, couponCode);
 
     if (resendKey) {
       const resend = new Resend(resendKey);
       const messageBlock = personalMessage?.trim()
         ? `\n\nPersonal message from your rep:\n${personalMessage.trim()}\n\n`
         : "\n\n";
+      const html = `
+        <p>Hi ${escapeHtml(pro.name)},</p>
+        <p>Your representative has sent you access to the following continuing education course:</p>
+        <p><strong>${escapeHtml(course.name)}</strong> (${course.hours} hrs) · ${escapeHtml(discount)}</p>
+        ${personalMessage?.trim() ? `<p><em>Personal message from your rep:</em><br/>${escapeHtml(personalMessage.trim())}</p>` : ""}
+        <p style="margin: 24px 0;">
+          <a href="${escapeHtml(accessUrl)}" style="display: inline-block; background: #2455FF; color: #fff; text-decoration: none; padding: 14px 24px; border-radius: 8px; font-weight: bold;">Access Your Free Course</a>
+        </p>
+        <p style="color: #666; font-size: 12px;">This link adds the course to your cart with your discount applied. If the button doesn’t work, copy and paste this into your browser:<br/><a href="${escapeHtml(accessUrl)}">${escapeHtml(accessUrl)}</a></p>
+        <p>— Pulse</p>
+      `;
+      const text = `Hi ${pro.name},\n\nYour representative has sent you access to the following continuing education course:\n\n${course.name} (${course.hours} hrs) · ${discount}${messageBlock}Access your course (discount auto-applied): ${accessUrl}\n\n— Pulse`;
       const { error: emailError } = await resend.emails.send({
         from: fromEmail,
         to: pro.email,
         subject: `Your CE course: ${course.name}`,
-        text: `Hi ${pro.name},\n\nYour representative has sent you access to the following continuing education course:\n\nCourse: ${course.name} (${course.hours} hrs)\nDiscount: ${discount}\nCoupon code: ${couponCode}\n\nRedeem at: ${link}${messageBlock}— Pulse`,
+        html,
+        text,
       });
       if (emailError) {
         console.warn("Resend error:", emailError);
