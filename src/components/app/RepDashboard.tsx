@@ -408,8 +408,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>Go to Network</button>
             </div>
           ) : (
-            <div className="space-y-0">
-              {(ceHistoryExpanded ? ceHistory : ceHistory.slice(0, 3)).map((row) => (
+            <>
+              <div className="space-y-0">
+                {(ceHistoryExpanded ? ceHistory : ceHistory.slice(0, 3)).map((row) => (
                 <div key={row.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-lg border-b border-[var(--border)] last:border-0 items-center hover:bg-[#F8FAFC]/50">
                   <div>
                     <div className="font-semibold text-[13px] text-[var(--ink)]">{row.professional_name}</div>
