@@ -2,13 +2,16 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const COURSES = [
-  { id: "ethics", name: "Ethics in Caring for the Elderly", hours: 2, productId: 3664 },
-  { id: "palliative", name: "Palliative and Hospice Care", hours: 3, productId: 20204 },
-  { id: "mental-health", name: "Mental Health and The Elderly", hours: 2, productId: 3715 },
-  { id: "chronic", name: "Chronic Disease Management", hours: 2, productId: 7672 },
-  { id: "patient-safety", name: "Patient Safety", hours: 2, productId: 5065 },
-] as const;
+/** Course id → product ID and display name for CE send dropdown and DB. */
+const COURSE_PRODUCT_MAP: Record<string, { name: string; hours: number; productId: number }> = {
+  "ethics": { name: "Ethics in Caring for the Elderly", hours: 2, productId: 3664 },
+  "palliative": { name: "Palliative and Hospice Care", hours: 3, productId: 20204 },
+  "mental-health": { name: "Mental Health and The Elderly", hours: 2, productId: 3715 },
+  "chronic": { name: "Chronic Disease Management", hours: 2, productId: 7672 },
+  "patient-safety": { name: "Patient Safety", hours: 2, productId: 5065 },
+};
+
+const COURSES = Object.entries(COURSE_PRODUCT_MAP).map(([id, v]) => ({ id, ...v }));
 
 const CART_BASE = "https://hiscornerstone.com/";
 function courseAccessUrl(productId: number, couponCode: string): string {
@@ -65,7 +68,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid discount" }, { status: 400 });
     }
 
-    const course = COURSES.find((c) => c.id === courseId);
+    const course = COURSE_PRODUCT_MAP[courseId];
     if (!course) {
       return NextResponse.json({ error: "Invalid course" }, { status: 400 });
     }
@@ -91,6 +94,7 @@ export async function POST(request: Request) {
     }
 
     const couponCode = generateCouponCode(repName);
+    const productIdForDb = course.productId;
 
     const { error: sendError } = await supabase.from("ce_sends").insert({
       rep_id: repId,
@@ -100,7 +104,7 @@ export async function POST(request: Request) {
       discount,
       coupon_code: couponCode,
       personal_message: personalMessage?.trim() || null,
-      product_id: course.productId,
+      product_id: productIdForDb,
     });
 
     if (sendError) {
@@ -122,7 +126,7 @@ export async function POST(request: Request) {
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
-    const accessUrl = courseAccessUrl(course.productId, couponCode);
+    const accessUrl = courseAccessUrl(productIdForDb, couponCode);
 
     if (resendKey) {
       const resend = new Resend(resendKey);

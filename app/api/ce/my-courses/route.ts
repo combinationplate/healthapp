@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 const CART_BASE = "https://hiscornerstone.com/";
+const FALLBACK_REDEEM_URL = "https://hiscornerstone.com";
+
 function courseAccessUrl(productId: number, couponCode: string): string {
   const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
   return `${CART_BASE}?${params.toString()}`;
@@ -32,6 +34,9 @@ export async function GET() {
       const repName = (r.users as { name?: string } | null)?.name ?? "Rep";
       const productId = r.product_id as number | null;
       const couponCode = r.coupon_code as string;
+      const redeemUrl = productId
+        ? courseAccessUrl(productId, couponCode)
+        : FALLBACK_REDEEM_URL;
       return {
         id: r.id,
         courseName: r.course_name,
@@ -39,7 +44,7 @@ export async function GET() {
         sentBy: repName,
         sentAt: created,
         expiryAt: expiryAt.toISOString(),
-        redeemUrl: productId ? courseAccessUrl(productId, couponCode) : null,
+        redeemUrl,
         redeemedAt: r.redeemed_at as string | null,
       };
     });
