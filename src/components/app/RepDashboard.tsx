@@ -204,60 +204,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-4 pb-20">
       <div>
         <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
         <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         {[
           { label: "Touchpoints", val: String(professionals.length * 2), note: "This week", noteClass: "text-[var(--blue)]" },
           { label: "CEs Sent", val: String(ceHistory.length), note: "Total", noteClass: "text-[var(--green)]" },
-          { label: "Credits", val: "—", note: "Available", noteClass: "text-[var(--blue)]" },
+          { label: "Credits", val: String(ceHistory.length), note: "CE sends", noteClass: "text-[var(--blue)]" },
           { label: "Requests", val: "0", note: "Pending", noteClass: "text-[var(--coral)]" },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+          <div key={s.label} className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
             <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
             <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
           </div>
         ))}
       </section>
-
-      {/* My Network section - list preview */}
-      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
-          <div className="flex gap-2 flex-wrap">
-            <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => setTab("network")}>View all</button>
-            <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
-          </div>
-        </div>
-        {loading ? (
-          <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
-        ) : professionals.length === 0 ? (
-          <div className="py-6 text-center">
-            <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
-            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {professionals.slice(0, 5).map((pro) => (
-              <div key={pro.id} className="grid grid-cols-[auto_1fr] gap-3 py-2.5 px-2 rounded-[var(--r)] border border-transparent hover:bg-[var(--cream)] hover:border-[var(--border)] items-center">
-                <div className="w-9 h-9 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-xs">{initials(pro.name)}</div>
-                <div className="min-w-0">
-                  <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                  <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
-                </div>
-              </div>
-            ))}
-            {professionals.length > 5 && (
-              <button type="button" className="text-xs font-semibold text-[var(--blue)] hover:underline pt-2 pb-1 block" onClick={() => setTab("network")}>View all {professionals.length} professionals →</button>
-            )}
-          </div>
-        )}
-      </div>
 
       <div className="flex gap-1 overflow-x-auto rounded-lg bg-white p-1 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         {TABS.map((t) => (
@@ -273,7 +239,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       </div>
 
       {tab === "discover" && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking Resources</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE will appear here</p>
@@ -287,7 +253,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "requests" && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Requests from professionals will appear here</p>
@@ -300,8 +266,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "distribute" && (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="space-y-4">
+          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
             </div>
@@ -332,7 +298,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </button>
             </div>
           </div>
-          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
             </div>
@@ -346,7 +312,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "network" && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
             <div className="flex gap-2 flex-wrap">
@@ -394,7 +360,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "ce-history" && (
-        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
             <p className="text-[11px] text-[var(--ink-muted)] mt-1">All CE courses you’ve sent to your network</p>

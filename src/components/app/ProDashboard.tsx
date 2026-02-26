@@ -20,7 +20,6 @@ type MyCourseRow = {
   redeemedAt: string | null;
 };
 
-const CARD_CLASS = "rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]";
 const BTN_PRIMARY = "rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]";
 const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]";
 
@@ -76,20 +75,20 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
   const hasMoreMyCourses = myCourses.length > showMyCoursesCount && !myCoursesExpanded;
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-4 pb-20">
       <div>
         <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
         <p className="mt-1 text-[13px] text-[var(--ink-muted)]">View your CE courses and network</p>
       </div>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
         {[
           { label: "Courses", val: String(myCourses.length), note: "Available", noteClass: "text-[var(--green)]" },
           { label: "Requests", val: "0", note: "Pending", noteClass: "text-[var(--coral)]" },
           { label: "Reps", val: "—", note: "Connected", noteClass: "text-[var(--blue)]" },
           { label: "CE Hours", val: String(myCourses.reduce((acc, c) => acc + c.courseHours, 0)), note: "Completed", noteClass: "text-[var(--green)]" },
         ].map((s) => (
-          <div key={s.label} className={`${CARD_CLASS} transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]`}>
+          <div key={s.label} className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
             <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
             <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
@@ -111,8 +110,8 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
       </div>
 
       {tab === "courses" && (
-        <div className="space-y-8">
-          <div className={CARD_CLASS}>
+        <div className="space-y-4">
+          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CE courses sent to you by your reps</p>
@@ -144,17 +143,13 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
                           <>
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
-                              {c.redeemUrl && (
-                                <a href={c.redeemUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[var(--green)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--green)]/90">
-                                  Redeem Course
-                                </a>
-                              )}
+                              <a href={c.redeemUrl || "https://hiscornerstone.com"} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[var(--green)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--green)]/90">
+                                Redeem Course
+                              </a>
                             </div>
-                            {c.redeemUrl && (
-                              <button type="button" onClick={() => handleMarkRedeemed(c.id)} className="text-[10px] text-[var(--ink-soft)] hover:underline">
-                                Mark as Redeemed
-                              </button>
-                            )}
+                            <button type="button" onClick={() => handleMarkRedeemed(c.id)} className="text-[10px] text-[var(--ink-soft)] hover:underline">
+                              Mark as Redeemed
+                            </button>
                           </>
                         )}
                       </div>
@@ -172,7 +167,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             )}
           </div>
 
-          <div className={CARD_CLASS}>
+          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>
               <button type="button" className={BTN_PRIMARY} onClick={() => alert("Request CE")}>+ Request CE</button>
@@ -183,7 +178,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             </div>
           </div>
 
-          <div className={CARD_CLASS}>
+          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Requests</h2>
             </div>
@@ -196,7 +191,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
       )}
 
       {tab === "network" && (
-        <div className={CARD_CLASS}>
+        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Network</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Sales reps connected to you</p>
