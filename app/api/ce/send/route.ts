@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
 
 /** Course id → product ID and display name for CE send dropdown and DB. */
 const COURSE_PRODUCT_MAP: Record<string, { name: string; hours: number; productId: number }> = {
@@ -107,20 +106,27 @@ export async function POST(request: Request) {
 
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 90);
-    const wooResult = await createWooCoupon({
-      code: couponCode,
-      amount: discountToAmount(discount),
-      discountType: "percent",
-      productIds: [productIdForDb],
-      dateExpires: expiryDate.toISOString().split("T")[0],
-      usageLimit: 1,
-      description: `Pulse CE: ${course.name} (${discount})`,
-    });
 
-    if (wooResult.error) {
+    const baseUrl = new URL(request.url).origin;
+    const createRes = await fetch(`${baseUrl}/api/coupons/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code: couponCode,
+        amount: discountToAmount(discount),
+        discountType: "percent",
+        productIds: [productIdForDb],
+        dateExpires: expiryDate.toISOString().split("T")[0],
+        usageLimit: 1,
+        description: `Pulse CE: ${course.name} (${discount})`,
+      }),
+    });
+    const wooJson = await createRes.json().catch(() => ({}));
+    if (!createRes.ok || wooJson.error) {
+      const errMsg = wooJson.error ?? createRes.statusText;
       return NextResponse.json(
-        { error: `Could not create coupon in store: ${wooResult.error}` },
-        { status: 502 }
+        { error: `Could not create coupon in store: ${errMsg}` },
+        { status: createRes.status === 503 ? 503 : 502 }
       );
     }
 
