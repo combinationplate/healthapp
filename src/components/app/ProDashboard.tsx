@@ -52,6 +52,22 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
 
+  const refreshMyCourses = () => {
+    fetch("/api/ce/my-courses", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (data.list) setMyCourses(data.list); });
+  };
+
+  async function handleMarkRedeemed(ceSendId: string) {
+    const res = await fetch("/api/ce/mark-redeemed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ ceSendId }),
+    });
+    if (res.ok) refreshMyCourses();
+  }
+
   return (
     <div className="space-y-5 pb-20">
       <div className="mb-2">
@@ -105,21 +121,33 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             ) : (
               <div className="space-y-0">
                 {myCourses.map((c) => (
-                  <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                  <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 sm:gap-4 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
                     <div>
                       <div className="font-semibold text-[13px] text-[var(--ink)]">{c.courseName}</div>
                       <div className="text-[11px] text-[var(--ink-muted)]">Sent by {c.sentBy} · {formatDate(c.sentAt)} · Expires {formatDate(c.expiryAt)}</div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-end gap-1">
                       {c.redeemedAt ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">✓ Redeemed</span>
+                        <>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Redeemed ✅</span>
+                          <span className="text-[10px] text-[var(--ink-muted)]">Redeemed {formatDate(c.redeemedAt)}</span>
+                        </>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
-                      )}
-                      {c.redeemUrl && !c.redeemedAt && (
-                        <a href={c.redeemUrl} target="_blank" rel="noopener noreferrer" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--teal-dark)] shrink-0">
-                          Redeem Course
-                        </a>
+                        <>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
+                            {c.redeemUrl && (
+                              <a href={c.redeemUrl} target="_blank" rel="noopener noreferrer" className="rounded-[var(--r)] bg-[var(--green)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--green)]/90 shrink-0">
+                                Redeem Course
+                              </a>
+                            )}
+                          </div>
+                          {c.redeemUrl && (
+                            <button type="button" onClick={() => handleMarkRedeemed(c.id)} className="text-[10px] text-[var(--ink-soft)] hover:underline">
+                              Mark as Redeemed
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

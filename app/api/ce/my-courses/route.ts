@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const CART_BASE = "https://hiscornerstone.com/cart/";
+const CART_BASE = "https://hiscornerstone.com/";
 function courseAccessUrl(productId: number, couponCode: string): string {
   const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
   return `${CART_BASE}?${params.toString()}`;

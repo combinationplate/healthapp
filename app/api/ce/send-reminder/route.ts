@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const CART_BASE = "https://hiscornerstone.com/cart/";
+const CART_BASE = "https://hiscornerstone.com/";
 function courseAccessUrl(productId: number, couponCode: string): string {
   const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
   return `${CART_BASE}?${params.toString()}`;
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
     const proRow = pro as { name: string; email: string };
     const productId = sendRow.product_id;
-    const accessUrl = productId ? courseAccessUrl(productId, sendRow.coupon_code) : "https://hiscornerstone.com/cart/";
+    const accessUrl = productId ? courseAccessUrl(productId, sendRow.coupon_code) : "https://hiscornerstone.com/";
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
