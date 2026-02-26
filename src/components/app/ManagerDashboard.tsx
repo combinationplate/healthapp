@@ -1,33 +1,28 @@
 "use client";
 
+import { PageShell, StatsGrid, StatCard, SectionCard } from "@/components/app/DashboardShell";
+
 type Props = { userName: string };
 
 export function ManagerDashboard({ userName }: Props) {
   const reps: { name: string; cesThisMonth: number; professionalsInNetwork: number; lastActivity: string; redemptionRate: string }[] = [];
 
   return (
-    <div className="space-y-8 pb-20">
-      <div>
-        <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
-        <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>
-      </div>
+    <PageShell>
+      <div className="space-y-4 pb-20">
+        <div>
+          <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
+          <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>
+        </div>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[
-          { label: "Touchpoints", val: "—", note: "This week", noteClass: "text-[var(--blue)]" },
-          { label: "CEs Distributed", val: "—", note: "This month", noteClass: "text-[var(--green)]" },
-          { label: "Credits Used", val: "—", note: "Available", noteClass: "text-[var(--blue)]" },
-          { label: "Professionals", val: "—", note: "In network", noteClass: "text-[var(--green)]" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
-            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
-            <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
-            <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
-          </div>
-        ))}
-      </section>
+        <StatsGrid>
+          <StatCard label="Touchpoints" value="—" note="This week" noteClass="text-[var(--blue)]" />
+          <StatCard label="CEs Distributed" value="—" note="This month" noteClass="text-[var(--green)]" />
+          <StatCard label="Credits Used" value="—" note="Available" noteClass="text-[var(--blue)]" />
+          <StatCard label="Professionals" value="—" note="In network" noteClass="text-[var(--green)]" />
+        </StatsGrid>
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <SectionCard>
         <div className="border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Rep performance</h2>
           <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CEs sent, network size, last activity, and redemption rate per rep</p>
@@ -63,9 +58,9 @@ export function ManagerDashboard({ userName }: Props) {
             </table>
           </div>
         )}
-      </div>
+        </SectionCard>
 
-      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <SectionCard>
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Credit usage</h2>
           <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Purchase credits")}>Purchase credits</button>
@@ -73,7 +68,8 @@ export function ManagerDashboard({ userName }: Props) {
         <div className="py-8 text-center">
           <p className="text-sm text-[var(--ink-muted)]">Credit usage will appear here when your team sends CEs.</p>
         </div>
+        </SectionCard>
       </div>
-    </div>
+    </PageShell>
   );
 }

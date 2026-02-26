@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { PageShell, StatsGrid, StatCard, TabBar, SectionCard } from "@/components/app/DashboardShell";
 
 const TABS = [
   { id: "discover", label: "Discover" },
@@ -204,42 +205,24 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }
 
   return (
-    <div className="space-y-4 pb-20">
-      <div>
-        <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
-        <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
-      </div>
+    <PageShell>
+      <div className="space-y-4 pb-20">
+        <div>
+          <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
+          <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
+        </div>
 
-      <section className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        {[
-          { label: "Touchpoints", val: String(professionals.length * 2), note: "This week", noteClass: "text-[var(--blue)]" },
-          { label: "CEs Sent", val: String(ceHistory.length), note: "Total", noteClass: "text-[var(--green)]" },
-          { label: "Credits", val: String(ceHistory.length), note: "CE sends", noteClass: "text-[var(--blue)]" },
-          { label: "Requests", val: "0", note: "Pending", noteClass: "text-[var(--coral)]" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
-            <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
-            <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
-          </div>
-        ))}
-      </section>
+        <StatsGrid>
+          <StatCard label="Touchpoints" value={professionals.length * 2} note="This week" noteClass="text-[var(--blue)]" />
+          <StatCard label="CEs Sent" value={ceHistory.length} note="Total" noteClass="text-[var(--green)]" />
+          <StatCard label="Credits" value={ceHistory.length} note="CE sends" noteClass="text-[var(--blue)]" />
+          <StatCard label="Requests" value="0" note="Pending" noteClass="text-[var(--coral)]" />
+        </StatsGrid>
 
-      <div className="flex gap-1 overflow-x-auto rounded-lg bg-white p-1 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-[var(--blue)] text-white" : "text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+        <TabBar tabs={[...TABS]} active={tab} onChange={(id) => setTab(id as RepTab)} />
 
-      {tab === "discover" && (
-        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        {tab === "discover" && (
+          <SectionCard>
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking Resources</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE will appear here</p>
@@ -249,11 +232,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network to send them CEs.</p>
             <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {tab === "requests" && (
-        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <SectionCard>
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Requests from professionals will appear here</p>
@@ -262,12 +245,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <p className="text-sm text-[var(--ink-muted)]">No pending CE requests.</p>
             <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {tab === "distribute" && (
         <div className="space-y-4">
-          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
             </div>
@@ -297,8 +280,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <div className="text-[11px] text-[var(--ink-muted)]">Event sign-up</div>
               </button>
             </div>
-          </div>
-          <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          </SectionCard>
+          <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
             </div>
@@ -307,12 +290,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Event Attendees</button>
               <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Import & Send</button>
             </div>
-          </div>
+          </SectionCard>
         </div>
       )}
 
       {tab === "network" && (
-        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <SectionCard>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
             <div className="flex gap-2 flex-wrap">
@@ -356,11 +339,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 ))}
             </div>
           )}
-        </div>
+        </SectionCard>
       )}
 
       {tab === "ce-history" && (
-        <div className="rounded-[12px] border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <SectionCard>
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
             <p className="text-[11px] text-[var(--ink-muted)] mt-1">All CE courses you’ve sent to your network</p>
@@ -428,7 +411,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               )}
             </>
           )}
-        </div>
+        </SectionCard>
       )}
 
       {/* Send CE modal */}
@@ -545,5 +528,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
         </div>
       )}
     </div>
+    </PageShell>
   );
 }
