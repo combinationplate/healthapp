@@ -3,103 +3,75 @@
 type Props = { userName: string };
 
 export function ManagerDashboard({ userName }: Props) {
+  const reps: { name: string; cesThisMonth: number; professionalsInNetwork: number; lastActivity: string; redemptionRate: string }[] = [];
+
   return (
-    <div className="space-y-5 pb-20">
-      <div className="mb-2">
+    <div className="space-y-8 pb-20">
+      <div>
         <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
-        <p className="text-[13px] text-[var(--ink-muted)] mt-1">Texas Region · 8 representatives</p>
+        <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>
       </div>
 
-      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[
-          { label: "Team Points", val: "847", note: "↑ 23%", noteClass: "text-[var(--green)]" },
-          { label: "Touchpoints", val: "142", note: "This week", noteClass: "text-[var(--blue)]" },
-          { label: "CEs Distributed", val: "38", note: "This month", noteClass: "text-[var(--green)]" },
-          { label: "Credits Used", val: "58", note: "142 left", noteClass: "text-[var(--blue)]" },
-          { label: "Events", val: "6", note: "Next 30 days", noteClass: "text-[var(--blue)]" },
-          { label: "Professionals", val: "267", note: "18 need attn", noteClass: "text-[var(--coral)]" },
+          { label: "Touchpoints", val: "—", note: "This week", noteClass: "text-[var(--blue)]" },
+          { label: "CEs Distributed", val: "—", note: "This month", noteClass: "text-[var(--green)]" },
+          { label: "Credits Used", val: "—", note: "Available", noteClass: "text-[var(--blue)]" },
+          { label: "Professionals", val: "—", note: "In network", noteClass: "text-[var(--green)]" },
         ].map((s) => (
-          <div key={s.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-5 transition-shadow hover:shadow-[var(--shadow)]">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ink-muted)] mb-1">{s.label}</div>
-            <div className="font-[family-name:var(--font-fraunces)] text-[28px] font-extrabold text-[var(--ink)]">{s.val}</div>
-            <div className={`text-[11px] font-medium ${s.noteClass}`}>{s.note}</div>
+          <div key={s.label} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
+            <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
+            <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         <div className="border-b border-[var(--border)] pb-3 mb-4">
-          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Team Leaderboard</h2>
+          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Rep performance</h2>
+          <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CEs sent, network size, last activity, and redemption rate per rep</p>
         </div>
-        {[
-          { rank: 1, name: "Marcus Johnson", meta: "Houston · 45 pros · 12 CEs · 3 events", pts: "248 pts", rankClass: "text-[var(--gold)]" },
-          { rank: 2, name: "Jessica Chen", meta: "Dallas · 38 pros · 9 CEs · 2 events", pts: "215 pts", rankClass: "text-[#9CA3AF]" },
-          { rank: 3, name: "David Rodriguez", meta: "Austin · 42 pros · 8 CEs", pts: "187 pts", rankClass: "text-[#CD7F32]" },
-          { rank: 4, name: "Amanda Williams", meta: "San Antonio · 31 pros · 5 CEs", pts: "156 pts", rankClass: "text-[var(--ink-muted)]" },
-          { rank: 5, name: "Kevin Park", meta: "Fort Worth · 28 pros · 4 CEs", pts: "134 pts", rankClass: "text-[var(--ink-muted)]" },
-        ].map((r) => (
-          <div key={r.rank} className="grid grid-cols-[40px_1fr_auto] gap-3 py-2.5 items-center border-b border-[var(--border)] last:border-0">
-            <div className={`font-[family-name:var(--font-fraunces)] font-extrabold text-lg text-center ${r.rankClass}`}>{r.rank}</div>
-            <div>
-              <div className="font-bold text-[13px] text-[var(--ink)]">{r.name}</div>
-              <div className="text-[10px] text-[var(--ink-muted)]">{r.meta}</div>
-            </div>
-            <span className="rounded-full bg-[var(--blue-glow)] px-3 py-1 text-[11px] font-bold text-[var(--blue)]">{r.pts}</span>
+        {reps.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-[var(--ink-muted)]">No rep data yet.</p>
+            <p className="mt-1 text-[13px] text-[var(--ink-soft)]">When your team uses Pulse, metrics will appear here.</p>
           </div>
-        ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-[var(--border)]">
+                  <th className="pb-3 pr-4 font-semibold text-[var(--ink-muted)]">Rep</th>
+                  <th className="pb-3 pr-4 font-semibold text-[var(--ink-muted)]">CEs this month</th>
+                  <th className="pb-3 pr-4 font-semibold text-[var(--ink-muted)]">Professionals in network</th>
+                  <th className="pb-3 pr-4 font-semibold text-[var(--ink-muted)]">Last activity</th>
+                  <th className="pb-3 font-semibold text-[var(--ink-muted)]">Redemption rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reps.map((r, i) => (
+                  <tr key={i} className="border-b border-[var(--border)] last:border-0">
+                    <td className="py-3 pr-4 font-medium text-[var(--ink)]">{r.name}</td>
+                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.cesThisMonth}</td>
+                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.professionalsInNetwork}</td>
+                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.lastActivity}</td>
+                    <td className="py-3 text-[var(--green)]">{r.redemptionRate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Credit Usage</h2>
-          <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Redirecting to purchase credits...")}>Purchase Credits</button>
+          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Credit usage</h2>
+          <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Purchase credits")}>Purchase credits</button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "COMPLIMENTARY", val: "38", sub: "1 credit each" },
-            { label: "DISCOUNTED", val: "14", sub: "Commission earned" },
-            { label: "REFERRED", val: "6", sub: "Commission earned" },
-          ].map((c) => (
-            <div key={c.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 text-center">
-              <div className="text-[10px] font-semibold text-[var(--ink-muted)] mb-1">{c.label}</div>
-              <div className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">{c.val}</div>
-              <div className="text-[10px] text-[var(--ink-muted)]">{c.sub}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
-        <div className="border-b border-[var(--border)] pb-3 mb-4">
-          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Upcoming Events</h2>
-        </div>
-        <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
-          <div className="flex justify-between items-start gap-2 mb-2">
-            <div>
-              <div className="font-bold text-[13px] text-[var(--ink)]">Ethics Lunch & Learn</div>
-              <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">Feb 20 · Memorial Medical, Houston · Marcus Johnson</div>
-            </div>
-            <span className="rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">12 RSVPs</span>
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Nursing</span>
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Social Work</span>
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--blue-glow)] text-[var(--blue)]">TX</span>
-          </div>
-        </div>
-        <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4">
-          <div className="flex justify-between items-start gap-2 mb-2">
-            <div>
-              <div className="font-bold text-[13px] text-[var(--ink)]">Palliative Care In-Service</div>
-              <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">Feb 27 · St. Luke&apos;s, Houston · Marcus Johnson</div>
-            </div>
-            <span className="rounded-full bg-[var(--blue-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--blue)]">8 RSVPs</span>
-          </div>
-          <div className="flex gap-1.5 flex-wrap">
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Nursing</span>
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">Case Mgmt</span>
-            <span className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--blue-glow)] text-[var(--blue)]">TX</span>
-          </div>
+        <div className="py-8 text-center">
+          <p className="text-sm text-[var(--ink-muted)]">Credit usage will appear here when your team sends CEs.</p>
         </div>
       </div>
     </div>

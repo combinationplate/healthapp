@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 const TABS = [
   { id: "discover", label: "Discover" },
   { id: "requests", label: "Requests" },
-  { id: "events", label: "Events" },
   { id: "distribute", label: "Distribute" },
   { id: "network", label: "Network" },
   { id: "ce-history", label: "CE History" },
@@ -74,6 +73,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
   const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
+  const [ceHistoryExpanded, setCeHistoryExpanded] = useState(false);
   const [reminderSending, setReminderSending] = useState<string | null>(null);
 
   const fetchProfessionals = useCallback(async () => {
@@ -118,8 +118,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }, [repId]);
 
   useEffect(() => {
-    if (tab === "ce-history") fetchCeHistory();
-  }, [tab, fetchCeHistory]);
+    if (repId) fetchCeHistory();
+  }, [repId, fetchCeHistory]);
 
   async function handleAddProfessional(e: React.FormEvent) {
     e.preventDefault();
@@ -204,42 +204,43 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }
 
   return (
-    <div className="space-y-5 pb-20">
-      <div className="mb-2">
+    <div className="space-y-8 pb-20">
+      <div>
         <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
-        <p className="text-[13px] text-[var(--ink-muted)] mt-1">Houston Territory, Texas</p>
+        <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
       </div>
 
-      <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(170px,1fr))]">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[
-          { label: "Points", val: "248", note: "#1 on team", noteClass: "text-[var(--green)]" },
-          { label: "Touchpoints", val: "24", note: "+6 this week", noteClass: "text-[var(--green)]" },
-          { label: "CEs Sent", val: "12", note: "This month", noteClass: "text-[var(--blue)]" },
-          { label: "Credits", val: "42", note: "Of 100", noteClass: "text-[var(--blue)]" },
-          { label: "Events", val: "2", note: "Upcoming", noteClass: "text-[var(--blue)]" },
-          { label: "Requests", val: "3", note: "Pending", noteClass: "text-[var(--coral)]" },
+          { label: "Touchpoints", val: String(professionals.length * 2), note: "This week", noteClass: "text-[var(--blue)]" },
+          { label: "CEs Sent", val: String(ceHistory.length), note: "Total", noteClass: "text-[var(--green)]" },
+          { label: "Credits", val: "—", note: "Available", noteClass: "text-[var(--blue)]" },
+          { label: "Requests", val: "0", note: "Pending", noteClass: "text-[var(--coral)]" },
         ].map((s) => (
-          <div key={s.label} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-5 transition-shadow hover:shadow-[var(--shadow)]">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--ink-muted)] mb-1">{s.label}</div>
-            <div className="font-[family-name:var(--font-fraunces)] text-[28px] font-extrabold text-[var(--ink)]">{s.val}</div>
-            <div className={`text-[11px] font-medium ${s.noteClass}`}>{s.note}</div>
+          <div key={s.label} className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{s.label}</div>
+            <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)]">{s.val}</div>
+            <div className={`text-[13px] font-medium ${s.noteClass}`}>{s.note}</div>
           </div>
         ))}
-      </div>
+      </section>
 
       {/* My Network section - list preview */}
-      <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-3">
+      <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
           <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
-          <div className="flex gap-1.5 flex-wrap">
-            <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]" onClick={() => setTab("network")}>View all</button>
-            <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+          <div className="flex gap-2 flex-wrap">
+            <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => setTab("network")}>View all</button>
+            <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
           </div>
         </div>
         {loading ? (
           <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
         ) : professionals.length === 0 ? (
-          <p className="text-sm text-[var(--ink-muted)] py-2">No professionals in your network yet. Click &quot;+ Add Professional&quot; to add one.</p>
+          <div className="py-6 text-center">
+            <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
+            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+          </div>
         ) : (
           <div className="space-y-1">
             {professionals.slice(0, 5).map((pro) => (
@@ -258,15 +259,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
         )}
       </div>
 
-      <div className="flex gap-1 p-1 bg-[var(--cream)] rounded-[var(--r)] overflow-x-auto">
+      <div className="flex gap-1 overflow-x-auto rounded-lg bg-white p-1 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`shrink-0 px-4 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer font-sans whitespace-nowrap transition-colors ${
-              tab === t.id ? "bg-white text-[var(--ink)] shadow-[var(--shadow-sm)]" : "bg-transparent text-[var(--ink-soft)]"
-            }`}
+            className={`shrink-0 rounded-lg px-4 py-2 text-xs font-semibold transition-colors ${tab === t.id ? "bg-[var(--blue)] text-white" : "text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}
           >
             {t.label}
           </button>
@@ -274,169 +273,90 @@ export function RepDashboard({ repId }: { repId?: string }) {
       </div>
 
       {tab === "discover" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking Resources</h2>
+            <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE will appear here</p>
           </div>
-          <div className="flex gap-1.5 flex-wrap mb-3.5">
-            {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
-              <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] font-sans cursor-pointer ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "bg-white text-[var(--ink-soft)]"}`}>{f}</button>
-            ))}
+          <div className="py-8 text-center">
+            <p className="text-sm text-[var(--ink-muted)]">No professionals seeking resources right now.</p>
+            <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network to send them CEs.</p>
+            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
           </div>
-          {[
-            { name: "Sarah Martinez, RN, BSN", meta: "Memorial Medical · Houston, TX", looking: "Ethics CE (2 hrs)", deadline: "March 31", tags: ["Nursing", "TX", "Hospital"] },
-            { name: "Robert Taylor, MSW, LCSW", meta: "St. Luke's · Houston, TX", looking: "Mental Health CE (3 hrs)", deadline: "June 30", tags: ["Social Work", "TX"] },
-            { name: "Lisa Wang, PT, DPT", meta: "Bayou City Rehab · Houston, TX", looking: "Patient Safety CE (2 hrs)", deadline: "April 15", tags: ["Physical Therapy", "TX"] },
-          ].map((pro) => (
-            <div key={pro.name} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
-              <div className="flex justify-between items-start gap-2 mb-2">
-                <div>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">{pro.meta}</div>
-                </div>
-                <span className="rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Available</span>
-              </div>
-              <div className="text-xs text-[var(--ink-soft)] leading-relaxed mb-2.5"><strong className="text-[var(--ink)]">Looking for:</strong> {pro.looking} · <strong className="text-[var(--ink)]">Deadline:</strong> {pro.deadline}</div>
-              <div className="flex gap-1.5 flex-wrap mb-2.5">
-                {pro.tags.map((t) => (
-                  <span key={t} className="rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{t}</span>
-                ))}
-              </div>
-              <div className="flex gap-1.5 flex-wrap">
-                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Invitation sent to " + pro.name)}>Invite</button>
-                <button
-                  type="button"
-                  className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)]"
-                  onClick={() => {
-                    const facility = pro.meta.split(" · ")[0] ?? "";
-                    setAddForm((f) => ({ ...f, name: pro.name, facility, email: "", phone: "", discipline: f.discipline }));
-                    setAddError(null);
-                    setAddOpen(true);
-                  }}
-                >
-                  Add to network
-                </button>
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)]">Profile</button>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
       {tab === "requests" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
           <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
+            <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Requests from professionals will appear here</p>
           </div>
-          {[
-            { name: "Jennifer Lopez, RN", meta: "St. Luke's · 2 hours ago", requested: "2 hrs Ethics", deadline: "End of month", badge: "New" },
-            { name: "Michael Chen, MSW", meta: "Harmony Hospice · Yesterday", requested: "3 hrs Mental Health", deadline: "March 15", badge: "Pending" },
-          ].map((r) => (
-            <div key={r.name} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
-              <div className="flex justify-between items-start gap-2 mb-2">
-                <div>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">{r.name}</div>
-                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">{r.meta}</div>
-                </div>
-                <span className="rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">{r.badge}</span>
-              </div>
-              <div className="text-xs text-[var(--ink-soft)] mb-2.5"><strong className="text-[var(--ink)]">Requested:</strong> {r.requested} · <strong className="text-[var(--ink)]">Deadline:</strong> {r.deadline}</div>
-              <div className="flex gap-1.5 flex-wrap">
-                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => openSendCeModal(professionals.find((p) => p.name.toLowerCase().includes(r.name.split(",")[0].trim().toLowerCase())) ?? null)}>Send CE</button>
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Message</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "events" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Events</h2>
-            <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Plan Event modal")}>+ Plan Event</button>
+          <div className="py-8 text-center">
+            <p className="text-sm text-[var(--ink-muted)]">No pending CE requests.</p>
+            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
           </div>
-          {[
-            { name: "Ethics Lunch & Learn", meta: "Feb 20, 12 PM · Memorial Medical", ce: "Ethics (2 hrs)", for: "Nursing, Social Work", rsvps: "12 RSVPs" },
-            { name: "Palliative Care In-Service", meta: "Feb 27, 1 PM · St. Luke's", ce: "Palliative (3 hrs)", for: "Nursing, Case Mgmt", rsvps: "8 RSVPs" },
-          ].map((e) => (
-            <div key={e.name} className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 mb-2.5">
-              <div className="flex justify-between items-start gap-2 mb-2">
-                <div>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">{e.name}</div>
-                  <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">{e.meta}</div>
-                </div>
-                <span className="rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">{e.rsvps}</span>
-              </div>
-              <div className="text-xs text-[var(--ink-soft)] mb-2"><strong className="text-[var(--ink)]">CE:</strong> {e.ce} · <strong className="text-[var(--ink)]">For:</strong> {e.for}</div>
-              <div className="flex gap-1.5 flex-wrap">
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">RSVPs</button>
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Remind</button>
-                <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("QR Code modal")}>QR Code</button>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
       {tab === "distribute" && (
-        <div className="space-y-4">
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+        <div className="space-y-6">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
             </div>
-            <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, kiosk mode, and bulk send — get CEs into hands fast.</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, kiosk mode, and bulk send.</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
               {[
                 { emoji: "📱", name: "My QR Code", meta: "Personal page" },
                 { emoji: "📚", name: "Course QR", meta: "Specific course" },
                 { emoji: "📅", name: "Event QR", meta: "Event RSVP" },
               ].map((c) => (
-                <button key={c.name} type="button" className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 text-center transition-colors hover:border-[var(--border-hover)] cursor-pointer" onClick={() => alert("QR: " + c.name)}>
-                  <span className="text-2xl block mb-1.5">{c.emoji}</span>
+                <button key={c.name} type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("QR: " + c.name)}>
+                  <span className="text-2xl block mb-2">{c.emoji}</span>
                   <div className="font-bold text-[13px] text-[var(--ink)]">{c.name}</div>
                   <div className="text-[11px] text-[var(--ink-muted)]">{c.meta}</div>
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button type="button" className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 text-center cursor-pointer" onClick={() => alert("Generate Flyer")}>
-                <span className="text-2xl block mb-1.5">📄</span>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Generate Flyer")}>
+                <span className="text-2xl block mb-2">📄</span>
                 <div className="font-bold text-[13px] text-[var(--ink)]">Generate Flyer</div>
                 <div className="text-[11px] text-[var(--ink-muted)]">PDF with QR</div>
               </button>
-              <button type="button" className="rounded-[var(--r-lg)] border border-[var(--border)] bg-[var(--cream)] p-4 text-center cursor-pointer" onClick={() => alert("Kiosk Mode")}>
-                <span className="text-2xl block mb-1.5">💻</span>
+              <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Kiosk Mode")}>
+                <span className="text-2xl block mb-2">💻</span>
                 <div className="font-bold text-[13px] text-[var(--ink)]">Kiosk Mode</div>
                 <div className="text-[11px] text-[var(--ink-muted)]">Event sign-up</div>
               </button>
             </div>
           </div>
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+          <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
             </div>
-            <div className="flex gap-1.5 flex-wrap">
-              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white" onClick={() => alert("Select professionals, choose course, send to all.")}>Send to Group</button>
-              <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Event Attendees</button>
-              <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Import & Send</button>
+            <div className="flex gap-2 flex-wrap">
+              <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Select professionals, choose course, send to all.")}>Send to Group</button>
+              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Event Attendees</button>
+              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Import & Send</button>
             </div>
           </div>
         </div>
       )}
 
       {tab === "network" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-3">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
-            <div className="flex gap-1.5 flex-wrap">
-              <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3.5 py-1.5 text-xs font-semibold text-[var(--ink-soft)]">Import CSV</button>
-              <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+            <div className="flex gap-2 flex-wrap">
+              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Import CSV</button>
+              <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
             </div>
           </div>
-          <div className="flex gap-1.5 flex-wrap mb-3">
+          <div className="flex gap-2 flex-wrap mb-4">
             {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
-              <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-full px-3 py-1.5 text-[11px] font-semibold border border-[var(--border)] ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "bg-white text-[var(--ink-soft)]"}`}>
+              <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}>
                 {f} {f === "All" ? `(${professionals.length})` : ""}
               </button>
             ))}
@@ -444,7 +364,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
           {loading ? (
             <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
           ) : professionals.length === 0 ? (
-            <p className="text-sm text-[var(--ink-muted)] py-2">No professionals in your network yet. Click &quot;+ Add Professional&quot; to add one.</p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
+              <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+            </div>
           ) : (
             <div className="space-y-0">
               {professionals
@@ -459,9 +382,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <span className="inline-block mt-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{pro.discipline}</span>
                       )}
                     </div>
-                    <div className="flex gap-1.5 shrink-0">
-                      <button type="button" className="rounded-[var(--r)] bg-[var(--blue)] px-3 py-1.5 text-[11px] font-semibold text-white" onClick={() => openSendCeModal(pro)}>CE</button>
-                      <button type="button" className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[var(--ink-soft)]">Log</button>
+                    <div className="flex gap-2 shrink-0">
+                      <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => openSendCeModal(pro)}>CE</button>
+                      <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Log</button>
                     </div>
                   </div>
                 ))}
@@ -471,19 +394,23 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "ce-history" && (
-        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
-          <div className="border-b border-[var(--border)] pb-3 mb-3">
+        <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <div className="border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
             <p className="text-[11px] text-[var(--ink-muted)] mt-1">All CE courses you’ve sent to your network</p>
           </div>
           {ceHistoryLoading ? (
             <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
           ) : ceHistory.length === 0 ? (
-            <p className="text-sm text-[var(--ink-muted)] py-4">No CE sends yet. Use the Network tab to send a course to a professional.</p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-[var(--ink-muted)]">No CE sends yet.</p>
+              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Use the Network tab to send a course to a professional.</p>
+              <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>Go to Network</button>
+            </div>
           ) : (
             <div className="space-y-0">
-              {ceHistory.map((row) => (
-                <div key={row.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+              {(ceHistoryExpanded ? ceHistory : ceHistory.slice(0, 3)).map((row) => (
+                <div key={row.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-lg border-b border-[var(--border)] last:border-0 items-center hover:bg-[#F8FAFC]/50">
                   <div>
                     <div className="font-semibold text-[13px] text-[var(--ink)]">{row.professional_name}</div>
                     <div className="text-[11px] text-[var(--ink-muted)]">{row.course_name} ({row.course_hours} hrs) · {row.discount}</div>
@@ -517,14 +444,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           setReminderSending(null);
                         }
                       }}
-                      className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)] disabled:opacity-50"
+                      className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] disabled:opacity-50"
                     >
                       {reminderSending === row.id ? "Sending…" : "Send Reminder"}
                     </button>
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+              {ceHistory.length > 3 && !ceHistoryExpanded && (
+                <div className="mt-4 pt-3 border-t border-[var(--border)]">
+                  <button type="button" onClick={() => setCeHistoryExpanded(true)} className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">
+                    Show more ({ceHistory.length - 3} more)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -532,13 +467,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
       {/* Send CE modal */}
       {sendCeOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !sendCeSaving && setSendCeOpen(false)}>
-          <div className="w-[92%] max-w-[480px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="w-[92%] max-w-[480px] rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">Send CE Course</h3>
               <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !sendCeSaving && setSendCeOpen(false)} aria-label="Close">×</button>
             </div>
             {sendCeSuccess ? (
-              <p className="text-[var(--green)] font-semibold py-4">CE sent successfully. +5 points added.</p>
+              <p className="py-4 font-semibold text-[var(--green)]">CE sent successfully.</p>
             ) : (
               <form onSubmit={handleSendCe} className="grid gap-4">
                 {!sendCePro && professionals.length > 1 && (
@@ -585,8 +520,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </div>
                 {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
                 <div className="flex gap-2 justify-end pt-1">
-                  <button type="button" className="rounded-[var(--r)] border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)]" onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
-                  <button type="submit" disabled={sendCeSaving} className="rounded-[var(--r)] bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{sendCeSaving ? "Sending…" : "Send CE"}</button>
+                  <button type="button" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
+                  <button type="submit" disabled={sendCeSaving} className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{sendCeSaving ? "Sending…" : "Send CE"}</button>
                 </div>
               </form>
             )}
@@ -597,7 +532,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       {/* Add Professional modal */}
       {addOpen && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !addSaving && setAddOpen(false)}>
-          <div className="w-[92%] max-w-[560px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="w-[92%] max-w-[560px] rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">Add Professional</h3>
               <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !addSaving && setAddOpen(false)} aria-label="Close">×</button>
@@ -635,8 +570,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               {addError && <p className="text-sm text-[var(--coral)]">{addError}</p>}
               <div className="flex gap-2 justify-end pt-2">
-                <button type="button" className="rounded-[var(--r)] border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)]" onClick={() => !addSaving && setAddOpen(false)}>Cancel</button>
-                <button type="submit" disabled={addSaving} className="rounded-[var(--r)] bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{addSaving ? "Saving…" : "Add"}</button>
+                <button type="button" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => !addSaving && setAddOpen(false)}>Cancel</button>
+                <button type="submit" disabled={addSaving} className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{addSaving ? "Saving…" : "Add"}</button>
               </div>
             </form>
           </div>
