@@ -31,9 +31,9 @@ export async function createWooCoupon(params: CreateCouponParams): Promise<{ id?
   }
 
   const apiUrl = `${WOO_URL}/wp-json/wc/v3/coupons`;
-  const auth = Buffer.from(`${WOO_KEY}:${WOO_SECRET}`).toString("base64");
+  const credentials = Buffer.from(`${WOO_KEY}:${WOO_SECRET}`).toString("base64");
 
-  const body = {
+  const couponData = {
     code: params.code,
     amount: params.amount,
     discount_type: params.discountType ?? "percent",
@@ -48,10 +48,10 @@ export async function createWooCoupon(params: CreateCouponParams): Promise<{ id?
     const res = await fetch(apiUrl, {
       method: "POST",
       headers: {
+        Authorization: `Basic ${credentials}`,
         "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(couponData),
     });
 
     const data = await res.json().catch(() => ({}));
