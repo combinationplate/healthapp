@@ -2,9 +2,12 @@
  * WooCommerce REST API v3 – create a coupon.
  * Uses env: WOOCOMMERCE_URL, WOOCOMMERCE_KEY, WOOCOMMERCE_SECRET.
  */
-const WOO_URL = process.env.WOOCOMMERCE_URL?.replace(/\/$/, "") ?? "";
-const WOO_KEY = process.env.WOOCOMMERCE_KEY ?? "";
-const WOO_SECRET = process.env.WOOCOMMERCE_SECRET ?? "";
+function getWooCredentials(): { url: string; key: string; secret: string } {
+  const url = (process.env.WOOCOMMERCE_URL ?? "").trim().replace(/\/$/, "");
+  const key = (process.env.WOOCOMMERCE_KEY ?? "").trim();
+  const secret = (process.env.WOOCOMMERCE_SECRET ?? "").trim();
+  return { url, key, secret };
+}
 
 export type CreateCouponParams = {
   code: string;
@@ -21,11 +24,13 @@ export type CreateCouponParams = {
 };
 
 export async function createWooCoupon(params: CreateCouponParams): Promise<{ id?: number; error?: string }> {
+  const { url: WOO_URL, key: WOO_KEY, secret: WOO_SECRET } = getWooCredentials();
+
   if (!WOO_URL || !WOO_KEY || !WOO_SECRET) {
     return { error: "WooCommerce credentials not configured" };
   }
 
-  const url = `${WOO_URL}/wp-json/wc/v3/coupons`;
+  const apiUrl = `${WOO_URL}/wp-json/wc/v3/coupons`;
   const auth = Buffer.from(`${WOO_KEY}:${WOO_SECRET}`).toString("base64");
 
   const body = {
@@ -40,7 +45,7 @@ export async function createWooCoupon(params: CreateCouponParams): Promise<{ id?
   };
 
   try {
-    const res = await fetch(url, {
+    const res = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
