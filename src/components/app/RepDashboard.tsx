@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { PageShell, StatsGrid, StatCard, TabBar, SectionCard } from "@/components/app/DashboardShell";
+import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
 const TABS = [
   { id: "discover", label: "Discover" },

@@ -1,6 +1,6 @@
 "use client";
 
-import { PageShell, StatsGrid, StatCard, SectionCard } from "@/components/app/DashboardShell";
+import { StatCard, StatsGrid, PageShell, SectionCard } from "./DashboardShell";
 
 type Props = { userName: string };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PageShell, StatsGrid, StatCard, TabBar, SectionCard } from "@/components/app/DashboardShell";
+import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
