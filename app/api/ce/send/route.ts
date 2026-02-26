@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
 
 /** Course id → product ID and display name for CE send dropdown and DB. */
 const COURSE_PRODUCT_MAP: Record<string, { name: string; hours: number; productId: number }> = {
@@ -27,6 +28,14 @@ function escapeHtml(s: string): string {
 }
 
 const DISCOUNTS = ["100% Free", "50% Off", "25% Off"] as const;
+
+/** Map discount label to WooCommerce coupon amount (percent). */
+function discountToAmount(discount: string): string {
+  if (discount === "100% Free") return "100";
+  if (discount === "50% Off") return "50";
+  if (discount === "25% Off") return "25";
+  return "100";
+}
 
 function initials(name: string): string {
   return name
@@ -95,6 +104,25 @@ export async function POST(request: Request) {
 
     const couponCode = generateCouponCode(repName);
     const productIdForDb = course.productId;
+
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + 90);
+    const wooResult = await createWooCoupon({
+      code: couponCode,
+      amount: discountToAmount(discount),
+      discountType: "percent",
+      productIds: [productIdForDb],
+      dateExpires: expiryDate.toISOString().split("T")[0],
+      usageLimit: 1,
+      description: `Pulse CE: ${course.name} (${discount})`,
+    });
+
+    if (wooResult.error) {
+      return NextResponse.json(
+        { error: `Could not create coupon in store: ${wooResult.error}` },
+        { status: 502 }
+      );
+    }
 
     const { error: sendError } = await supabase.from("ce_sends").insert({
       rep_id: repId,
