@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
@@ -10,6 +10,17 @@ const PRO_TABS = [
 ] as const;
 
 type ProTab = (typeof PRO_TABS)[number]["id"];
+
+type MyCourseRow = {
+  id: string;
+  courseName: string;
+  courseHours: number;
+  sentBy: string;
+  sentAt: string;
+  expiryAt: string;
+  redeemUrl: string | null;
+  redeemedAt: string | null;
+};
 
 function displayName(nameOrEmail: string): string {
   if (!nameOrEmail) return "there";
@@ -21,6 +32,25 @@ function displayName(nameOrEmail: string): string {
 export function ProDashboard({ userName }: { userName?: string | null }) {
   const [tab, setTab] = useState<ProTab>("courses");
   const welcomeName = displayName(userName ?? "");
+  const [myCourses, setMyCourses] = useState<MyCourseRow[]>([]);
+  const [myCoursesLoading, setMyCoursesLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setMyCoursesLoading(true);
+    fetch("/api/ce/my-courses", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled && data.list) setMyCourses(data.list);
+      })
+      .finally(() => { if (!cancelled) setMyCoursesLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
   return (
     <div className="space-y-5 pb-20">
@@ -63,6 +93,40 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
 
       {tab === "courses" && (
         <>
+          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5 mb-5">
+            <div className="border-b border-[var(--border)] pb-3 mb-3">
+              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1">CE courses sent to you by your reps</p>
+            </div>
+            {myCoursesLoading ? (
+              <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
+            ) : myCourses.length === 0 ? (
+              <p className="text-sm text-[var(--ink-muted)] py-4">No courses sent to you yet. When a rep sends you a CE, it will appear here.</p>
+            ) : (
+              <div className="space-y-0">
+                {myCourses.map((c) => (
+                  <div key={c.id} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                    <div>
+                      <div className="font-semibold text-[13px] text-[var(--ink)]">{c.courseName}</div>
+                      <div className="text-[11px] text-[var(--ink-muted)]">Sent by {c.sentBy} · {formatDate(c.sentAt)} · Expires {formatDate(c.expiryAt)}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {c.redeemedAt ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">✓ Redeemed</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
+                      )}
+                      {c.redeemUrl && !c.redeemedAt && (
+                        <a href={c.redeemUrl} target="_blank" rel="noopener noreferrer" className="rounded-[var(--r)] bg-[var(--teal)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--teal-dark)] shrink-0">
+                          Redeem Course
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>

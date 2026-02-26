@@ -100,6 +100,7 @@ export async function POST(request: Request) {
       discount,
       coupon_code: couponCode,
       personal_message: personalMessage?.trim() || null,
+      product_id: course.productId,
     });
 
     if (sendError) {

@@ -9,6 +9,7 @@ const TABS = [
   { id: "events", label: "Events" },
   { id: "distribute", label: "Distribute" },
   { id: "network", label: "Network" },
+  { id: "ce-history", label: "CE History" },
 ] as const;
 
 const CE_COURSES = [
@@ -32,6 +33,17 @@ export type ProfessionalRow = {
   discipline: string | null;
   rep_id: string;
   created_at: string;
+};
+
+type CeHistoryRow = {
+  id: string;
+  professional_id: string;
+  professional_name: string;
+  course_name: string;
+  course_hours: number;
+  discount: string;
+  created_at: string;
+  redeemed_at: string | null;
 };
 
 function initials(name: string): string {
@@ -60,6 +72,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSaving, setSendCeSaving] = useState(false);
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
+  const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
+  const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
+  const [reminderSending, setReminderSending] = useState<string | null>(null);
 
   const fetchProfessionals = useCallback(async () => {
     if (!repId) return;
@@ -77,6 +92,34 @@ export function RepDashboard({ repId }: { repId?: string }) {
   useEffect(() => {
     fetchProfessionals();
   }, [fetchProfessionals]);
+
+  const fetchCeHistory = useCallback(async () => {
+    if (!repId) return;
+    setCeHistoryLoading(true);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("ce_sends")
+      .select("id, professional_id, course_name, course_hours, discount, created_at, redeemed_at, professionals(name)")
+      .eq("rep_id", repId)
+      .order("created_at", { ascending: false });
+    setCeHistoryLoading(false);
+    if (!error && data) {
+      setCeHistory(data.map((r: Record<string, unknown>) => ({
+        id: r.id as string,
+        professional_id: r.professional_id as string,
+        professional_name: (r.professionals as { name?: string } | null)?.name ?? "—",
+        course_name: r.course_name as string,
+        course_hours: r.course_hours as number,
+        discount: r.discount as string,
+        created_at: r.created_at as string,
+        redeemed_at: r.redeemed_at as string | null,
+      })));
+    }
+  }, [repId]);
+
+  useEffect(() => {
+    if (tab === "ce-history") fetchCeHistory();
+  }, [tab, fetchCeHistory]);
 
   async function handleAddProfessional(e: React.FormEvent) {
     e.preventDefault();
@@ -422,6 +465,65 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     </div>
                   </div>
                 ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "ce-history" && (
+        <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-5">
+          <div className="border-b border-[var(--border)] pb-3 mb-3">
+            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
+            <p className="text-[11px] text-[var(--ink-muted)] mt-1">All CE courses you’ve sent to your network</p>
+          </div>
+          {ceHistoryLoading ? (
+            <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
+          ) : ceHistory.length === 0 ? (
+            <p className="text-sm text-[var(--ink-muted)] py-4">No CE sends yet. Use the Network tab to send a course to a professional.</p>
+          ) : (
+            <div className="space-y-0">
+              {ceHistory.map((row) => (
+                <div key={row.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                  <div>
+                    <div className="font-semibold text-[13px] text-[var(--ink)]">{row.professional_name}</div>
+                    <div className="text-[11px] text-[var(--ink-muted)]">{row.course_name} ({row.course_hours} hrs) · {row.discount}</div>
+                  </div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">
+                    Sent {new Date(row.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </div>
+                  <div>
+                    {row.redeemed_at ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Redeemed</span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      disabled={reminderSending === row.id}
+                      onClick={async () => {
+                        setReminderSending(row.id);
+                        try {
+                          const res = await fetch("/api/ce/send-reminder", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            credentials: "include",
+                            body: JSON.stringify({ ceSendId: row.id }),
+                          });
+                          const data = await res.json().catch(() => ({}));
+                          if (!res.ok) alert(data.error ?? "Failed to send reminder");
+                        } finally {
+                          setReminderSending(null);
+                        }
+                      }}
+                      className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-3 py-1.5 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)] disabled:opacity-50"
+                    >
+                      {reminderSending === row.id ? "Sending…" : "Send Reminder"}
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
