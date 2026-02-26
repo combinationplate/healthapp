@@ -54,15 +54,35 @@ export async function createWooCoupon(params: CreateCouponParams): Promise<{ id?
       body: JSON.stringify(couponData),
     });
 
-    const data = await res.json().catch(() => ({}));
+    const responseText = await res.text();
+    const data = (() => {
+      try {
+        return JSON.parse(responseText) as Record<string, unknown>;
+      } catch {
+        return {};
+      }
+    })();
 
     if (!res.ok) {
-      const msg = typeof data.message === "string" ? data.message : data.message?.join?.(" ") ?? data.code ?? res.statusText;
+      const headersObj: Record<string, string> = {};
+      res.headers.forEach((value, key) => {
+        headersObj[key] = value;
+      });
+      console.error("[WooCommerce] Coupon create failed", {
+        status: res.status,
+        statusText: res.statusText,
+        url: apiUrl,
+        headers: headersObj,
+        body: responseText,
+        parsed: data,
+      });
+      const msg = typeof data.message === "string" ? data.message : Array.isArray(data.message) ? (data.message as string[]).join(" ") : (data.code as string) ?? res.statusText;
       return { error: msg };
     }
 
-    return { id: data.id };
+    return { id: data.id as number };
   } catch (e) {
+    console.error("[WooCommerce] Coupon create request threw", e);
     const msg = e instanceof Error ? e.message : "WooCommerce request failed";
     return { error: msg };
   }
