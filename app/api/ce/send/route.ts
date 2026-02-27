@@ -3,17 +3,6 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
 
-/** Course id → product ID and display name for CE send dropdown and DB. */
-const COURSE_PRODUCT_MAP: Record<string, { name: string; hours: number; productId: number }> = {
-  "ethics": { name: "Ethics in Caring for the Elderly", hours: 2, productId: 3664 },
-  "palliative": { name: "Palliative and Hospice Care", hours: 3, productId: 20204 },
-  "mental-health": { name: "Mental Health and The Elderly", hours: 2, productId: 3715 },
-  "chronic": { name: "Chronic Disease Management", hours: 2, productId: 7672 },
-  "patient-safety": { name: "Patient Safety", hours: 2, productId: 5065 },
-};
-
-const COURSES = Object.entries(COURSE_PRODUCT_MAP).map(([id, v]) => ({ id, ...v }));
-
 const CART_BASE = "https://hiscornerstone.com/";
 function courseAccessUrl(productId: number, couponCode: string): string {
   const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
@@ -77,15 +66,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid discount" }, { status: 400 });
     }
 
-    const course = COURSE_PRODUCT_MAP[courseId];
-    if (!course) {
-      return NextResponse.json({ error: "Invalid course" }, { status: 400 });
-    }
-
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || user.id !== repId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Look up course by UUID from the courses table
+    const { data: course, error: courseError } = await supabase
+      .from("courses")
+      .select("id, name, hours, product_id")
+      .eq("id", courseId)
+      .single();
+
+    if (courseError || !course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 400 });
     }
 
     const { data: rep } = await supabase.from("users").select("name").eq("id", repId).single();
@@ -103,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     const couponCode = generateCouponCode(repName);
-    const productIdForDb = course.productId;
+    const productIdForDb = course.product_id;
 
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + 90);
