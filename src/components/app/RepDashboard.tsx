@@ -732,8 +732,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   onClick={() => setSendCeCourse(course.id)}
                                   className={`rounded-lg border p-3 mb-2 last:mb-0 cursor-pointer transition-colors grid grid-cols-[1fr_auto] gap-2 items-center ${
                                     sendCeCourse === course.id
-                                      ? "border-[var(--blue)] bg-[#EEF2FF] ring-1 ring-[var(--blue)]"
-                                      : "border-[var(--border)] bg-white hover:border-[var(--blue)] hover:bg-[#F0F4FF]"
+                                      ? "border-2 border-[var(--blue)] bg-[#DBEAFE]"
+                                      : "border border-[var(--border)] bg-white hover:border-[var(--blue)] hover:bg-[#F0F4FF]"
                                   }`}
                                 >
                                   <div className="min-w-0">
@@ -744,13 +744,16 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                       {course.topic ? ` · ${course.topic}` : ""}
                                     </div>
                                   </div>
-                                  <div className="shrink-0">
+                                  <div className="shrink-0 flex items-center gap-1.5">
                                     <ApprovalBadge
                                       profession={profession}
                                       proState={sendCePro?.state ?? null}
                                       course={course}
                                       approvalMap={professionApproval}
                                     />
+                                    {sendCeCourse === course.id && (
+                                      <div className="w-5 h-5 rounded-full bg-[var(--blue)] text-white flex items-center justify-center text-[11px] font-bold">✓</div>
+                                    )}
                                   </div>
                                 </div>
                               ))

@@ -41,7 +41,8 @@ function generateCouponCode(repName: string): string {
   const now = new Date();
   const mon = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][now.getMonth()];
   const year = String(now.getFullYear()).slice(-2);
-  return `${base}-${init}-${mon}${year}`;
+  const suffix = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${base}-${init}-${mon}${year}-${suffix}`;
 }
 
 export async function POST(request: Request) {
