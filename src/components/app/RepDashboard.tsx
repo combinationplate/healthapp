@@ -206,7 +206,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
   return (
     <PageShell>
-      <div className="space-y-4 pb-20">
+      <div className="space-y-6 pb-20">
         <div>
           <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
@@ -249,7 +249,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
 
       {tab === "distribute" && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
@@ -318,11 +318,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="space-y-4">
               {professionals
                 .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
                 .map((pro) => (
-                  <div key={pro.id} className="grid grid-cols-[auto_1fr_auto] gap-3 py-3 px-2 rounded-[var(--r)] border-b border-[var(--border)] last:border-0 items-center hover:bg-[var(--cream)]/50">
+                  <div key={pro.id} className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] grid grid-cols-[auto_1fr_auto] gap-3 items-center">
                     <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">{initials(pro.name)}</div>
                     <div className="min-w-0">
                       <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>

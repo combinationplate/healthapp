@@ -77,7 +77,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
 
   return (
     <PageShell>
-      <div className="space-y-4 pb-20">
+      <div className="space-y-6 pb-20">
         <div>
           <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">View your CE courses and network</p>
@@ -93,7 +93,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
         <TabBar tabs={[...PRO_TABS]} active={tab} onChange={(id) => setTab(id as ProTab)} />
 
         {tab === "courses" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
@@ -126,7 +126,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
                           <>
                             <div className="flex items-center gap-2">
                               <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
-                              <a href={c.redeemUrl || "https://hiscornerstone.com"} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[var(--green)] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[var(--green)]/90">
+                              <a href={c.redeemUrl || "https://hiscornerstone.com"} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]">
                                 Redeem Course
                               </a>
                             </div>

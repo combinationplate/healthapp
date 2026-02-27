@@ -13,7 +13,7 @@ export function StatCard({ label, value, note, noteClass = "text-[var(--blue)]" 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
       <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{label}</div>
-      <div className="font-[family-name:var(--font-fraunces)] text-[32px] font-bold text-[var(--ink)] leading-none my-2">{value}</div>
+      <div className="font-[family-name:var(--font-fraunces)] text-[36px] font-bold text-[var(--ink)] leading-none my-2">{value}</div>
       <div className={`text-[13px] font-medium ${noteClass}`}>{note}</div>
     </div>
   );
@@ -21,7 +21,7 @@ export function StatCard({ label, value, note, noteClass = "text-[var(--blue)]" 
 
 export function StatsGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-6">
       {children}
     </div>
   );
@@ -30,7 +30,7 @@ export function StatsGrid({ children }: { children: ReactNode }) {
 export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-6 py-8 sm:px-8 lg:px-12">
         {children}
       </div>
     </div>
