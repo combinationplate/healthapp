@@ -51,16 +51,16 @@ export function TabBar({ tabs, active, onChange }: {
   onChange: (id: string) => void;
 }) {
   return (
-    <div className="flex gap-1 border-b border-[var(--border)] mb-6">
+    <div className="flex gap-2 border-b border-[var(--border)] mb-6 overflow-x-auto">
       {tabs.map(tab => (
         <button
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors ${
+          className={`px-5 py-2.5 mr-1 text-sm font-semibold rounded-t-lg transition-colors border-b-2 ${
             active === tab.id
-              ? "bg-white border border-b-white border-[var(--border)] text-[var(--blue)] -mb-px"
-              : "text-[var(--ink-muted)] hover:text-[var(--ink-soft)]"
+              ? "border-[var(--blue)] text-[var(--blue)]"
+              : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-soft)]"
           }`}
         >
           {tab.label}
