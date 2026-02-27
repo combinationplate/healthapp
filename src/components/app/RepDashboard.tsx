@@ -705,6 +705,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <button
                                 key={pill}
                                 type="button"
+                                tabIndex={-1}
                                 onClick={() => setCourseTopicFilter(pill)}
                                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-colors ${
                                   courseTopicFilter === pill
