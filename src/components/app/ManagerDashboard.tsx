@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard } from "./DashboardShell";
 
 type Props = { userName: string };
@@ -15,12 +16,14 @@ export function ManagerDashboard({ userName }: Props) {
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>
         </div>
 
-        <StatsGrid>
-          <StatCard label="Touchpoints" value="—" note="This week" noteClass="text-[var(--blue)]" />
-          <StatCard label="CEs Distributed" value="—" note="This month" noteClass="text-[var(--green)]" />
-          <StatCard label="Credits Used" value="—" note="Available" noteClass="text-[var(--blue)]" />
-          <StatCard label="Professionals" value="—" note="In network" noteClass="text-[var(--green)]" />
-        </StatsGrid>
+        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <StatsGrid>
+            <StatCard label="CEs Distributed" value="—" note="This month" noteClass="text-[var(--green)]" />
+            <StatCard label="Professionals in Network" value="—" note="Across all reps" noteClass="text-[var(--blue)]" />
+            <StatCard label="Active Reps" value="—" note="Sent a CE this month" noteClass="text-[var(--green)]" />
+            <StatCard label="Redemption Rate" value="—" note="All CE sends" noteClass="text-[var(--blue)]" />
+          </StatsGrid>
+        </div>
 
         <SectionCard>
         <div className="border-b border-[var(--border)] pb-3 mb-4">
@@ -46,28 +49,21 @@ export function ManagerDashboard({ userName }: Props) {
               </thead>
               <tbody>
                 {reps.map((r, i) => (
-                  <tr key={i} className="border-b border-[var(--border)] last:border-0">
-                    <td className="py-3 pr-4 font-medium text-[var(--ink)]">{r.name}</td>
-                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.cesThisMonth}</td>
-                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.professionalsInNetwork}</td>
-                    <td className="py-3 pr-4 text-[var(--ink-muted)]">{r.lastActivity}</td>
-                    <td className="py-3 text-[var(--green)]">{r.redemptionRate}</td>
+                  <tr
+                    key={i}
+                    className="border-b border-[var(--border)] last:border-0 even:bg-[#F8FAFC]"
+                  >
+                    <td className="py-4 pr-4 font-medium text-[var(--ink)]">{r.name}</td>
+                    <td className="py-4 pr-4 text-[var(--ink-muted)]">{r.cesThisMonth}</td>
+                    <td className="py-4 pr-4 text-[var(--ink-muted)]">{r.professionalsInNetwork}</td>
+                    <td className="py-4 pr-4 text-[var(--ink-muted)]">{r.lastActivity}</td>
+                    <td className="py-4 text-[var(--green)]">{r.redemptionRate}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-        </SectionCard>
-
-        <SectionCard>
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-          <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Credit usage</h2>
-          <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Purchase credits")}>Purchase credits</button>
-        </div>
-        <div className="py-8 text-center">
-          <p className="text-sm text-[var(--ink-muted)]">Credit usage will appear here when your team sends CEs.</p>
-        </div>
         </SectionCard>
       </div>
     </PageShell>

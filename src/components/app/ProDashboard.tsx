@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
@@ -83,12 +84,34 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">View your CE courses and network</p>
         </div>
 
-        <StatsGrid>
-          <StatCard label="Courses" value={myCourses.length} note="Available" noteClass="text-[var(--green)]" />
-          <StatCard label="Requests" value="0" note="Pending" noteClass="text-[var(--coral)]" />
-          <StatCard label="Reps" value="—" note="Connected" noteClass="text-[var(--blue)]" />
-          <StatCard label="CE Hours" value={myCourses.reduce((acc, c) => acc + c.courseHours, 0)} note="Completed" noteClass="text-[var(--green)]" />
-        </StatsGrid>
+        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <StatsGrid>
+            <StatCard
+              label="Courses"
+              value={myCourses.length}
+              note="In My Courses"
+              noteClass="text-[var(--green)]"
+            />
+            <StatCard
+              label="CE Hours"
+              value={myCourses.reduce((acc, c) => acc + c.courseHours, 0)}
+              note="Completed"
+              noteClass="text-[var(--green)]"
+            />
+            <StatCard
+              label="Courses Available"
+              value={myCourses.length}
+              note="From your reps"
+              noteClass="text-[var(--blue)]"
+            />
+            <StatCard
+              label="Reps"
+              value="—"
+              note="Connected"
+              noteClass="text-[var(--blue)]"
+            />
+          </StatsGrid>
+        </div>
 
         <TabBar tabs={[...PRO_TABS]} active={tab} onChange={(id) => setTab(id as ProTab)} />
 
@@ -142,7 +165,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
                                   href={c.redeemUrl || "https://hiscornerstone.com"}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]"
+                                  className="ml-3 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]"
                                 >
                                   Redeem Course
                                 </a>

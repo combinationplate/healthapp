@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
 const TABS = [
@@ -20,7 +21,7 @@ const CE_COURSES = [
   { id: "patient-safety", name: "Patient Safety", hours: 2 },
 ] as const;
 
-const CE_DISCOUNTS = ["100% Free", "50% Off", "25% Off"] as const;
+const CE_DISCOUNTS = ["100% Free"] as const;
 
 type RepTab = (typeof TABS)[number]["id"];
 
@@ -30,6 +31,7 @@ export type ProfessionalRow = {
   email: string;
   phone: string | null;
   facility: string | null;
+  city: string | null;
   discipline: string | null;
   rep_id: string;
   created_at: string;
@@ -61,7 +63,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [professionals, setProfessionals] = useState<ProfessionalRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", facility: "", discipline: "" });
+  const [addForm, setAddForm] = useState({ name: "", email: "", phone: "", facility: "", city: "", discipline: "" });
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
   const [sendCeOpen, setSendCeOpen] = useState(false);
@@ -83,7 +85,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("professionals")
-      .select("id, name, email, phone, facility, discipline, rep_id, created_at")
+      .select("id, name, email, phone, facility, city, discipline, rep_id, created_at")
       .eq("rep_id", repId)
       .order("created_at", { ascending: false });
     setLoading(false);
@@ -141,6 +143,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       email: addForm.email.trim(),
       phone: addForm.phone.trim() || null,
       facility: addForm.facility.trim() || null,
+      city: addForm.city.trim() || null,
       discipline: addForm.discipline.trim() || null,
     });
     setAddSaving(false);
@@ -148,7 +151,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       setAddError(error.message);
       return;
     }
-    setAddForm({ name: "", email: "", phone: "", facility: "", discipline: "" });
+    setAddForm({ name: "", email: "", phone: "", facility: "", city: "", discipline: "" });
     setAddOpen(false);
     fetchProfessionals();
   }
@@ -212,12 +215,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
         </div>
 
-        <StatsGrid>
-          <StatCard label="Touchpoints" value={professionals.length * 2} note="This week" noteClass="text-[var(--blue)]" />
-          <StatCard label="CEs Sent" value={ceHistory.length} note="Total" noteClass="text-[var(--green)]" />
-          <StatCard label="Credits" value={ceHistory.length} note="CE sends" noteClass="text-[var(--blue)]" />
-          <StatCard label="Requests" value="0" note="Pending" noteClass="text-[var(--coral)]" />
-        </StatsGrid>
+        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+          <StatsGrid>
+            <StatCard label="Touchpoints" value={professionals.length * 2} note="This week" noteClass="text-[var(--blue)]" />
+            <StatCard label="CEs Sent" value={ceHistory.length} note="Total" noteClass="text-[var(--green)]" />
+            <StatCard label="Credits" value={ceHistory.length} note="CE sends" noteClass="text-[var(--blue)]" />
+            <StatCard label="Requests" value="0" note="Pending" noteClass="text-[var(--coral)]" />
+          </StatsGrid>
+        </div>
 
         <TabBar tabs={[...TABS]} active={tab} onChange={(id) => setTab(id as RepTab)} />
 
@@ -255,7 +260,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
             </div>
             <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, kiosk mode, and bulk send.</p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-4">
               {[
                 { emoji: "📱", name: "My QR Code", meta: "Personal page" },
                 { emoji: "📚", name: "Course QR", meta: "Specific course" },
@@ -315,27 +320,65 @@ export function RepDashboard({ repId }: { repId?: string }) {
           ) : professionals.length === 0 ? (
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
-              <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+              <button
+                type="button"
+                className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]"
+                onClick={() => setAddOpen(true)}
+              >
+                + Add Professional
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
               {professionals
-                .filter((p) => filter === "All" || (p.discipline && p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0])))
+                .filter(
+                  (p) =>
+                    filter === "All" ||
+                    (p.discipline &&
+                      p.discipline.toLowerCase().includes(filter.toLowerCase().split(/[/\s]/)[0]))
+                )
                 .map((pro) => (
-                  <div key={pro.id} className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] grid grid-cols-[auto_1fr_auto] gap-3 items-center">
-                    <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">{initials(pro.name)}</div>
-                    <div className="min-w-0">
-                      <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                      <div className="text-[11px] text-[var(--ink-muted)]">{[pro.facility, pro.discipline].filter(Boolean).join(" · ") || pro.email}</div>
-                      {pro.discipline && (
-                        <span className="inline-block mt-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-[var(--teal-glow)] text-[var(--teal)]">{pro.discipline}</span>
-                      )}
+                    <div
+                      key={pro.id}
+                      className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] grid grid-cols-[auto_1fr_auto] gap-3 items-center"
+                    >
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">
+                        {initials(pro.name)}
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
+                        {pro.facility && (
+                          <div className="text-[11px] text-[var(--ink-muted)]">
+                            <strong className="text-[var(--ink)]">Facility:</strong> {pro.facility}
+                          </div>
+                        )}
+                        {pro.city && (
+                          <div className="text-[11px] text-[var(--ink-muted)]">
+                            <strong className="text-[var(--ink)]">City:</strong> {pro.city}
+                          </div>
+                        )}
+                        {pro.discipline && (
+                          <div className="text-[11px] text-[var(--ink-muted)]">
+                            <strong className="text-[var(--ink)]">Discipline:</strong> {pro.discipline}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          className="rounded-lg bg-[var(--blue)] px-4 py-2 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]"
+                          onClick={() => openSendCeModal(pro)}
+                        >
+                          Send CE
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]"
+                        >
+                          Log Touchpoint
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
-                      <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => openSendCeModal(pro)}>CE</button>
-                      <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Log</button>
-                    </div>
-                  </div>
                 ))}
             </div>
           )}
@@ -431,7 +474,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Send to</label>
                     <select
                       required
-                      value={sendCePro?.id ?? ""}
+                      value=""
                       onChange={(e) => setSendCePro(professionals.find((p) => p.id === e.target.value) ?? null)}
                       className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm"
                     >
@@ -502,17 +545,21 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <input type="text" value={addForm.facility} onChange={(e) => setAddForm((f) => ({ ...f, facility: e.target.value }))} placeholder="St. Luke's Hospital" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Discipline</label>
-                  <select value={addForm.discipline} onChange={(e) => setAddForm((f) => ({ ...f, discipline: e.target.value }))} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm">
-                    <option value="">Select…</option>
-                    <option value="Nursing">Nursing</option>
-                    <option value="Social Work">Social Work</option>
-                    <option value="Case Mgmt">Case Mgmt</option>
-                    <option value="PT">PT</option>
-                    <option value="OT">OT</option>
-                    <option value="SLP">SLP</option>
-                  </select>
+                  <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">City</label>
+                  <input type="text" value={addForm.city} onChange={(e) => setAddForm((f) => ({ ...f, city: e.target.value }))} placeholder="Chicago" className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Discipline</label>
+                <select value={addForm.discipline} onChange={(e) => setAddForm((f) => ({ ...f, discipline: e.target.value }))} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm">
+                  <option value="">Select…</option>
+                  <option value="Nursing">Nursing</option>
+                  <option value="Social Work">Social Work</option>
+                  <option value="Case Mgmt">Case Mgmt</option>
+                  <option value="PT">PT</option>
+                  <option value="OT">OT</option>
+                  <option value="SLP">SLP</option>
+                </select>
               </div>
               <div>
                 <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Phone</label>
