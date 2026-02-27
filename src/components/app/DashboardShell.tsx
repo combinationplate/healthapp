@@ -1,5 +1,4 @@
-"use client";
-
+﻿"use client";
 import React, { ReactNode } from "react";
 
 interface StatCardProps {
@@ -11,9 +10,9 @@ interface StatCardProps {
 
 export function StatCard({ label, value, note, noteClass = "text-[var(--blue)]" }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-      <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--ink-muted)]">{label}</div>
-      <div className="font-[family-name:var(--font-fraunces)] text-[36px] font-bold text-[var(--ink)] leading-none my-2">{value}</div>
+    <div style={{background:"white",borderRadius:"12px",border:"1px solid var(--border)",padding:"20px",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}}>
+      <div style={{fontSize:"11px",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.05em",color:"var(--ink-muted)",marginBottom:"8px"}}>{label}</div>
+      <div style={{fontSize:"36px",fontWeight:700,color:"var(--ink)",lineHeight:1,margin:"8px 0"}}>{value}</div>
       <div className={`text-[13px] font-medium ${noteClass}`}>{note}</div>
     </div>
   );
@@ -21,7 +20,7 @@ export function StatCard({ label, value, note, noteClass = "text-[var(--blue)]" 
 
 export function StatsGrid({ children }: { children: ReactNode }) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-6">
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(180px, 1fr))",gap:"16px",marginBottom:"24px"}}>
       {children}
     </div>
   );
@@ -29,8 +28,8 @@ export function StatsGrid({ children }: { children: ReactNode }) {
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <div className="mx-auto max-w-[1200px] px-8 py-8">
+    <div style={{minHeight:"100vh",background:"#F8FAFC"}}>
+      <div style={{maxWidth:"1200px",margin:"0 auto",paddingLeft:"32px",paddingRight:"32px",paddingTop:"32px",paddingBottom:"80px"}}>
         {children}
       </div>
     </div>
@@ -39,7 +38,7 @@ export function PageShell({ children }: { children: ReactNode }) {
 
 export function SectionCard({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-xl border border-[var(--border)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)] ${className}`}>
+    <div className={className} style={{background:"white",borderRadius:"12px",border:"1px solid var(--border)",padding:"20px",boxShadow:"0 1px 3px rgba(0,0,0,0.08)"}}>
       {children}
     </div>
   );
@@ -51,17 +50,25 @@ export function TabBar({ tabs, active, onChange }: {
   onChange: (id: string) => void;
 }) {
   return (
-    <div className="flex gap-2 border-b border-[var(--border)] mb-6 overflow-x-auto">
+    <div style={{display:"flex",gap:"4px",borderBottom:"1px solid var(--border)",marginBottom:"24px",overflowX:"auto"}}>
       {tabs.map(tab => (
         <button
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`px-5 py-2.5 mr-1 text-sm font-semibold rounded-t-lg transition-colors border-b-2 ${
-            active === tab.id
-              ? "border-[var(--blue)] text-[var(--blue)]"
-              : "border-transparent text-[var(--ink-muted)] hover:text-[var(--ink-soft)]"
-          }`}
+          style={{
+            padding:"10px 20px",
+            fontSize:"14px",
+            fontWeight:600,
+            borderRadius:"8px 8px 0 0",
+            border:"none",
+            borderBottom: active === tab.id ? "2px solid var(--blue)" : "2px solid transparent",
+            background:"transparent",
+            color: active === tab.id ? "var(--blue)" : "var(--ink-muted)",
+            cursor:"pointer",
+            whiteSpace:"nowrap",
+            transition:"color 0.15s",
+          }}
         >
           {tab.label}
         </button>

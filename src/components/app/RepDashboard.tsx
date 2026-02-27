@@ -23,6 +23,9 @@ const CE_COURSES = [
 
 const CE_DISCOUNTS = ["100% Free"] as const;
 
+const BTN_PRIMARY = "rounded-lg bg-[var(--blue)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors shadow-sm";
+const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] transition-colors";
+
 type RepTab = (typeof TABS)[number]["id"];
 
 export type ProfessionalRow = {
@@ -235,7 +238,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="py-8 text-center">
             <p className="text-sm text-[var(--ink-muted)]">No professionals seeking resources right now.</p>
             <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network to send them CEs.</p>
-            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
+            <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
           </div>
         </SectionCard>
       )}
@@ -248,7 +251,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </div>
           <div className="py-8 text-center">
             <p className="text-sm text-[var(--ink-muted)]">No pending CE requests.</p>
-            <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>View My Network</button>
+            <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
           </div>
         </SectionCard>
       )}
@@ -291,9 +294,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => alert("Select professionals, choose course, send to all.")}>Send to Group</button>
-              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Event Attendees</button>
-              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Import & Send</button>
+              <button type="button" className={BTN_PRIMARY} onClick={() => alert("Select professionals, choose course, send to all.")}>Send to Group</button>
+              <button type="button" className={BTN_SECONDARY}>Event Attendees</button>
+              <button type="button" className={BTN_SECONDARY}>Import & Send</button>
             </div>
           </SectionCard>
         </div>
@@ -304,8 +307,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
             <div className="flex gap-2 flex-wrap">
-              <button type="button" className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-xs font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">Import CSV</button>
-              <button type="button" className="rounded-lg bg-[var(--blue)] px-4 py-2 text-xs font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setAddOpen(true)}>+ Add Professional</button>
+              <button type="button" className={BTN_SECONDARY}>Import CSV</button>
+              <button type="button" className={BTN_PRIMARY} onClick={() => setAddOpen(true)}>+ Add Professional</button>
             </div>
           </div>
           <div className="flex gap-2 flex-wrap mb-4">
@@ -322,7 +325,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
               <button
                 type="button"
-                className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]"
+                className={`mt-4 ${BTN_PRIMARY}`}
                 onClick={() => setAddOpen(true)}
               >
                 + Add Professional
@@ -366,14 +369,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       <div className="flex gap-2 shrink-0">
                         <button
                           type="button"
-                          className="rounded-lg bg-[var(--blue)] px-4 py-2 text-[11px] font-semibold text-white hover:bg-[var(--blue-dark)]"
+                          className={BTN_PRIMARY}
                           onClick={() => openSendCeModal(pro)}
                         >
                           Send CE
                         </button>
                         <button
                           type="button"
-                          className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]"
+                          className={BTN_SECONDARY}
                         >
                           Log Touchpoint
                         </button>
@@ -397,7 +400,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--ink-muted)]">No CE sends yet.</p>
               <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Use the Network tab to send a course to a professional.</p>
-              <button type="button" className="mt-4 rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)]" onClick={() => setTab("network")}>Go to Network</button>
+              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>Go to Network</button>
             </div>
           ) : (
             <>
@@ -437,7 +440,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           setReminderSending(null);
                         }
                       }}
-                      className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-[11px] font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] disabled:opacity-50"
+                      className={`${BTN_SECONDARY} disabled:opacity-50`}
                     >
                       {reminderSending === row.id ? "Sending…" : "Send Reminder"}
                     </button>
@@ -447,7 +450,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               {ceHistory.length > 3 && !ceHistoryExpanded && (
                 <div className="mt-4 pt-3 border-t border-[var(--border)]">
-                  <button type="button" onClick={() => setCeHistoryExpanded(true)} className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">
+                  <button type="button" onClick={() => setCeHistoryExpanded(true)} className={BTN_SECONDARY}>
                     Show more ({ceHistory.length - 3} more)
                   </button>
                 </div>
@@ -513,8 +516,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </div>
                 {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
                 <div className="flex gap-2 justify-end pt-1">
-                  <button type="button" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
-                  <button type="submit" disabled={sendCeSaving} className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{sendCeSaving ? "Sending…" : "Send CE"}</button>
+                  <button type="button" className={BTN_SECONDARY} onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
+                  <button type="submit" disabled={sendCeSaving} className={`${BTN_PRIMARY} disabled:opacity-60`}>{sendCeSaving ? "Sending…" : "Send CE"}</button>
                 </div>
               </form>
             )}
@@ -567,8 +570,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               {addError && <p className="text-sm text-[var(--coral)]">{addError}</p>}
               <div className="flex gap-2 justify-end pt-2">
-                <button type="button" className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => !addSaving && setAddOpen(false)}>Cancel</button>
-                <button type="submit" disabled={addSaving} className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{addSaving ? "Saving…" : "Add"}</button>
+                <button type="button" className={BTN_SECONDARY} onClick={() => !addSaving && setAddOpen(false)}>Cancel</button>
+                <button type="submit" disabled={addSaving} className={`${BTN_PRIMARY} disabled:opacity-60`}>{addSaving ? "Saving…" : "Add"}</button>
               </div>
             </form>
           </div>

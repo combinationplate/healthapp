@@ -22,8 +22,8 @@ type MyCourseRow = {
   redeemedAt: string | null;
 };
 
-const BTN_PRIMARY = "rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]";
-const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]";
+const BTN_PRIMARY = "rounded-lg bg-[var(--blue)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors shadow-sm";
+const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] transition-colors";
 
 function displayName(nameOrEmail: string): string {
   if (!nameOrEmail) return "there";
@@ -128,7 +128,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
               <div className="py-8 text-center">
                 <p className="text-sm text-[var(--ink-muted)]">No courses sent to you yet.</p>
                 <p className="mt-1 text-[13px] text-[var(--ink-soft)]">When a rep sends you a CE, it will appear here.</p>
-                <a href="/app" className="mt-4 inline-block rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]">Go to Dashboard</a>
+                <a href="/app" className={`mt-4 inline-block ${BTN_PRIMARY}`}>Go to Dashboard</a>
               </div>
             ) : (
               <>
@@ -165,7 +165,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
                                   href={c.redeemUrl || "https://hiscornerstone.com"}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="ml-3 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]"
+                                  className={`ml-3 ${BTN_PRIMARY}`}
                                 >
                                   Redeem Course
                                 </a>
@@ -189,7 +189,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
                     <button
                       type="button"
                       onClick={() => setMyCoursesExpanded(true)}
-                      className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]"
+                      className={BTN_SECONDARY}
                     >
                       Show more ({myCourses.length - showMyCoursesCount} more)
                     </button>
@@ -206,7 +206,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             </div>
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--ink-muted)]">Browse and request CE courses from your reps.</p>
-              <button type="button" className="mt-4 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]" onClick={() => alert("Request CE")}>Request a course</button>
+              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => alert("Request CE")}>Request a course</button>
             </div>
             </SectionCard>
 
@@ -216,7 +216,7 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             </div>
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--ink-muted)]">No pending requests.</p>
-              <button type="button" className="mt-4 rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]" onClick={() => alert("Request CE")}>Request CE</button>
+              <button type="button" className={`mt-4 ${BTN_SECONDARY}`} onClick={() => alert("Request CE")}>Request CE</button>
             </div>
             </SectionCard>
         </div>
