@@ -110,14 +110,14 @@ function ApprovalBadge({
   if (!proState) {
     if (NATIONALLY_APPROVED.has(profession)) {
       return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2 py-0.5 text-[10px] font-semibold text-[var(--green)] whitespace-nowrap">
-          ✅ Nationally approved
+        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-[11px] font-semibold text-green-700 whitespace-nowrap">
+          Nationally approved
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2 py-0.5 text-[10px] font-semibold text-[#B8860B] whitespace-nowrap">
-        ⚠️ Add state to verify
+      <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 border border-yellow-200 px-2.5 py-0.5 text-[11px] font-semibold text-yellow-700 whitespace-nowrap">
+        Add state to verify
       </span>
     );
   }
@@ -127,23 +127,23 @@ function ApprovalBadge({
 
   if (status === "approved") {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2 py-0.5 text-[10px] font-semibold text-[var(--green)] whitespace-nowrap">
-        ✅ Approved in {proState}
+      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 border border-green-200 px-2.5 py-0.5 text-[11px] font-semibold text-green-700 whitespace-nowrap">
+        Approved in {proState}
       </span>
     );
   }
 
   return (
     <span className="flex flex-col gap-0.5 items-end">
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600 whitespace-nowrap">
-        ❌ Not approved in {proState}
+      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2.5 py-0.5 text-[11px] font-semibold text-red-700 whitespace-nowrap">
+        Not approved in {proState}
       </span>
       {course.product_id && (
         <a
           href={`https://hiscornerstone.com/?p=${course.product_id}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[10px] text-[var(--blue)] hover:underline"
+          className="text-[10px] text-[var(--blue)] hover:underline mt-0.5"
         >
           View details ↗
         </a>
@@ -171,6 +171,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSaving, setSendCeSaving] = useState(false);
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
+  const [courseTopicFilter, setCourseTopicFilter] = useState("All");
   const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
   const [ceHistoryExpanded, setCeHistoryExpanded] = useState(false);
@@ -320,6 +321,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setSendCeSuccess(false);
     setAvailableCourses([]);
     setProfessionApproval({});
+    setCourseTopicFilter("All");
     setSendCeOpen(true);
 
     setAvailableCoursesLoading(true);
@@ -687,38 +689,75 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       </div>
                     ) : filteredCourses.length === 0 ? (
                       <p className="py-4 text-center text-sm text-[var(--ink-muted)]">No courses available.</p>
-                    ) : (
-                      <div className="max-h-[280px] overflow-y-auto space-y-2 pr-1">
-                        {filteredCourses.map(({ course, profession }) => (
-                          <div
-                            key={course.id}
-                            onClick={() => setSendCeCourse(course.id)}
-                            className={`cursor-pointer rounded-lg border p-3 flex items-start gap-3 justify-between transition-colors ${
-                              sendCeCourse === course.id
-                                ? "border-[var(--blue)] bg-[var(--blue-glow)]"
-                                : "border-[var(--border)] bg-white hover:bg-[#F8FAFC]"
-                            }`}
-                          >
-                            <div className="min-w-0">
-                              <div className="font-semibold text-[13px] text-[var(--ink)]">{course.name}</div>
-                              <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">
-                                {course.hours} hr{course.hours !== 1 ? "s" : ""}
-                                {course.price != null ? ` · $${course.price}` : ""}
-                                {course.topic ? ` · ${course.topic}` : ""}
-                              </div>
-                            </div>
-                            <div className="shrink-0 mt-0.5">
-                              <ApprovalBadge
-                                profession={profession}
-                                proState={sendCePro?.state ?? null}
-                                course={course}
-                                approvalMap={professionApproval}
-                              />
-                            </div>
+                    ) : (() => {
+                      const TOPIC_PILLS = ["All", "Ethics", "Palliative Care", "Mental Health", "Care Transitions", "Rehabilitation", "General"];
+                      const topicFiltered = courseTopicFilter === "All"
+                        ? filteredCourses
+                        : filteredCourses.filter(({ course }) =>
+                            course.topic?.toLowerCase().includes(courseTopicFilter.toLowerCase())
+                          );
+                      const disciplineLabel = sendCePro?.discipline ?? "all disciplines";
+                      return (
+                        <>
+                          {/* Topic filter pills */}
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {TOPIC_PILLS.map((pill) => (
+                              <button
+                                key={pill}
+                                type="button"
+                                onClick={() => setCourseTopicFilter(pill)}
+                                className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-colors ${
+                                  courseTopicFilter === pill
+                                    ? "bg-[var(--blue)] text-white border-[var(--blue)]"
+                                    : "bg-white text-[var(--ink-soft)] border-[var(--border)] hover:bg-[#F8FAFC]"
+                                }`}
+                              >
+                                {pill}
+                              </button>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          {/* Count */}
+                          <p className="text-[11px] text-[var(--ink-muted)] mb-2">
+                            Showing {topicFiltered.length} course{topicFiltered.length !== 1 ? "s" : ""} for {disciplineLabel}
+                          </p>
+                          {/* Scrollable course list */}
+                          <div className="max-h-[260px] overflow-y-auto rounded-lg border border-[var(--border)] p-2 bg-[#F8FAFC]">
+                            {topicFiltered.length === 0 ? (
+                              <p className="py-4 text-center text-sm text-[var(--ink-muted)]">No courses match this topic.</p>
+                            ) : (
+                              topicFiltered.map(({ course, profession }) => (
+                                <div
+                                  key={course.id}
+                                  onClick={() => setSendCeCourse(course.id)}
+                                  className={`rounded-lg border p-3 mb-2 last:mb-0 cursor-pointer transition-colors grid grid-cols-[1fr_auto] gap-2 items-center ${
+                                    sendCeCourse === course.id
+                                      ? "border-[var(--blue)] bg-[#EEF2FF] ring-1 ring-[var(--blue)]"
+                                      : "border-[var(--border)] bg-white hover:border-[var(--blue)] hover:bg-[#F0F4FF]"
+                                  }`}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-[13px] text-[var(--ink)] leading-snug">{course.name}</div>
+                                    <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">
+                                      {course.hours} hr{course.hours !== 1 ? "s" : ""}
+                                      {course.price != null ? ` · $${course.price}` : ""}
+                                      {course.topic ? ` · ${course.topic}` : ""}
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0">
+                                    <ApprovalBadge
+                                      profession={profession}
+                                      proState={sendCePro?.state ?? null}
+                                      course={course}
+                                      approvalMap={professionApproval}
+                                    />
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   <div>
