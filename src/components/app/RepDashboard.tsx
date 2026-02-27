@@ -722,7 +722,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             Showing {topicFiltered.length} course{topicFiltered.length !== 1 ? "s" : ""} for {disciplineLabel}
                           </p>
                           {/* Scrollable course list */}
-                          <div className="max-h-[260px] overflow-y-auto rounded-lg border border-[var(--border)] p-2 bg-[#F8FAFC]">
+                          <div className="max-h-[260px] overflow-y-auto rounded-lg border border-[var(--border)] p-2">
                             {topicFiltered.length === 0 ? (
                               <p className="py-4 text-center text-sm text-[var(--ink-muted)]">No courses match this topic.</p>
                             ) : (
@@ -730,11 +730,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 <div
                                   key={course.id}
                                   onClick={() => setSendCeCourse(course.id)}
-                                  className={`rounded-lg border p-3 mb-2 last:mb-0 cursor-pointer transition-colors grid grid-cols-[1fr_auto] gap-2 items-center ${
-                                    sendCeCourse === course.id
-                                      ? "border-2 border-[var(--blue)] bg-[#DBEAFE]"
-                                      : "border border-[var(--border)] bg-white hover:border-[var(--blue)] hover:bg-[#F0F4FF]"
-                                  }`}
+                                  className="rounded-lg mb-2 last:mb-0 cursor-pointer transition-colors grid grid-cols-[1fr_auto] gap-2 items-center"
+                                  style={{
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    border: sendCeCourse === course.id ? '2px solid var(--blue)' : '1px solid var(--border)',
+                                    background: sendCeCourse === course.id ? '#DBEAFE' : 'white',
+                                  }}
                                 >
                                   <div className="min-w-0">
                                     <div className="font-semibold text-[13px] text-[var(--ink)] leading-snug">{course.name}</div>
