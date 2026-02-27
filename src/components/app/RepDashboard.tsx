@@ -46,12 +46,17 @@ type CourseRow = {
   id: string;
   name: string;
   hours: number;
-  price: number | null;
+  price: number;
   topic: string | null;
-  product_id: string | null;
+  product_id: number | null;
 };
 
 type CourseProfessionRow = {
+  profession: string;
+  courses: CourseRow | CourseRow[] | null;
+};
+
+type NormalizedCourseProfessionRow = {
   profession: string;
   courses: CourseRow;
 };
@@ -170,7 +175,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
   const [ceHistoryExpanded, setCeHistoryExpanded] = useState(false);
   const [reminderSending, setReminderSending] = useState<string | null>(null);
-  const [availableCourses, setAvailableCourses] = useState<CourseProfessionRow[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<NormalizedCourseProfessionRow[]>([]);
   const [availableCoursesLoading, setAvailableCoursesLoading] = useState(false);
   const [professionApproval, setProfessionApproval] = useState<Record<string, string>>({});
 
@@ -323,7 +328,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
       const { data } = await supabase
         .from("course_professions")
         .select("profession, courses(id, name, hours, price, topic, product_id)");
-      const rows = (data as CourseProfessionRow[]) ?? [];
+      const rows = ((data as CourseProfessionRow[]) ?? [])
+        .map((r) => ({
+          ...r,
+          courses: Array.isArray(r.courses) ? r.courses[0] : r.courses,
+        }))
+        .filter((r): r is NormalizedCourseProfessionRow => r.courses != null);
       rows.sort((a, b) => a.courses.name.localeCompare(b.courses.name));
       setAvailableCourses(rows);
     } finally {
