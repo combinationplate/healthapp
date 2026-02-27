@@ -111,38 +111,63 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
               <>
                 <div className="space-y-3">
                   {myCoursesVisible.map((c) => (
-                    <div key={c.id} className="rounded-xl border border-[var(--border)] bg-white p-4 mb-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                    <div
+                      key={c.id}
+                      className="rounded-xl border border-[var(--border)] bg-white p-4 mb-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
+                    >
                       <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto] sm:gap-4">
                         <div>
                           <div className="font-semibold text-[13px] text-[var(--ink)]">{c.courseName}</div>
-                          <div className="text-[11px] text-[var(--ink-muted)]">Sent by {c.sentBy} · {formatDate(c.sentAt)} · Expires {formatDate(c.expiryAt)}</div>
+                          <div className="text-[11px] text-[var(--ink-muted)]">
+                            Sent by {c.sentBy} · {formatDate(c.sentAt)} · Expires {formatDate(c.expiryAt)}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                        {c.redeemedAt ? (
-                          <>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Redeemed</span>
-                            <span className="text-[10px] text-[var(--ink-muted)]">Redeemed {formatDate(c.redeemedAt)}</span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
-                              <a href={c.redeemUrl || "https://hiscornerstone.com"} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]">
-                                Redeem Course
-                              </a>
-                            </div>
-                            <button type="button" onClick={() => handleMarkRedeemed(c.id)} className="text-[10px] text-[var(--ink-soft)] hover:underline">
-                              Mark as Redeemed
-                            </button>
-                          </>
-                        )}
+                          {c.redeemedAt ? (
+                            <>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">
+                                Redeemed
+                              </span>
+                              <span className="text-[10px] text-[var(--ink-muted)]">
+                                Redeemed {formatDate(c.redeemedAt)}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">
+                                  Pending
+                                </span>
+                                <a
+                                  href={c.redeemUrl || "https://hiscornerstone.com"}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)]"
+                                >
+                                  Redeem Course
+                                </a>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleMarkRedeemed(c.id)}
+                                className="text-[10px] text-[var(--ink-soft)] hover:underline"
+                              >
+                                Mark as Redeemed
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
                 {hasMoreMyCourses && (
                   <div className="mt-4 pt-3 border-t border-[var(--border)]">
-                    <button type="button" onClick={() => setMyCoursesExpanded(true)} className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]">
+                    <button
+                      type="button"
+                      onClick={() => setMyCoursesExpanded(true)}
+                      className="rounded-lg border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC]"
+                    >
                       Show more ({myCourses.length - showMyCoursesCount} more)
                     </button>
                   </div>
