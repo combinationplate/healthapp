@@ -206,7 +206,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
   return (
     <PageShell>
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-20 pt-6">
         <div>
           <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>

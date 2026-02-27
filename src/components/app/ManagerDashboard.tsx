@@ -9,7 +9,7 @@ export function ManagerDashboard({ userName }: Props) {
 
   return (
     <PageShell>
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-20 pt-6">
         <div>
           <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
           <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>

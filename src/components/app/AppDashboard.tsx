@@ -5,6 +5,7 @@ import { ManagerDashboard } from "./ManagerDashboard";
 import { ProDashboard } from "./ProDashboard";
 import { RepDashboard } from "./RepDashboard";
 import { RoleSelector } from "./RoleSelector";
+import { AppHeader } from "./AppHeader";
 
 type Role = "manager" | "rep" | "professional";
 
@@ -23,16 +24,13 @@ export function AppDashboard({ userId, userEmail, userDisplayName, initialRole =
     return <RoleSelector onSelect={setRole} />;
   }
 
-  const switchRole = (
-    <p className="mb-4 text-sm text-[var(--ink-muted)]">
-      <button type="button" onClick={() => setRole(null)} className="underline hover:text-[var(--ink-soft)]">Switch role</button>
-    </p>
-  );
+  const roleLabel = role === "manager" ? "Manager" : role === "rep" ? "Rep" : "Professional";
+  const displayName = userDisplayName?.trim() || userEmail || "";
 
   if (role === "manager") {
     return (
       <>
-        {switchRole}
+        <AppHeader displayName={displayName} roleLabel={roleLabel} onSwitchRole={() => setRole(null)} />
         <ManagerDashboard userName={userDisplayName || userEmail} />
       </>
     );
@@ -40,14 +38,14 @@ export function AppDashboard({ userId, userEmail, userDisplayName, initialRole =
   if (role === "rep") {
     return (
       <>
-        {switchRole}
+        <AppHeader displayName={displayName} roleLabel={roleLabel} onSwitchRole={() => setRole(null)} />
         <RepDashboard repId={userId} />
       </>
     );
   }
   return (
     <>
-      {switchRole}
+      <AppHeader displayName={displayName} roleLabel={roleLabel} onSwitchRole={() => setRole(null)} />
       <ProDashboard userName={userDisplayName ?? userEmail} />
     </>
   );
