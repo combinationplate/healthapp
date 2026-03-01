@@ -925,7 +925,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <div style={{padding:'24px',textAlign:'center'}}>
                 <div style={{fontSize:'40px',marginBottom:'8px'}}>✓</div>
                 <p style={{fontWeight:600,color:'var(--green)'}}>Touchpoint logged!</p>
-                <p style={{fontSize:'13px',color:'var(--ink-muted)',marginTop:'4px'}}>+{({'call':1,'visit':3,'lunch':8,'event':8,'other':1})[touchpointType]} points earned</p>
               </div>
             ) : (
               <form onSubmit={handleSaveTouchpoint}>
@@ -956,7 +955,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         }}
                       >
                         <div>{t.label}</div>
-                        <div style={{fontSize:'11px',fontWeight:500,marginTop:'2px',color:'var(--ink-muted)'}}>+{t.points} pts</div>
                       </button>
                     ))}
                   </div>
