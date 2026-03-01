@@ -39,7 +39,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     const supabase = createClient();
 
     // Get manager's org_id
-    const { data: managerProfile } = await supabase
+    const { data: managerProfile, error: profileError } = await supabase
       .from("profiles")
       .select("org_id")
       .eq("id", managerId)
