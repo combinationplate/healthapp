@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { ReactNode } from "react";
 
 interface StatCardProps {
@@ -32,8 +32,8 @@ export function StatsGrid({ children }: { children: ReactNode }) {
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F4F6FA]">
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-8 pb-24">
+    <div style={{ minHeight: '100vh', background: '#F8FAFC' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', paddingLeft: '32px', paddingRight: '32px', paddingTop: '32px', paddingBottom: '80px' }}>
         {children}
       </div>
     </div>
