@@ -179,6 +179,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [availableCourses, setAvailableCourses] = useState<NormalizedCourseProfessionRow[]>([]);
   const [availableCoursesLoading, setAvailableCoursesLoading] = useState(false);
   const [professionApproval, setProfessionApproval] = useState<Record<string, string>>({});
+  const [touchpointOpen, setTouchpointOpen] = useState(false);
+  const [touchpointPro, setTouchpointPro] = useState<ProfessionalRow | null>(null);
+  const [touchpointType, setTouchpointType] = useState<string>("call");
+  const [touchpointNotes, setTouchpointNotes] = useState("");
+  const [touchpointSaving, setTouchpointSaving] = useState(false);
+  const [touchpointError, setTouchpointError] = useState<string | null>(null);
+  const [touchpointSuccess, setTouchpointSuccess] = useState(false);
 
   const fetchProfessionals = useCallback(async () => {
     if (!repId) return;
@@ -388,6 +395,47 @@ export function RepDashboard({ repId }: { repId?: string }) {
     }
   }
 
+  function openTouchpointModal(pro: ProfessionalRow) {
+    setTouchpointPro(pro);
+    setTouchpointType("call");
+    setTouchpointNotes("");
+    setTouchpointError(null);
+    setTouchpointSuccess(false);
+    setTouchpointOpen(true);
+  }
+
+  async function handleSaveTouchpoint(e: React.FormEvent) {
+    e.preventDefault();
+    if (!repId || !touchpointPro) return;
+    setTouchpointSaving(true);
+    setTouchpointError(null);
+    const pointsMap: Record<string, number> = {
+      call: 1,
+      visit: 3,
+      lunch: 8,
+      event: 8,
+      other: 1,
+    };
+    const supabase = createClient();
+    const { error } = await supabase.from("touchpoints").insert({
+      rep_id: repId,
+      professional_id: touchpointPro.id,
+      type: touchpointType,
+      notes: touchpointNotes.trim() || null,
+      points: pointsMap[touchpointType] ?? 1,
+    });
+    setTouchpointSaving(false);
+    if (error) {
+      setTouchpointError(error.message);
+      return;
+    }
+    setTouchpointSuccess(true);
+    setTimeout(() => {
+      setTouchpointOpen(false);
+      setTouchpointSuccess(false);
+    }, 1500);
+  }
+
   return (
     <PageShell>
       <div className="space-y-6 pb-20 pt-6">
@@ -556,6 +604,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <button
                           type="button"
                           className={BTN_SECONDARY}
+                          onClick={() => openTouchpointModal(pro)}
                         >
                           Log Touchpoint
                         </button>
@@ -855,6 +904,86 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </div>
           </div>
         )}
+      {touchpointOpen && (
+        <div
+          style={{position:'fixed',inset:0,zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(10,18,34,0.5)',backdropFilter:'blur(4px)'}}
+          onClick={() => !touchpointSaving && setTouchpointOpen(false)}
+        >
+          <div
+            style={{width:'92%',maxWidth:'440px',background:'white',borderRadius:'16px',padding:'24px',boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'16px'}}>
+              <div>
+                <h3 style={{fontSize:'18px',fontWeight:700,color:'var(--ink)'}}>Log Touchpoint</h3>
+                {touchpointPro && <p style={{fontSize:'13px',color:'var(--ink-muted)',marginTop:'2px'}}>{touchpointPro.name}</p>}
+              </div>
+              <button type="button" onClick={() => !touchpointSaving && setTouchpointOpen(false)} style={{background:'none',border:'none',fontSize:'22px',cursor:'pointer',color:'var(--ink-muted)',lineHeight:1}}>×</button>
+            </div>
+
+            {touchpointSuccess ? (
+              <div style={{padding:'24px',textAlign:'center'}}>
+                <div style={{fontSize:'40px',marginBottom:'8px'}}>✓</div>
+                <p style={{fontWeight:600,color:'var(--green)'}}>Touchpoint logged!</p>
+                <p style={{fontSize:'13px',color:'var(--ink-muted)',marginTop:'4px'}}>+{({'call':1,'visit':3,'lunch':8,'event':8,'other':1})[touchpointType]} points earned</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveTouchpoint}>
+                <div style={{marginBottom:'16px'}}>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'8px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Type</label>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+                    {[
+                      {id:'call', label:'📞 Phone Call', points:1},
+                      {id:'visit', label:'🏥 In-Person Visit', points:3},
+                      {id:'lunch', label:'🍽️ Lunch & Learn', points:8},
+                      {id:'event', label:'🎉 Event', points:8},
+                      {id:'other', label:'📝 Other', points:1},
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTouchpointType(t.id)}
+                        style={{
+                          padding:'10px 12px',
+                          borderRadius:'10px',
+                          border: touchpointType === t.id ? '2px solid var(--blue)' : '1px solid var(--border)',
+                          background: touchpointType === t.id ? '#DBEAFE' : 'white',
+                          cursor:'pointer',
+                          fontSize:'13px',
+                          fontWeight:600,
+                          color: touchpointType === t.id ? 'var(--blue)' : 'var(--ink-soft)',
+                          textAlign:'left',
+                        }}
+                      >
+                        <div>{t.label}</div>
+                        <div style={{fontSize:'11px',fontWeight:500,marginTop:'2px',color:'var(--ink-muted)'}}>+{t.points} pts</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{marginBottom:'16px'}}>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Notes (optional)</label>
+                  <textarea
+                    value={touchpointNotes}
+                    onChange={e => setTouchpointNotes(e.target.value)}
+                    placeholder="What was discussed?"
+                    rows={3}
+                    style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',resize:'none',fontFamily:'inherit',boxSizing:'border-box'}}
+                  />
+                </div>
+
+                {touchpointError && <p style={{fontSize:'13px',color:'var(--coral)',marginBottom:'12px'}}>{touchpointError}</p>}
+
+                <div style={{display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+                  <button type="button" onClick={() => !touchpointSaving && setTouchpointOpen(false)} style={{padding:'10px 20px',borderRadius:'10px',border:'1px solid var(--border)',background:'white',fontSize:'13px',fontWeight:600,cursor:'pointer',color:'var(--ink-soft)'}}>Cancel</button>
+                  <button type="submit" disabled={touchpointSaving} style={{padding:'10px 20px',borderRadius:'10px',border:'none',background:'var(--blue)',color:'white',fontSize:'13px',fontWeight:600,cursor:'pointer',opacity:touchpointSaving?0.6:1}}>{touchpointSaving ? 'Saving…' : 'Log Touchpoint'}</button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
       </div>
     </PageShell>
   );
