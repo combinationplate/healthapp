@@ -2,6 +2,12 @@
 	"folders": [
 		{
 			"path": "src/components/app"
+		},
+		{
+			"path": "app/(app)/app"
+		},
+		{
+			"path": "app/api/manager/stats"
 		}
 	]
 }
