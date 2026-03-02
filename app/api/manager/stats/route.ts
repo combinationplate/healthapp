@@ -2,43 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    console.log("user:", user?.id);
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  
-    const { data: managerProfile, error: profileError } = await supabase
-      .from("profiles")
-      .select("org_id")
-      .eq("id", user.id)
-      .single();
-  
-    console.log("managerProfile:", managerProfile, "profileError:", profileError);
-  
-    if (!managerProfile?.org_id) {
-      return NextResponse.json({ reps: [], stats: null });
-    }
-  
-    const orgId = managerProfile.org_id;
-  
-    const { data: repProfiles, error: repError } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .eq("org_id", orgId)
-      .eq("role", "rep");
-  
-    console.log("repProfiles:", repProfiles, "repError:", repError);
-    
-export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  console.log("user:", user?.id);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: managerProfile } = await supabase
+  const { data: managerProfile, error: profileError } = await supabase
     .from("profiles")
     .select("org_id")
     .eq("id", user.id)
     .single();
+
+  console.log("managerProfile:", managerProfile, "profileError:", profileError);
 
   if (!managerProfile?.org_id) {
     return NextResponse.json({ reps: [], stats: null });
@@ -46,11 +21,13 @@ export async function GET() {
 
   const orgId = managerProfile.org_id;
 
-  const { data: repProfiles } = await supabase
+  const { data: repProfiles, error: repError } = await supabase
     .from("profiles")
     .select("id, full_name")
     .eq("org_id", orgId)
     .eq("role", "rep");
+
+  console.log("repProfiles:", repProfiles, "repError:", repError);
 
   if (!repProfiles || repProfiles.length === 0) {
     return NextResponse.json({ reps: [], stats: null });
@@ -86,27 +63,4 @@ export async function GET() {
 
   const reps = repProfiles.map((rep) => {
     const repCesThisMonth = cesThisMonth.filter((c) => c.rep_id === rep.id).length;
-    const repProfessionals = allProfessionals.filter((p) => p.rep_id === rep.id).length;
-    const repCesAll = allCeSends.filter((c) => c.rep_id === rep.id);
-    const repRedeemed = repCesAll.filter((c) => c.redeemed_at).length;
-    const repRedemptionRate = repCesAll.length > 0
-      ? `${Math.round((repRedeemed / repCesAll.length) * 100)}%`
-      : "—";
-    const lastTouch = allTouchpoints.find((t) => t.rep_id === rep.id);
-    const lastActivity = lastTouch
-      ? new Date(lastTouch.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-      : "No activity";
-
-    return {
-      id: rep.id,
-      name: rep.full_name ?? "Unknown",
-      cesThisMonth: repCesThisMonth,
-      professionalsInNetwork: repProfessionals,
-      lastActivity,
-      redemptionRate: repRedemptionRate,
-    };
-  });
-
-  reps.sort((a, b) => b.cesThisMonth - a.cesThisMonth);
-  return NextResponse.json({ reps, stats });
-}
+    const repProfessionals = allProfe
