@@ -2,6 +2,34 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    console.log("user:", user?.id);
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  
+    const { data: managerProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("org_id")
+      .eq("id", user.id)
+      .single();
+  
+    console.log("managerProfile:", managerProfile, "profileError:", profileError);
+  
+    if (!managerProfile?.org_id) {
+      return NextResponse.json({ reps: [], stats: null });
+    }
+  
+    const orgId = managerProfile.org_id;
+  
+    const { data: repProfiles, error: repError } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .eq("org_id", orgId)
+      .eq("role", "rep");
+  
+    console.log("repProfiles:", repProfiles, "repError:", repError);
+    
+export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
