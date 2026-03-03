@@ -91,7 +91,7 @@ export function TabBar({
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`shrink-0 px-4 py-2.5 text-[13px] font-semibold rounded-t-lg border-b-2 transition-colors whitespace-nowrap
+          className={`shrink-0 px-6 py-2.5 text-[13px] font-semibold rounded-t-lg border-b-2 transition-colors whitespace-nowrap
             ${
               active === tab.id
                 ? "border-[var(--blue)] text-[var(--blue)] bg-[var(--blue-glow)]"

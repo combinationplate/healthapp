@@ -5,10 +5,10 @@ import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
 const TABS = [
-  { id: "discover", label: "Discover" },
-  { id: "requests", label: "Requests" },
   { id: "distribute", label: "Distribute" },
+  { id: "discover", label: "Discover" },
   { id: "network", label: "Network" },
+  { id: "requests", label: "Requests" },
   { id: "ce-history", label: "CE History" },
 ] as const;
 
@@ -153,7 +153,7 @@ function ApprovalBadge({
 }
 
 export function RepDashboard({ repId }: { repId?: string }) {
-  const [tab, setTab] = useState<RepTab>("discover");
+  const [tab, setTab] = useState<RepTab>("distribute");
   const [filter, setFilter] = useState("All");
   const [professionals, setProfessionals] = useState<ProfessionalRow[]>([]);
   const [loading, setLoading] = useState(false);
