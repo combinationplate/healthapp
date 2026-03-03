@@ -420,8 +420,24 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
           )}
           <div style={{padding:'12px',borderRadius:'10px',border:'1px solid var(--border)',background:'var(--bg-light)',cursor:'pointer'}} onClick={() => setRequestForm(f => ({...f, visible: !f.visible}))}>
             <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
-              <input type="checkbox" checked={requestForm.visible} onChange={() => {}} style={{width:'16px',height:'16px'}} />
-              <div
+            <input type="checkbox" checked={requestForm.visible} onChange={() => {}} style={{width:'16px',height:'16px'}} />
+              <div>
+                <div style={{fontSize:'13px',fontWeight:600,color:'var(--ink)'}}>Make me visible to local reps</div>
+                <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>Reps in your area can see your request and send you CEs</div>
+              </div>
+            </div>
+          </div>
+          {requestSaving && <p style={{fontSize:'13px',color:'var(--ink-muted)'}}>Submitting...</p>}
+          <div style={{display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+            <button type="button" onClick={() => !requestSaving && setRequestOpen(false)} style={{padding:'10px 20px',borderRadius:'10px',border:'1px solid var(--border)',background:'white',fontSize:'13px',fontWeight:600,cursor:'pointer',color:'var(--ink-soft)'}}>Cancel</button>
+            <button type="submit" disabled={requestSaving} style={{padding:'10px 20px',borderRadius:'10px',border:'none',background:'var(--blue)',color:'white',fontSize:'13px',fontWeight:600,cursor:'pointer',opacity:requestSaving?0.6:1}}>Submit Request</button>
+          </div>
+        </form>
+      )}
+    </div>
+  </div>
+)}
     </PageShell>
   );
 }
+  
