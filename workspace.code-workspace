@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "app/api/manager/stats"
+		},
+		{
+			"path": "app/api/rep"
 		}
 	]
 }

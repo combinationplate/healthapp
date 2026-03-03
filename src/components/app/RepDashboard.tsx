@@ -179,6 +179,23 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [availableCourses, setAvailableCourses] = useState<NormalizedCourseProfessionRow[]>([]);
   const [availableCoursesLoading, setAvailableCoursesLoading] = useState(false);
   const [professionApproval, setProfessionApproval] = useState<Record<string, string>>({});
+  const [repStats, setRepStats] = useState({
+    touchpointsThisWeek: 0,
+    cesSentThisMonth: 0,
+    cesSentAllTime: 0,
+    redeemed: 0,
+    requests: 0,
+  });
+  
+  const fetchRepStats = useCallback(async () => {
+    const res = await fetch("/api/rep/stats", { credentials: "include" });
+    const data = await res.json();
+    if (res.ok) setRepStats(data);
+  }, []);
+  
+  useEffect(() => {
+    if (repId) fetchRepStats();
+  }, [repId, fetchRepStats]);
   const [touchpointOpen, setTouchpointOpen] = useState(false);
   const [touchpointPro, setTouchpointPro] = useState<ProfessionalRow | null>(null);
   const [touchpointType, setTouchpointType] = useState<string>("call");
@@ -445,12 +462,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
         </div>
 
         <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-          <StatsGrid>
-            <StatCard label="Touchpoints" value={professionals.length * 2} note="This week" noteClass="text-[var(--blue)]" />
-            <StatCard label="CEs Sent" value={ceHistory.length} note="Total" noteClass="text-[var(--green)]" />
-            <StatCard label="Credits" value={ceHistory.length} note="CE sends" noteClass="text-[var(--blue)]" />
-            <StatCard label="Requests" value="0" note="Pending" noteClass="text-[var(--coral)]" />
-          </StatsGrid>
+        <StatsGrid>
+  <StatCard label="Touchpoints This Week" value={repStats.touchpointsThisWeek} note="Calls, visits, CEs & events" noteClass="text-[var(--blue)]" />
+  <StatCard label="CEs Sent" value={repStats.cesSentThisMonth} note={`All time: ${repStats.cesSentAllTime}`} noteClass="text-[var(--green)]" />
+  <StatCard label="Redeemed" value={repStats.redeemed} note="Coupon used" noteClass="text-[var(--green)]" />
+  <StatCard label="Requests" value={repStats.requests} note="Pending in network" noteClass="text-[var(--coral)]" />
+</StatsGrid>
         </div>
 
         <TabBar tabs={[...TABS]} active={tab} onChange={(id) => setTab(id as RepTab)} />
