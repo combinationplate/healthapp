@@ -3,9 +3,10 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   request: Request,
-  { params }: { params: { coupon: string } }
+  context: { params: Promise<{ coupon: string }> }
 ) {
-  const couponCode = params.coupon.toUpperCase();
+  const { coupon } = await context.params;
+  const couponCode = coupon.toUpperCase();
 
   try {
     const admin = createServiceClient(
@@ -26,7 +27,6 @@ export async function GET(
         .eq("id", ceSend.id);
     }
 
-    // Redirect to hiscornerstone.com with coupon applied
     const productId = ceSend?.product_id;
     let redirectUrl = "https://hiscornerstone.com/";
     if (productId) {
