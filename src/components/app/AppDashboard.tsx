@@ -46,7 +46,7 @@ export function AppDashboard({ userId, userEmail, userDisplayName, initialRole =
   return (
     <>
       <AppHeader displayName={displayName} roleLabel={roleLabel} onSwitchRole={() => setRole(null)} />
-      <ProDashboard userName={userDisplayName ?? userEmail} />
+      <ProDashboard userName={userDisplayName ?? userEmail} userId={userId} />
     </>
   );
 }

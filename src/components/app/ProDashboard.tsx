@@ -32,12 +32,34 @@ function displayName(nameOrEmail: string): string {
   return trimmed.split(/\s+/)[0] ?? trimmed;
 }
 
-export function ProDashboard({ userName }: { userName?: string | null }) {
+export function ProDashboard({ userName, userId }: { userName?: string | null; userId?: string }) {
   const [tab, setTab] = useState<ProTab>("courses");
   const welcomeName = displayName(userName ?? "");
   const [myCourses, setMyCourses] = useState<MyCourseRow[]>([]);
   const [myCoursesLoading, setMyCoursesLoading] = useState(false);
   const [myCoursesExpanded, setMyCoursesExpanded] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+const [needsOnboarding, setNeedsOnboarding] = useState(false);
+const [onboardingForm, setOnboardingForm] = useState({
+  discipline: "",
+  state: "",
+  city: "",
+  facility: "",
+});
+const [onboardingSaving, setOnboardingSaving] = useState(false);
+const [requestOpen, setRequestOpen] = useState(false);
+const [requestForm, setRequestForm] = useState({
+  topic: "",
+  hours: "2",
+  deadline: "",
+  notes: "",
+  visible: false,
+  repId: "",
+});
+const [requestSaving, setRequestSaving] = useState(false);
+const [requestSuccess, setRequestSuccess] = useState(false);
+const [myRequests, setMyRequests] = useState<{id: string; topic: string; hours: number; deadline: string; status: string; created_at: string}[]>([]);
+const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,7 +93,61 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
     });
     if (res.ok) refreshMyCourses();
   }
-
+  useEffect(() => {
+    fetch("/api/pro/profile", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile && !data.profile.discipline) {
+          setNeedsOnboarding(true);
+        }
+        setProfileLoading(false);
+      });
+  }, []);
+  
+  useEffect(() => {
+    if (!userId) return;
+    fetch("/api/pro/requests", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.requests) setMyRequests(data.requests);
+        if (data.reps) setConnectedReps(data.reps);
+      });
+  }, [userId]);
+  
+  async function handleOnboarding(e: React.FormEvent) {
+    e.preventDefault();
+    setOnboardingSaving(true);
+    const res = await fetch("/api/pro/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(onboardingForm),
+    });
+    setOnboardingSaving(false);
+    if (res.ok) setNeedsOnboarding(false);
+  }
+  
+  async function handleSubmitRequest(e: React.FormEvent) {
+    e.preventDefault();
+    setRequestSaving(true);
+    const res = await fetch("/api/pro/requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(requestForm),
+    });
+    setRequestSaving(false);
+    if (res.ok) {
+      setRequestSuccess(true);
+      const data = await res.json();
+      if (data.request) setMyRequests((prev) => [data.request, ...prev]);
+      setTimeout(() => {
+        setRequestOpen(false);
+        setRequestSuccess(false);
+        setRequestForm({ topic: "", hours: "2", deadline: "", notes: "", visible: false, repId: "" });
+      }, 1500);
+    }
+  }
   const showMyCoursesCount = 3;
   const myCoursesVisible = myCoursesExpanded ? myCourses : myCourses.slice(0, showMyCoursesCount);
   const hasMoreMyCourses = myCourses.length > showMyCoursesCount && !myCoursesExpanded;
@@ -202,11 +278,11 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             <SectionCard>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>
-              <button type="button" className={BTN_PRIMARY} onClick={() => alert("Request CE")}>+ Request CE</button>
+              <button type="button" className={BTN_PRIMARY} onClick={() => setRequestOpen(true)}>+ Request CE</button>
             </div>
             <div className="py-8 text-center">
               <p className="text-sm text-[var(--ink-muted)]">Browse and request CE courses from your reps.</p>
-              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => alert("Request CE")}>Request a course</button>
+              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setRequestOpen(true)}>Request a course</button>
             </div>
             </SectionCard>
 
@@ -214,10 +290,26 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Requests</h2>
             </div>
-            <div className="py-8 text-center">
-              <p className="text-sm text-[var(--ink-muted)]">No pending requests.</p>
-              <button type="button" className={`mt-4 ${BTN_SECONDARY}`} onClick={() => alert("Request CE")}>Request CE</button>
-            </div>
+            {myRequests.length === 0 ? (
+  <div className="py-8 text-center">
+    <p className="text-sm text-[var(--ink-muted)]">No pending requests.</p>
+    <button type="button" className={`mt-4 ${BTN_SECONDARY}`} onClick={() => setRequestOpen(true)}>Request CE</button>
+  </div>
+) : (
+  <div className="space-y-3">
+    {myRequests.map(r => (
+      <div key={r.id} style={{padding:'14px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+          <div>
+            <div style={{fontWeight:600,fontSize:'13px',color:'var(--ink)'}}>{r.topic}</div>
+            <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>{r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
+          </div>
+          <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background: r.status === 'pending' ? 'var(--gold-glow)' : 'var(--green-glow)',color: r.status === 'pending' ? '#B8860B' : 'var(--green)'}}>{r.status}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
             </SectionCard>
         </div>
       )}
@@ -235,6 +327,101 @@ export function ProDashboard({ userName }: { userName?: string | null }) {
         </SectionCard>
       )}
     </div>
+    {/* Onboarding Modal */}
+{!profileLoading && needsOnboarding && (
+  <div style={{position:'fixed',inset:0,zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(10,18,34,0.6)',backdropFilter:'blur(4px)'}}>
+    <div style={{width:'92%',maxWidth:'480px',background:'white',borderRadius:'16px',padding:'32px',boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}}>
+      <h3 style={{fontSize:'20px',fontWeight:700,color:'var(--ink)',marginBottom:'6px'}}>Welcome to Pulse</h3>
+      <p style={{fontSize:'13px',color:'var(--ink-muted)',marginBottom:'24px'}}>Tell us a bit about yourself so reps can send you the right CE courses.</p>
+      <form onSubmit={handleOnboarding} style={{display:'grid',gap:'16px'}}>
+        <div>
+          <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Discipline</label>
+          <select required value={onboardingForm.discipline} onChange={e => setOnboardingForm(f => ({...f, discipline: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+            <option value="">Select...</option>
+            <option value="Nursing">Nursing</option>
+            <option value="Social Work">Social Work</option>
+            <option value="Case Mgmt">Case Management</option>
+            <option value="PT">Physical Therapy</option>
+            <option value="OT">Occupational Therapy</option>
+            <option value="SLP">Speech-Language Pathology</option>
+          </select>
+        </div>
+        <div>
+          <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Facility</label>
+          <input type="text" required value={onboardingForm.facility} onChange={e => setOnboardingForm(f => ({...f, facility: e.target.value}))} placeholder="St. Luke's Hospital" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+          <div>
+            <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>City</label>
+            <input type="text" value={onboardingForm.city} onChange={e => setOnboardingForm(f => ({...f, city: e.target.value}))} placeholder="Houston" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+          </div>
+          <div>
+            <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>State</label>
+            <select value={onboardingForm.state} onChange={e => setOnboardingForm(f => ({...f, state: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+              <option value="">Select...</option>
+              {["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"].map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        <button type="submit" disabled={onboardingSaving} style={{padding:'12px',borderRadius:'10px',border:'none',background:'var(--blue)',color:'white',fontSize:'14px',fontWeight:600,cursor:'pointer',opacity:onboardingSaving?0.6:1}}>
+          {onboardingSaving ? 'Saving...' : 'Get Started'}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
+{/* Request CE Modal */}
+{requestOpen && (
+  <div style={{position:'fixed',inset:0,zIndex:300,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(10,18,34,0.5)',backdropFilter:'blur(4px)'}} onClick={() => !requestSaving && setRequestOpen(false)}>
+    <div style={{width:'92%',maxWidth:'480px',background:'white',borderRadius:'16px',padding:'24px',boxShadow:'0 20px 60px rgba(0,0,0,0.15)'}} onClick={e => e.stopPropagation()}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'16px'}}>
+        <h3 style={{fontSize:'18px',fontWeight:700,color:'var(--ink)'}}>Request CE Course</h3>
+        <button type="button" onClick={() => !requestSaving && setRequestOpen(false)} style={{background:'none',border:'none',fontSize:'22px',cursor:'pointer',color:'var(--ink-muted)',lineHeight:1}}>×</button>
+      </div>
+      {requestSuccess ? (
+        <div style={{padding:'24px',textAlign:'center'}}>
+          <div style={{fontSize:'40px',marginBottom:'8px'}}>✓</div>
+          <p style={{fontWeight:600,color:'var(--green)'}}>Request submitted!</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmitRequest} style={{display:'grid',gap:'16px'}}>
+          <div>
+            <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Topic</label>
+            <select required value={requestForm.topic} onChange={e => setRequestForm(f => ({...f, topic: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+              <option value="">Select topic...</option>
+              <option>Ethics</option>
+              <option>Palliative Care</option>
+              <option>Mental Health</option>
+              <option>Chronic Disease Management</option>
+              <option>Patient Safety</option>
+              <option>Care Transitions</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+            <div>
+              <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Hours needed</label>
+              <input type="number" required min="1" max="10" value={requestForm.hours} onChange={e => setRequestForm(f => ({...f, hours: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+            </div>
+            <div>
+              <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Deadline</label>
+              <input type="date" required value={requestForm.deadline} onChange={e => setRequestForm(f => ({...f, deadline: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+            </div>
+          </div>
+          {connectedReps.length > 0 && (
+            <div>
+              <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Request from specific rep (optional)</label>
+              <select value={requestForm.repId} onChange={e => setRequestForm(f => ({...f, repId: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+                <option value="">Any rep in my area</option>
+                {connectedReps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div style={{padding:'12px',borderRadius:'10px',border:'1px solid var(--border)',background:'var(--bg-light)',cursor:'pointer'}} onClick={() => setRequestForm(f => ({...f, visible: !f.visible}))}>
+            <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+              <input type="checkbox" checked={requestForm.visible} onChange={() => {}} style={{width:'16px',height:'16px'}} />
+              <div
     </PageShell>
   );
 }
