@@ -27,7 +27,7 @@ export async function GET() {
     admin.from("ce_sends")
       .select("id", { count: "exact" })
       .eq("rep_id", user.id)
-      .gte("created_at", startOfMonth.toISOString()),
+      .not("clicked_at", "is", null),
     admin.from("ce_sends")
       .select("id", { count: "exact" })
       .eq("rep_id", user.id),

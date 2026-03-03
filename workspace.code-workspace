@@ -1,9 +1,6 @@
 {
 	"folders": [
 		{
-			"path": "app/(app)/app"
-		},
-		{
 			"path": "app/api/manager/stats"
 		},
 		{
@@ -17,6 +14,9 @@
 		},
 		{
 			"path": "app"
+		},
+		{
+			"path": "src/components"
 		}
 	]
 }

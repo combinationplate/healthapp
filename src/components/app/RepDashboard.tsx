@@ -465,7 +465,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         <StatsGrid>
   <StatCard label="Touchpoints This Week" value={repStats.touchpointsThisWeek} note="Calls, visits, CEs & events" noteClass="text-[var(--blue)]" />
   <StatCard label="CEs Sent" value={repStats.cesSentThisMonth} note={`All time: ${repStats.cesSentAllTime}`} noteClass="text-[var(--green)]" />
-  <StatCard label="Redeemed" value={repStats.redeemed} note="Coupon used" noteClass="text-[var(--green)]" />
+  <StatCard label="Accessed" value={repStats.redeemed} note="Link opened" noteClass="text-[var(--green)]" />
   <StatCard label="Requests" value={repStats.requests} note="Pending in network" noteClass="text-[var(--coral)]" />
 </StatsGrid>
         </div>
