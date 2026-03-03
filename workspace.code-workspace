@@ -1,9 +1,6 @@
 {
 	"folders": [
 		{
-			"path": "src/components/app"
-		},
-		{
 			"path": "app/(app)/app"
 		},
 		{
@@ -11,6 +8,15 @@
 		},
 		{
 			"path": "app/api/rep"
+		},
+		{
+			"path": "app/api/ce"
+		},
+		{
+			"path": "lib/woocommerce"
+		},
+		{
+			"path": "app"
 		}
 	]
 }

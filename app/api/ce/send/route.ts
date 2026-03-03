@@ -4,9 +4,9 @@ import { Resend } from "resend";
 import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
 
 const CART_BASE = "https://hiscornerstone.com/";
-function courseAccessUrl(productId: number, couponCode: string): string {
-  const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
-  return `${CART_BASE}?${params.toString()}`;
+function courseAccessUrl(couponCode: string): string {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsereferrals.vercel.app").replace(/\/$/, "");
+  return `${appUrl}/r/${couponCode}`;
 }
 function escapeHtml(s: string): string {
   return s
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
-    const accessUrl = courseAccessUrl(productIdForDb, couponCode);
+    const accessUrl = courseAccessUrl(couponCode);
 
     if (resendKey) {
       const resend = new Resend(resendKey);
