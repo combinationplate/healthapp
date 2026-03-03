@@ -1,15 +1,6 @@
 {
 	"folders": [
 		{
-			"path": "app/api/manager/stats"
-		},
-		{
-			"path": "app/api/rep"
-		},
-		{
-			"path": "app/api/ce"
-		},
-		{
 			"path": "lib/woocommerce"
 		},
 		{
@@ -17,6 +8,9 @@
 		},
 		{
 			"path": "src/components"
+		},
+		{
+			"path": "app/api"
 		}
 	]
 }
