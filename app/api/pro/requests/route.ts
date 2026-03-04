@@ -66,6 +66,7 @@ export async function POST(request: Request) {
         hours: parseInt(hours),
         deadline,
         status: "pending",
+        rep_id: body.repId || null,
       })
       .select()
       .single();
