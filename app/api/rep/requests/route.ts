@@ -70,6 +70,7 @@ export async function GET() {
       state: profile?.state ?? null,
       isDirectRequest: r.rep_id === user.id,
       isInNetwork,
+      professionalId: r.professional_id,
     };
   });
 

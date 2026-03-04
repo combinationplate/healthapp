@@ -201,6 +201,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     state: string | null;
     isDirectRequest: boolean;
     isInNetwork: boolean;
+    professionalId: string;
   }[]>([]);
   
   useEffect(() => {
@@ -546,8 +547,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 type="button"
                 className={BTN_PRIMARY}
                 style={{fontSize:'12px',padding:'6px 14px'}}
-                onClick={() => {
-                  const pro = professionals.find((p) => p.name === r.professionalName) ?? null;
+                onClick={async () => {
+                  let pro = professionals.find((p) => p.name === r.professionalName) ?? null;
+                  if (!pro) {
+                    pro = {
+                      id: r.professionalId,
+                      name: r.professionalName,
+                      email: "",
+                      phone: null,
+                      facility: r.facility,
+                      city: r.city,
+                      state: r.state,
+                      discipline: r.discipline,
+                      rep_id: repId ?? "",
+                      created_at: r.created_at,
+                    };
+                  }
                   openSendCeModal(pro);
                 }}
               >
