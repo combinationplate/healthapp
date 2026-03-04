@@ -25,6 +25,20 @@ const US_STATES = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
 ];
 
+const STATE_NAMES: Record<string, string> = {
+  AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",
+  CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",
+  HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",
+  KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",
+  MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",
+  NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",
+  NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",
+  OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",
+  SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",
+  VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",
+  DC:"DC"
+};
+
 
 const DISCIPLINE_MAP: Record<string, string> = {
   "Nursing": "Nursing",
@@ -287,6 +301,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
       const approvals: Record<string, string> = {};
 
+      const stateFull = STATE_NAMES[sendCePro!.state ?? ""] ?? sendCePro!.state;
+
       for (const profession of relevantProfessions) {
         if (!sendCePro!.state) {
           approvals[profession] = NATIONALLY_APPROVED.has(profession) ? "national" : "no-state";
@@ -295,7 +311,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
             .from("discipline_states")
             .select("state")
             .eq("profession", profession)
-            .eq("state", sendCePro!.state);
+            .eq("state", stateFull);
           if (cancelled) return;
           approvals[profession] = data && data.length > 0 ? "approved" : "not-approved";
         }
@@ -892,7 +908,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   <div className="shrink-0 flex items-center gap-1.5">
                                     <ApprovalBadge
                                       profession={profession}
-                                      proState={sendCePro?.state ?? null}
+                                      proState={sendCePro?.state ? (STATE_NAMES[sendCePro.state] ?? sendCePro.state) : null}
                                       course={course}
                                       approvalMap={professionApproval}
                                     />
