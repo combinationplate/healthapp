@@ -25,6 +25,7 @@ const US_STATES = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
 ];
 
+
 const DISCIPLINE_MAP: Record<string, string> = {
   "Nursing": "Nursing",
   "Social Work": "Social Work",
@@ -186,7 +187,29 @@ export function RepDashboard({ repId }: { repId?: string }) {
     redeemed: 0,
     requests: 0,
   });
+  const [repRequests, setRepRequests] = useState<{
+    id: string;
+    topic: string;
+    hours: number;
+    deadline: string;
+    status: string;
+    created_at: string;
+    professionalName: string;
+    discipline: string | null;
+    facility: string | null;
+    city: string | null;
+    state: string | null;
+    isDirectRequest: boolean;
+    isInNetwork: boolean;
+  }[]>([]);
   
+  useEffect(() => {
+    fetch("/api/rep/requests", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.requests) setRepRequests(data.requests);
+      });
+  }, []);
   const fetchRepStats = useCallback(async () => {
     const res = await fetch("/api/rep/stats", { credentials: "include" });
     const data = await res.json();
@@ -486,18 +509,57 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </SectionCard>
         )}
 
-        {tab === "requests" && (
-          <SectionCard>
-            <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
-              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Requests from professionals will appear here</p>
+{tab === "requests" && (
+  <SectionCard>
+    <div className="border-b border-[var(--border)] pb-3 mb-4">
+      <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
+      <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals requesting CE courses</p>
+    </div>
+    {repRequests.length === 0 ? (
+      <div className="py-8 text-center">
+        <p className="text-sm text-[var(--ink-muted)]">No pending CE requests.</p>
+        <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
+      </div>
+    ) : (
+      <div style={{display:'grid',gap:'12px'}}>
+        {repRequests.map((r) => (
+          <div key={r.id} style={{padding:'16px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'8px'}}>
+              <div>
+                <div style={{fontWeight:600,fontSize:'14px',color:'var(--ink)'}}>{r.professionalName}</div>
+                <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>
+                  {[r.discipline, r.facility, r.city && r.state ? `${r.city}, ${r.state}` : r.state].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+              <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
+                {r.isDirectRequest && (
+                  <span style={{padding:'3px 8px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'var(--blue-glow)',color:'var(--blue)'}}>Direct</span>
+                )}
+                <span style={{padding:'3px 8px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'var(--gold-glow)',color:'#B8860B'}}>Pending</span>
+              </div>
             </div>
-            <div className="py-8 text-center">
-              <p className="text-sm text-[var(--ink-muted)]">No pending CE requests.</p>
-              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
+            <div style={{fontSize:'13px',color:'var(--ink)',marginBottom:'12px'}}>
+              <strong>{r.topic}</strong> · {r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
             </div>
-          </SectionCard>
-        )}
+            <div style={{display:'flex',gap:'8px'}}>
+              <button
+                type="button"
+                className={BTN_PRIMARY}
+                style={{fontSize:'12px',padding:'6px 14px'}}
+                onClick={() => {
+                  const pro = professionals.find((p) => p.name === r.professionalName) ?? null;
+                  openSendCeModal(pro);
+                }}
+              >
+                Send CE
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </SectionCard>
+)}
 
         {tab === "distribute" && (
           <div className="space-y-6">
