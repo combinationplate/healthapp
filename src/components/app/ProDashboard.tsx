@@ -61,6 +61,8 @@ const [requestSaving, setRequestSaving] = useState(false);
 const [requestSuccess, setRequestSuccess] = useState(false);
 const [myRequests, setMyRequests] = useState<{id: string; topic: string; hours: number; deadline: string; status: string; created_at: string}[]>([]);
 const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>([]);
+const [networkReps, setNetworkReps] = useState<{id: string; name: string; connectedAt: string | null}[]>([]);
+const [networkLoading, setNetworkLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -114,7 +116,16 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
         if (data.reps) setConnectedReps(data.reps);
       });
   }, [userId]);
-  
+
+  useEffect(() => {
+    fetch("/api/pro/network", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.reps) setNetworkReps(data.reps);
+        setNetworkLoading(false);
+      });
+  }, []);
+
   async function handleOnboarding(e: React.FormEvent) {
     e.preventDefault();
     setOnboardingSaving(true);
@@ -321,10 +332,37 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
             <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Network</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Sales reps connected to you</p>
           </div>
-          <div className="py-8 text-center">
-            <p className="text-sm text-[var(--ink-muted)]">No reps in your network yet.</p>
-            <p className="mt-1 text-[13px] text-[var(--ink-soft)]">When you connect with a rep, they will appear here.</p>
-          </div>
+          {networkLoading ? (
+            <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
+          ) : networkReps.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-sm text-[var(--ink-muted)]">No reps in your network yet.</p>
+              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">When a rep adds you to their network, they will appear here.</p>
+            </div>
+          ) : (
+            <div style={{display:'grid',gap:'12px'}}>
+              {networkReps.map((rep) => (
+                <div key={rep.id} style={{padding:'16px',borderRadius:'10px',border:'1px solid var(--border)',background:'white',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:'14px',color:'var(--ink)'}}>{rep.name}</div>
+                    {rep.connectedAt && (
+                      <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>
+                        Connected {new Date(rep.connectedAt).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className={BTN_PRIMARY}
+                    style={{fontSize:'12px',padding:'6px 14px'}}
+                    onClick={() => setRequestOpen(true)}
+                  >
+                    Request CE
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </SectionCard>
       )}
     </div>
