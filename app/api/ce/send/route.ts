@@ -85,6 +85,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Course not found" }, { status: 400 });
     }
 
+    const admin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { data: rep } = await supabase.from("users").select("name").eq("id", repId).single();
     const repName = (rep?.name ?? user.user_metadata?.full_name ?? "Rep").trim() || "Rep";
 
@@ -98,10 +103,6 @@ export async function POST(request: Request) {
     let pro: { id: string; name: string; email: string } | null = proFromProfessionals ?? null;
 
     if (!pro) {
-      const admin = createServiceClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
       const { data: profile } = await admin
         .from("profiles")
         .select("id, full_name")
@@ -145,7 +146,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error: sendError } = await supabase.from("ce_sends").insert({
+    const { error: sendError } = await admin.from("ce_sends").insert({
       rep_id: repId,
       professional_id: professionalId,
       course_name: course.name,
@@ -160,7 +161,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: sendError.message }, { status: 500 });
     }
 
-    const { error: touchError } = await supabase.from("touchpoints").insert({
+    const { error: touchError } = await admin.from("touchpoints").insert({
       rep_id: repId,
       professional_id: professionalId,
       type: "ce_send",
