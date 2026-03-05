@@ -226,6 +226,27 @@ export function RepDashboard({ repId }: { repId?: string }) {
         if (data.requests) setRepRequests(data.requests);
       });
   }, []);
+
+  const [discoverPros, setDiscoverPros] = useState<{
+    id: string;
+    name: string;
+    discipline: string | null;
+    city: string | null;
+    state: string | null;
+    facility: string | null;
+    requests: { professional_id: string; topic: string; hours: number; deadline: string }[];
+  }[]>([]);
+  const [discoverLoading, setDiscoverLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/rep/discover", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.professionals) setDiscoverPros(data.professionals);
+        setDiscoverLoading(false);
+      });
+  }, []);
+
   const fetchRepStats = useCallback(async () => {
     const res = await fetch("/api/rep/stats", { credentials: "include" });
     const data = await res.json();
@@ -520,14 +541,64 @@ export function RepDashboard({ repId }: { repId?: string }) {
         {tab === "discover" && (
           <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking Resources</h2>
-              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE will appear here</p>
+              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking CEs</h2>
+              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals in your area looking for CE courses</p>
             </div>
-            <div className="py-8 text-center">
-              <p className="text-sm text-[var(--ink-muted)]">No professionals seeking resources right now.</p>
-              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network to send them CEs.</p>
-              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
-            </div>
+            {discoverLoading ? (
+              <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
+            ) : discoverPros.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-[var(--ink-muted)]">No professionals seeking CEs right now.</p>
+                <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network.</p>
+                <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
+              </div>
+            ) : (
+              <div style={{display:'grid',gap:'12px'}}>
+                {discoverPros.map((pro) => (
+                  <div key={pro.id} style={{padding:'16px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'8px'}}>
+                      <div>
+                        <div style={{fontWeight:600,fontSize:'14px',color:'var(--ink)'}}>{pro.name}</div>
+                        <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>
+                          {[pro.discipline, pro.facility, pro.city && pro.state ? `${pro.city}, ${pro.state}` : pro.state].filter(Boolean).join(' · ')}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className={BTN_PRIMARY}
+                        style={{fontSize:'12px',padding:'6px 14px'}}
+                        onClick={() => {
+                          const tempPro = {
+                            id: pro.id,
+                            name: pro.name,
+                            email: "",
+                            phone: null,
+                            facility: pro.facility,
+                            city: pro.city,
+                            state: pro.state,
+                            discipline: pro.discipline,
+                            rep_id: repId ?? "",
+                            created_at: new Date().toISOString(),
+                          };
+                          openSendCeModal(tempPro);
+                        }}
+                      >
+                        Send CE
+                      </button>
+                    </div>
+                    {pro.requests.length > 0 && (
+                      <div style={{marginTop:'8px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
+                        {pro.requests.map((r, i) => (
+                          <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'var(--gold-glow)',color:'#B8860B'}}>
+                            Needs: {r.topic} · {r.hours} hrs
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </SectionCard>
         )}
 
