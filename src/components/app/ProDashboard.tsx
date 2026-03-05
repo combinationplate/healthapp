@@ -145,7 +145,7 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
       setTimeout(() => {
         setRequestOpen(false);
         setRequestSuccess(false);
-        setRequestForm({ topic: "", hours: "2", deadline: "", notes: "", visible: false, repId: "" });
+        setRequestForm({ topic: "", hours: "2", deadline: "", notes: "", visible: false, repId: "", inviteEmail: "" });
       }, 1500);
     }
   }
