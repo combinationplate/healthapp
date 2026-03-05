@@ -59,6 +59,8 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    const repIdValue = body.repId && body.repId !== "__invite__" ? body.repId : null;
+
     const { data: newRequest, error } = await admin
       .from("ce_requests")
       .insert({
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
         hours: parseInt(hours),
         deadline,
         status: "pending",
-        rep_id: body.repId || null,
+        rep_id: repIdValue,
       })
       .select()
       .single();
