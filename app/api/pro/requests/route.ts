@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
 export async function GET() {
   const supabase = await createClient();
@@ -47,7 +48,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { topic, hours, deadline, visible } = body;
+    const { topic, hours, deadline, visible, inviteEmail } = body;
 
     if (!topic || !hours || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -80,6 +81,43 @@ export async function POST(request: Request) {
         .from("profiles")
         .update({ seeking_ce: true })
         .eq("id", user.id);
+    }
+
+    if (inviteEmail && typeof inviteEmail === "string" && inviteEmail.includes("@")) {
+      await admin
+        .from("ce_requests")
+        .update({ invited_rep_email: inviteEmail })
+        .eq("id", newRequest.id);
+
+      const resendKey = process.env.RESEND_API_KEY;
+      if (resendKey) {
+        const resend = new Resend(resendKey);
+        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
+        const proName = (user.user_metadata?.full_name as string | undefined)?.trim() || user.email || "A healthcare professional";
+        const signupUrl = "https://pulsereferrals.vercel.app/signup";
+        const html = `
+          <p>Hi,</p>
+          <p><strong>${proName}</strong> needs continuing education and is looking for a rep to help them out.</p>
+          <p>They requested: <strong>${topic}</strong> (${hours} hrs) — needed by ${new Date(deadline).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
+          <p>Join Pulse to connect with them and send CE credits directly:</p>
+          <p style="margin: 24px 0;">
+            <a href="${signupUrl}" style="display:inline-block;background:#2455FF;color:#fff;text-decoration:none;padding:14px 24px;border-radius:8px;font-weight:bold;">Join Pulse &amp; Send CE</a>
+          </p>
+          <p style="color:#666;font-size:12px;">If the button doesn't work, copy and paste this link: <a href="${signupUrl}">${signupUrl}</a></p>
+          <p>— Pulse</p>
+        `;
+        const text = `Hi,\n\n${proName} needs continuing education and is looking for a rep.\n\nThey requested: ${topic} (${hours} hrs) — needed by ${deadline}.\n\nJoin Pulse to connect with them and send CE credits: ${signupUrl}\n\n— Pulse`;
+        const { error: emailError } = await resend.emails.send({
+          from: fromEmail,
+          to: inviteEmail,
+          subject: `${proName} needs CE — join Pulse to help`,
+          html,
+          text,
+        });
+        if (emailError) {
+          console.warn("Invite email failed:", emailError);
+        }
+      }
     }
 
     return NextResponse.json({ success: true, request: newRequest });

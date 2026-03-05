@@ -55,6 +55,7 @@ const [requestForm, setRequestForm] = useState({
   notes: "",
   visible: false,
   repId: "",
+  inviteEmail: "",
 });
 const [requestSaving, setRequestSaving] = useState(false);
 const [requestSuccess, setRequestSuccess] = useState(false);
@@ -412,10 +413,21 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
           {connectedReps.length > 0 && (
             <div>
               <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Request from specific rep (optional)</label>
-              <select value={requestForm.repId} onChange={e => setRequestForm(f => ({...f, repId: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+              <select value={requestForm.repId} onChange={e => setRequestForm(f => ({...f, repId: e.target.value, inviteEmail: ""}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
                 <option value="">Any rep in my area</option>
                 {connectedReps.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                <option value="__invite__">Invite rep by email…</option>
               </select>
+              {requestForm.repId === "__invite__" && (
+                <input
+                  type="email"
+                  required
+                  placeholder="rep@example.com"
+                  value={requestForm.inviteEmail}
+                  onChange={e => setRequestForm(f => ({...f, inviteEmail: e.target.value}))}
+                  style={{marginTop:'8px',width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}}
+                />
+              )}
             </div>
           )}
           <div style={{padding:'12px',borderRadius:'10px',border:'1px solid var(--border)',background:'var(--bg-light)',cursor:'pointer'}} onClick={() => setRequestForm(f => ({...f, visible: !f.visible}))}>
