@@ -95,11 +95,22 @@ export async function POST(request: Request) {
       if (resendKey) {
         const resend = new Resend(resendKey);
         const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
-        const proName = (user.user_metadata?.full_name as string | undefined)?.trim() || user.email || "A healthcare professional";
+
+        const { data: proProfile } = await admin
+          .from("profiles")
+          .select("full_name, discipline, facility")
+          .eq("id", user.id)
+          .single();
+
+        const proName = proProfile?.full_name?.trim() || (user.user_metadata?.full_name as string | undefined)?.trim() || user.email || "A healthcare professional";
+        const discipline = proProfile?.discipline ?? null;
+        const facility = proProfile?.facility ?? null;
+        const proDetails = [discipline, facility].filter(Boolean).join(" at ");
+
         const signupUrl = "https://pulsereferrals.vercel.app/signup";
         const html = `
           <p>Hi,</p>
-          <p><strong>${proName}</strong> needs continuing education and is looking for a rep to help them out.</p>
+          <p><strong>${proName}</strong>${proDetails ? ` (${proDetails})` : ""} needs continuing education and is looking for a rep to help them out.</p>
           <p>They requested: <strong>${topic}</strong> (${hours} hrs) — needed by ${new Date(deadline).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.</p>
           <p>Join Pulse to connect with them and send CE credits directly:</p>
           <p style="margin: 24px 0;">
@@ -108,7 +119,7 @@ export async function POST(request: Request) {
           <p style="color:#666;font-size:12px;">If the button doesn't work, copy and paste this link: <a href="${signupUrl}">${signupUrl}</a></p>
           <p>— Pulse</p>
         `;
-        const text = `Hi,\n\n${proName} needs continuing education and is looking for a rep.\n\nThey requested: ${topic} (${hours} hrs) — needed by ${deadline}.\n\nJoin Pulse to connect with them and send CE credits: ${signupUrl}\n\n— Pulse`;
+        const text = `Hi,\n\n${proName}${proDetails ? ` (${proDetails})` : ""} needs continuing education and is looking for a rep.\n\nThey requested: ${topic} (${hours} hrs) — needed by ${deadline}.\n\nJoin Pulse to connect with them and send CE credits: ${signupUrl}\n\n— Pulse`;
         const { error: emailError } = await resend.emails.send({
           from: fromEmail,
           to: inviteEmail,
