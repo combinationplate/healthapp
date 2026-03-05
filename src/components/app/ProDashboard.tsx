@@ -194,7 +194,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
             />
             <StatCard
               label="Reps"
-              value="—"
+              value={networkLoading ? "—" : networkReps.length}
               note="Connected"
               noteClass="text-[var(--blue)]"
             />
