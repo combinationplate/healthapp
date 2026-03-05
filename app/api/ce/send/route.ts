@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
@@ -87,14 +88,36 @@ export async function POST(request: Request) {
     const { data: rep } = await supabase.from("users").select("name").eq("id", repId).single();
     const repName = (rep?.name ?? user.user_metadata?.full_name ?? "Rep").trim() || "Rep";
 
-    const { data: pro, error: proError } = await supabase
+    const { data: proFromProfessionals } = await supabase
       .from("professionals")
       .select("id, name, email")
       .eq("id", professionalId)
       .eq("rep_id", repId)
       .single();
 
-    if (proError || !pro) {
+    let pro: { id: string; name: string; email: string } | null = proFromProfessionals ?? null;
+
+    if (!pro) {
+      const admin = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("id, full_name")
+        .eq("id", professionalId)
+        .single();
+
+      if (profile) {
+        const { data: authUser } = await admin.auth.admin.getUserById(professionalId);
+        const email = authUser?.user?.email ?? null;
+        if (email) {
+          pro = { id: profile.id, name: profile.full_name ?? "Professional", email };
+        }
+      }
+    }
+
+    if (!pro) {
       return NextResponse.json({ error: "Professional not found or not in your network" }, { status: 404 });
     }
 
