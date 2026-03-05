@@ -186,6 +186,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSaving, setSendCeSaving] = useState(false);
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [courseTopicFilter, setCourseTopicFilter] = useState("All");
   const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
@@ -443,6 +444,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
         return;
       }
       setSendCeSuccess(true);
+      if (activeRequestId) {
+        setRepRequests(prev => prev.filter(req => req.id !== activeRequestId));
+        setActiveRequestId(null);
+      }
       setTimeout(() => {
         setSendCeOpen(false);
         setSendCeSuccess(false);
@@ -564,6 +569,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 className={BTN_PRIMARY}
                 style={{fontSize:'12px',padding:'6px 14px'}}
                 onClick={async () => {
+                  setActiveRequestId(r.id);
                   let pro = professionals.find((p) => p.name === r.professionalName) ?? null;
                   if (!pro) {
                     pro = {

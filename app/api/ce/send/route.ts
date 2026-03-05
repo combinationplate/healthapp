@@ -197,6 +197,25 @@ export async function POST(request: Request) {
       console.warn("Touchpoint insert failed:", touchError);
     }
 
+    const { data: pendingRequest } = await admin
+      .from("ce_requests")
+      .select("id")
+      .eq("professional_id", ceSendProId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (pendingRequest) {
+      const { error: fulfillError } = await admin
+        .from("ce_requests")
+        .update({ status: "fulfilled" })
+        .eq("id", pendingRequest.id);
+      if (fulfillError) {
+        console.warn("Could not mark ce_request as fulfilled:", fulfillError.message);
+      }
+    }
+
     const resendKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
     const accessUrl = courseAccessUrl(couponCode);
