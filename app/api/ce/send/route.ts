@@ -101,11 +101,12 @@ export async function POST(request: Request) {
       .single();
 
     let pro: { id: string; name: string; email: string } | null = proFromProfessionals ?? null;
+    let ceSendProId: string = professionalId;
 
     if (!pro) {
       const { data: profile } = await admin
         .from("profiles")
-        .select("id, full_name")
+        .select("id, full_name, discipline, city, state, facility")
         .eq("id", professionalId)
         .single();
 
@@ -113,7 +114,29 @@ export async function POST(request: Request) {
         const { data: authUser } = await admin.auth.admin.getUserById(professionalId);
         const email = authUser?.user?.email ?? null;
         if (email) {
-          pro = { id: profile.id, name: profile.full_name ?? "Professional", email };
+          const name = profile.full_name ?? "Professional";
+          const { data: newPro, error: insertProError } = await admin
+            .from("professionals")
+            .insert({
+              id: professionalId,
+              rep_id: repId,
+              name,
+              email,
+              discipline: profile.discipline ?? null,
+              city: profile.city ?? null,
+              state: profile.state ?? null,
+              facility: profile.facility ?? null,
+            })
+            .select("id")
+            .single();
+
+          if (insertProError) {
+            console.warn("Could not insert professional from profile:", insertProError.message);
+          } else if (newPro) {
+            ceSendProId = newPro.id;
+          }
+
+          pro = { id: ceSendProId, name, email };
         }
       }
     }
@@ -148,7 +171,7 @@ export async function POST(request: Request) {
 
     const { error: sendError } = await admin.from("ce_sends").insert({
       rep_id: repId,
-      professional_id: professionalId,
+      professional_id: ceSendProId,
       course_name: course.name,
       course_hours: course.hours,
       discount,
@@ -163,7 +186,7 @@ export async function POST(request: Request) {
 
     const { error: touchError } = await admin.from("touchpoints").insert({
       rep_id: repId,
-      professional_id: professionalId,
+      professional_id: ceSendProId,
       type: "ce_send",
       notes: `${course.name} (${couponCode})`,
       points: 5,
