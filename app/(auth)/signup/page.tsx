@@ -47,10 +47,7 @@ function SignupForm() {
       setMessage({ type: "error", text: error.message });
       return;
     }
-    setMessage({
-      type: "success",
-      text: "Check your email for the confirmation link to complete sign up.",
-    });
+    router.push("/app");
   }
 
   return (
