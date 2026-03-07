@@ -66,6 +66,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const emailNormalized = String(email).trim().toLowerCase();
+
     const admin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -93,13 +95,20 @@ export async function POST(request: Request) {
       .upsert({
         rep_id: repId,
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        email: emailNormalized,
         discipline: discipline || null,
       }, { onConflict: "rep_id,email" })
       .select("id")
       .single();
 
     if (!pro) return NextResponse.json({ error: "Failed to add professional" }, { status: 500 });
+
+    // Check if professional has a Pulse account (public users table)
+    const { data: existingUser } = await admin
+      .from("users")
+      .select("id")
+      .eq("email", emailNormalized)
+      .maybeSingle();
 
     // Generate coupon code
     const repName = (repProfile?.full_name ?? "REP").split(" ")[0].toUpperCase();
@@ -130,11 +139,12 @@ export async function POST(request: Request) {
       }),
     });
 
-    // Log CE send
+    // Log CE send (link to auth user if they have a Pulse account so it appears in their dashboard)
     const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${couponCode}`;
     await admin.from("ce_sends").insert({
       rep_id: repId,
       professional_id: pro.id,
+      ...(existingUser ? { user_id: existingUser.id } : {}),
       course_id: courseId,
       course_name: course.name,
       course_hours: course.hours,
@@ -161,7 +171,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: process.env.RESEND_FROM_EMAIL,
-        to: email.trim().toLowerCase(),
+        to: emailNormalized,
         subject: `Your free CE course from ${repProfile?.full_name ?? "your rep"}`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
