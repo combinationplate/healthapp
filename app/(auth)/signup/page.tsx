@@ -37,7 +37,7 @@ function SignupForm() {
           full_name: fullName,
           account_type: accountType,
           role: effectiveRole,
-          invite_token: inviteToken ?? undefined,
+          ...(inviteToken ? { invite_token: inviteToken } : {}),
         },
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
       },
