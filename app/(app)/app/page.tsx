@@ -36,6 +36,21 @@ export default async function AppPage() {
     { onConflict: "id" }
   );
 
+  const { createClient: createServiceClient } = await import("@supabase/supabase-js");
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const state = (user.user_metadata?.state as string) ?? null;
+  const city = (user.user_metadata?.city as string) ?? null;
+  await admin.rpc("upsert_profile_safe", {
+    p_id: user.id,
+    p_role: userTableRole,
+    p_full_name: displayName ?? "",
+    p_state: state,
+    p_city: city,
+  });
+
   return (
     <AppDashboard
       userId={user.id}
