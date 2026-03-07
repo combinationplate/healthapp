@@ -63,5 +63,8 @@ export async function GET() {
     requests: requests.filter((r) => r.professional_id === p.id),
   }));
 
-  return NextResponse.json({ professionals: result });
+  return NextResponse.json({
+    professionals: result,
+    cities: [...new Set(result.map((p) => p.city).filter(Boolean))].sort(),
+  });
 }

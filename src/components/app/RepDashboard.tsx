@@ -237,12 +237,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
     requests: { professional_id: string; topic: string; hours: number; deadline: string }[];
   }[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(true);
+  const [discoverCityFilter, setDiscoverCityFilter] = useState("All");
+  const [discoverCities, setDiscoverCities] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/rep/discover", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (data.professionals) setDiscoverPros(data.professionals);
+        if (data.cities) setDiscoverCities(data.cities);
         setDiscoverLoading(false);
       });
   }, []);
@@ -544,6 +547,20 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking CEs</h2>
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals in your area looking for CE courses</p>
             </div>
+            {discoverCities.length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-4">
+                {["All", ...discoverCities].map((city) => (
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => setDiscoverCityFilter(city)}
+                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${discoverCityFilter === city ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            )}
             {discoverLoading ? (
               <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
             ) : discoverPros.length === 0 ? (
@@ -554,7 +571,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
             ) : (
               <div style={{display:'grid',gap:'12px'}}>
-                {discoverPros.map((pro) => (
+                {discoverPros
+                  .filter((pro) => discoverCityFilter === "All" || pro.city === discoverCityFilter)
+                  .map((pro) => (
                   <div key={pro.id} style={{padding:'16px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'8px'}}>
                       <div>
