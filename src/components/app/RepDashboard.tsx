@@ -25,6 +25,8 @@ const US_STATES = [
   "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
 ];
 
+const QR_DISCIPLINE_OPTIONS = ["All", "Nursing", "Social Work", "Case Management", "PT", "OT", "ST"] as const;
+
 const STATE_NAMES: Record<string, string> = {
   AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",
   CO:"Colorado",CT:"Connecticut",DE:"Delaware",FL:"Florida",GA:"Georgia",
@@ -298,6 +300,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [qrCourseId, setQrCourseId] = useState("");
   const [qrCourses, setQrCourses] = useState<{ id: string; name: string; hours: number }[]>([]);
   const [qrCoursesLoading, setQrCoursesLoading] = useState(false);
+  const [qrDisciplineFilter, setQrDisciplineFilter] = useState("All");
+  const [qrStateFilter, setQrStateFilter] = useState("");
+  const [qrCourseRows, setQrCourseRows] = useState<{ profession: string; course: { id: string; name: string; hours: number } }[]>([]);
+  const [qrApprovedProfessions, setQrApprovedProfessions] = useState<string[]>([]);
 
   useEffect(() => {
     if (!qrOpen || !repId) return;
@@ -305,18 +311,57 @@ export function RepDashboard({ repId }: { repId?: string }) {
     const supabase = createClient();
     supabase
       .from("course_professions")
-      .select("courses(id, name, hours)")
+      .select("profession, courses(id, name, hours)")
       .then(({ data }) => {
-        const rows = ((data ?? []) as unknown) as { courses: { id: string; name: string; hours: number } | { id: string; name: string; hours: number }[] }[];
-        const byId = new Map<string, { id: string; name: string; hours: number }>();
+        const rows = ((data ?? []) as unknown) as { profession: string; courses: { id: string; name: string; hours: number } | { id: string; name: string; hours: number }[] }[];
+        const courseRows: { profession: string; course: { id: string; name: string; hours: number } }[] = [];
         rows.forEach((r) => {
           const c = Array.isArray(r.courses) ? r.courses[0] : r.courses;
-          if (c && c.id) byId.set(c.id, { id: c.id, name: c.name, hours: c.hours });
+          if (c && c.id) courseRows.push({ profession: r.profession, course: { id: c.id, name: c.name, hours: c.hours } });
         });
+        setQrCourseRows(courseRows);
+        const byId = new Map<string, { id: string; name: string; hours: number }>();
+        courseRows.forEach(({ course }) => byId.set(course.id, course));
         setQrCourses(Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name)));
         setQrCoursesLoading(false);
       });
   }, [qrOpen, repId]);
+
+  useEffect(() => {
+    if (!qrOpen || !qrStateFilter) {
+      setQrApprovedProfessions([]);
+      return;
+    }
+    const stateFull = STATE_NAMES[qrStateFilter] ?? qrStateFilter;
+    const supabase = createClient();
+    supabase
+      .from("discipline_states")
+      .select("profession")
+      .eq("state", stateFull)
+      .then(({ data }) => {
+        const professions = [...new Set((data ?? []).map((r: { profession: string }) => r.profession))];
+        setQrApprovedProfessions(professions);
+      });
+  }, [qrOpen, qrStateFilter]);
+
+  const qrFilteredCourses = useMemo(() => {
+    let rows = qrCourseRows;
+    if (qrDisciplineFilter !== "All") {
+      rows = rows.filter((r) => r.profession === qrDisciplineFilter);
+    }
+    if (qrStateFilter && qrApprovedProfessions.length > 0) {
+      rows = rows.filter((r) => qrApprovedProfessions.includes(r.profession));
+    }
+    const byId = new Map<string, { id: string; name: string; hours: number }>();
+    rows.forEach(({ course }) => byId.set(course.id, course));
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [qrCourseRows, qrDisciplineFilter, qrStateFilter, qrApprovedProfessions]);
+
+  useEffect(() => {
+    if (qrCourseId && qrFilteredCourses.length > 0 && !qrFilteredCourses.some((c) => c.id === qrCourseId)) {
+      setQrCourseId("");
+    }
+  }, [qrCourseId, qrFilteredCourses]);
 
   const fetchProfessionals = useCallback(async () => {
     if (!repId) return;
@@ -798,6 +843,33 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   </div>
                   {qrMode === "specific" && (
                     <div style={{ marginBottom: "16px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discipline</label>
+                          <select
+                            value={qrDisciplineFilter}
+                            onChange={e => setQrDisciplineFilter(e.target.value)}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                          >
+                            {QR_DISCIPLINE_OPTIONS.map((d) => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>State</label>
+                          <select
+                            value={qrStateFilter}
+                            onChange={e => setQrStateFilter(e.target.value)}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                          >
+                            <option value="">All states</option>
+                            {US_STATES.map((s) => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
                       <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
                       <select
                         value={qrCourseId}
@@ -805,7 +877,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
                       >
                         <option value="">Select…</option>
-                        {qrCoursesLoading ? <option disabled>Loading…</option> : qrCourses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
+                        {qrCoursesLoading ? <option disabled>Loading…</option> : qrFilteredCourses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
                       </select>
                     </div>
                   )}
