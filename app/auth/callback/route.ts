@@ -22,10 +22,20 @@ export async function GET(request: Request) {
     if (!error && data.user) {
       const role = roleFromMetadata(data.user.user_metadata);
       const fullName = (data.user.user_metadata?.full_name as string) ?? "";
-      await supabase.from("profiles").upsert(
-        { id: data.user.id, role, full_name: fullName, updated_at: new Date().toISOString() },
-        { onConflict: "id" }
+      const { createClient: createServiceClient } = await import("@supabase/supabase-js");
+      const admin = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
+      const state = (data.user.user_metadata?.state as string) ?? null;
+      const city = (data.user.user_metadata?.city as string) ?? null;
+      await admin.rpc("upsert_profile_safe", {
+        p_id: data.user.id,
+        p_role: role,
+        p_full_name: fullName,
+        p_state: state,
+        p_city: city,
+      });
       await supabase.from("users").upsert(
         { id: data.user.id, email: data.user.email ?? "", role, name: fullName },
         { onConflict: "id" }
