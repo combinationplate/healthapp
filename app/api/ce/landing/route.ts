@@ -120,10 +120,10 @@ export async function POST(request: Request) {
 
     // Create WooCommerce coupon
     const wcAuth = Buffer.from(
-      `${process.env.WC_CONSUMER_KEY}:${process.env.WC_CONSUMER_SECRET}`
+      `${process.env.WOOCOMMERCE_KEY}:${process.env.WOOCOMMERCE_SECRET}`
     ).toString("base64");
 
-    await fetch(`${process.env.WC_STORE_URL}/wp-json/wc/v3/coupons`, {
+    await fetch(`${process.env.WOOCOMMERCE_URL}/wp-json/wc/v3/coupons`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -170,7 +170,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL,
+        from: "noreply@pulsereferrals.com",
         to: emailNormalized,
         subject: `Your free CE course from ${repProfile?.full_name ?? "your rep"}`,
         html: `
