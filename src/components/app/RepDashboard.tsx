@@ -202,6 +202,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
     redeemed: 0,
     requests: 0,
   });
+  const [repOnboarding, setRepOnboarding] = useState(false);
+  const [repOnboardingForm, setRepOnboardingForm] = useState({ state: "", city: "" });
+  const [repOnboardingSaving, setRepOnboardingSaving] = useState(false);
   const [repRequests, setRepRequests] = useState<{
     id: string;
     topic: string;
@@ -250,6 +253,16 @@ export function RepDashboard({ repId }: { repId?: string }) {
       });
   }, []);
 
+  useEffect(() => {
+    fetch("/api/rep/profile", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile && !data.profile.state) {
+          setRepOnboarding(true);
+        }
+      });
+  }, []);
+
   const fetchRepStats = useCallback(async () => {
     const res = await fetch("/api/rep/stats", { credentials: "include" });
     const data = await res.json();
@@ -259,6 +272,20 @@ export function RepDashboard({ repId }: { repId?: string }) {
   useEffect(() => {
     if (repId) fetchRepStats();
   }, [repId, fetchRepStats]);
+
+  async function handleRepOnboarding(e: React.FormEvent) {
+    e.preventDefault();
+    setRepOnboardingSaving(true);
+    await fetch("/api/rep/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(repOnboardingForm),
+    });
+    setRepOnboardingSaving(false);
+    setRepOnboarding(false);
+  }
+
   const [touchpointOpen, setTouchpointOpen] = useState(false);
   const [touchpointPro, setTouchpointPro] = useState<ProfessionalRow | null>(null);
   const [touchpointType, setTouchpointType] = useState<string>("call");
@@ -523,6 +550,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }
 
   return (
+    <>
     <PageShell>
       <div className="space-y-6 pb-20 pt-6">
         <div>
@@ -1190,5 +1218,45 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
       </div>
     </PageShell>
+
+    {repOnboarding && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)" }}>
+        <div style={{ width: "92%", maxWidth: "480px", background: "white", borderRadius: "16px", padding: "32px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
+          <h3 style={{ fontSize: "20px", fontWeight: 700, color: "var(--ink)", marginBottom: "6px" }}>Welcome to Pulse</h3>
+          <p style={{ fontSize: "13px", color: "var(--ink-muted)", marginBottom: "24px" }}>Tell us where you work so we can show you professionals in your area.</p>
+          <form onSubmit={handleRepOnboarding} style={{ display: "grid", gap: "16px" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-soft)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>State</label>
+              <select
+                required
+                value={repOnboardingForm.state}
+                onChange={(e) => setRepOnboardingForm((f) => ({ ...f, state: e.target.value }))}
+                style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border)", padding: "10px 12px", fontSize: "13px", fontFamily: "inherit" }}
+              >
+                <option value="">Select...</option>
+                {US_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-soft)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>City</label>
+              <input
+                type="text"
+                required
+                value={repOnboardingForm.city}
+                onChange={(e) => setRepOnboardingForm((f) => ({ ...f, city: e.target.value }))}
+                placeholder="e.g. Houston"
+                style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border)", padding: "10px 12px", fontSize: "13px", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
+            </div>
+            <button type="submit" disabled={repOnboardingSaving} style={{ padding: "12px", borderRadius: "10px", border: "none", background: "var(--blue)", color: "white", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: repOnboardingSaving ? 0.6 : 1 }}>
+              {repOnboardingSaving ? "Saving…" : "Get Started"}
+            </button>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
