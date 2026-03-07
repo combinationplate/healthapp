@@ -16,26 +16,6 @@ export default async function AppPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  let profile = await getProfile(user.id);
-  if (!profile) {
-    const role = roleFromMetadata(user.user_metadata);
-    const fullName = (user.user_metadata?.full_name as string) ?? "";
-    await supabase.from("profiles").upsert(
-      { id: user.id, role, full_name: fullName, updated_at: new Date().toISOString() },
-      { onConflict: "id" }
-    );
-    profile = { id: user.id, role, full_name: fullName };
-  }
-
-  const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
-  const role = profile.role;
-  // users.role accepts only manager | rep | professional
-  const userTableRole = role === "manager" || role === "rep" || role === "professional" ? role : "manager";
-  await supabase.from("users").upsert(
-    { id: user.id, email: user.email ?? "", role: userTableRole, name: displayName ?? "" },
-    { onConflict: "id" }
-  );
-
   const { createClient: createServiceClient } = await import("@supabase/supabase-js");
   const admin = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,6 +23,30 @@ export default async function AppPage() {
   );
   const state = (user.user_metadata?.state as string) ?? null;
   const city = (user.user_metadata?.city as string) ?? null;
+
+  let profile = await getProfile(user.id);
+  if (!profile) {
+    const role = roleFromMetadata(user.user_metadata);
+    const fullName = (user.user_metadata?.full_name as string) ?? "";
+    await admin.rpc("upsert_profile_safe", {
+      p_id: user.id,
+      p_role: role,
+      p_full_name: fullName,
+      p_state: state,
+      p_city: city,
+    });
+    profile = { id: user.id, role, full_name: fullName };
+  }
+
+  const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
+  const role = profile.role;
+  const userTableRole = role === "manager" || role === "rep" || role === "professional" ? role : "manager";
+
+  await supabase.from("users").upsert(
+    { id: user.id, email: user.email ?? "", role: userTableRole, name: displayName ?? "" },
+    { onConflict: "id" }
+  );
+
   await admin.rpc("upsert_profile_safe", {
     p_id: user.id,
     p_role: userTableRole,
