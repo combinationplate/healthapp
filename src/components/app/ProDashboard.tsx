@@ -206,9 +206,12 @@ const [networkLoading, setNetworkLoading] = useState(true);
         {tab === "courses" && (
           <div className="space-y-6">
             <SectionCard>
-            <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
-              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CE courses sent to you by your reps</p>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+              <div>
+                <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
+                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CE courses sent to you by your reps</p>
+              </div>
+              <button type="button" className={BTN_PRIMARY} onClick={() => setRequestOpen(true)}>+ Request CE</button>
             </div>
             {myCoursesLoading ? (
               <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
@@ -285,17 +288,6 @@ const [networkLoading, setNetworkLoading] = useState(true);
                 )}
               </>
             )}
-            </SectionCard>
-
-            <SectionCard>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Available CE Courses</h2>
-              <button type="button" className={BTN_PRIMARY} onClick={() => setRequestOpen(true)}>+ Request CE</button>
-            </div>
-            <div className="py-8 text-center">
-              <p className="text-sm text-[var(--ink-muted)]">Browse and request CE courses from your reps.</p>
-              <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setRequestOpen(true)}>Request a course</button>
-            </div>
             </SectionCard>
 
             <SectionCard>
