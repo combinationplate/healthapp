@@ -13,6 +13,9 @@ function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [company, setCompany] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
   const [role, setRole] = useState<"manager" | "rep" | "professional">(
     typeParam === "sales" ? "rep" : typeParam === "manager" ? "manager" : "professional"
   );
@@ -21,13 +24,14 @@ function SignupForm() {
 
   const isSales = role === "rep" || !!inviteToken;
   const isManager = role === "manager" && !inviteToken;
+  const effectiveRole = inviteToken ? "rep" : role;
+  const showRepManagerFields = effectiveRole === "rep" || effectiveRole === "manager";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const effectiveRole = inviteToken ? "rep" : role;
     const accountType = effectiveRole === "rep" ? "sales" : effectiveRole === "manager" ? "manager" : "hcp";
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -38,6 +42,8 @@ function SignupForm() {
           account_type: accountType,
           role: effectiveRole,
           ...(inviteToken ? { invite_token: inviteToken } : {}),
+          ...(effectiveRole === "rep" || effectiveRole === "manager" ? { state, city } : {}),
+          ...(effectiveRole === "rep" || effectiveRole === "manager" ? { company_name: company || undefined } : {}),
         },
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
       },
@@ -112,6 +118,51 @@ function SignupForm() {
               className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
             />
           </div>
+          {!inviteToken && (role === "rep" || role === "manager") && (
+            <div>
+              <label htmlFor="company" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">Company Name</label>
+              <input
+                id="company"
+                type="text"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                required
+                placeholder="e.g. Acme Hospice"
+                className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+              />
+            </div>
+          )}
+          {showRepManagerFields && (
+            <>
+              <div>
+                <label htmlFor="state" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">State</label>
+                <select
+                  id="state"
+                  required
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                >
+                  <option value="">Select...</option>
+                  {["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY", "DC"].map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="city" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">City</label>
+                <input
+                  id="city"
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  required
+                  placeholder="e.g. Houston"
+                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                />
+              </div>
+            </>
+          )}
           <div>
             <label htmlFor="password" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">Password</label>
             <input
