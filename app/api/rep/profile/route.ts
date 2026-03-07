@@ -29,6 +29,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { state, city } = body;
+    const cityNormalized = typeof city === "string" ? city.trim().replace(/\b\w/g, (c) => c.toUpperCase()) : city;
 
     const admin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
 
     await admin
       .from("profiles")
-      .update({ state, city, updated_at: new Date().toISOString() })
+      .update({ state, city: cityNormalized, updated_at: new Date().toISOString() })
       .eq("id", user.id);
 
     return NextResponse.json({ success: true });

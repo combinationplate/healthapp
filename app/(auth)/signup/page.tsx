@@ -33,6 +33,7 @@ function SignupForm() {
     setMessage(null);
     const supabase = createClient();
     const accountType = effectiveRole === "rep" ? "sales" : effectiveRole === "manager" ? "manager" : "hcp";
+    const cityNormalized = typeof city === "string" ? city.trim().replace(/\b\w/g, (c) => c.toUpperCase()) : city;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -42,7 +43,7 @@ function SignupForm() {
           account_type: accountType,
           role: effectiveRole,
           ...(inviteToken ? { invite_token: inviteToken } : {}),
-          ...(effectiveRole === "rep" || effectiveRole === "manager" ? { state, city } : {}),
+          ...(effectiveRole === "rep" || effectiveRole === "manager" ? { state, city: cityNormalized } : {}),
           ...(effectiveRole === "rep" || effectiveRole === "manager" ? { company_name: company || undefined } : {}),
         },
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,

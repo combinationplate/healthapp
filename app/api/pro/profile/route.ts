@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const { discipline, state, city, facility } = body;
+  const cityNormalized = typeof city === "string" ? city.trim().replace(/\b\w/g, (c) => c.toUpperCase()) : city;
 
   const admin = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
 
   const { error } = await admin
     .from("profiles")
-    .update({ discipline, state, city, facility, updated_at: new Date().toISOString() })
+    .update({ discipline, state, city: cityNormalized, facility, updated_at: new Date().toISOString() })
     .eq("id", user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
