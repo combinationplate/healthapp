@@ -29,7 +29,7 @@ function SignupForm() {
     const supabase = createClient();
     const effectiveRole = inviteToken ? "rep" : role;
     const accountType = effectiveRole === "rep" ? "sales" : effectiveRole === "manager" ? "manager" : "hcp";
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -47,7 +47,14 @@ function SignupForm() {
       setMessage({ type: "error", text: error.message });
       return;
     }
-    router.push("/app");
+    if (data.session) {
+      setTimeout(() => router.push("/app"), 100);
+    } else {
+      setMessage({
+        type: "success",
+        text: "Check your email for the confirmation link to complete sign up.",
+      });
+    }
   }
 
   return (
