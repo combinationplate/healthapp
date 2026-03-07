@@ -293,6 +293,30 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [touchpointSaving, setTouchpointSaving] = useState(false);
   const [touchpointError, setTouchpointError] = useState<string | null>(null);
   const [touchpointSuccess, setTouchpointSuccess] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrMode, setQrMode] = useState<"any" | "specific">("any");
+  const [qrCourseId, setQrCourseId] = useState("");
+  const [qrCourses, setQrCourses] = useState<{ id: string; name: string; hours: number }[]>([]);
+  const [qrCoursesLoading, setQrCoursesLoading] = useState(false);
+
+  useEffect(() => {
+    if (!qrOpen || !repId) return;
+    setQrCoursesLoading(true);
+    const supabase = createClient();
+    supabase
+      .from("course_professions")
+      .select("courses(id, name, hours)")
+      .then(({ data }) => {
+        const rows = ((data ?? []) as unknown) as { courses: { id: string; name: string; hours: number } | { id: string; name: string; hours: number }[] }[];
+        const byId = new Map<string, { id: string; name: string; hours: number }>();
+        rows.forEach((r) => {
+          const c = Array.isArray(r.courses) ? r.courses[0] : r.courses;
+          if (c && c.id) byId.set(c.id, { id: c.id, name: c.name, hours: c.hours });
+        });
+        setQrCourses(Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name)));
+        setQrCoursesLoading(false);
+      });
+  }, [qrOpen, repId]);
 
   const fetchProfessionals = useCallback(async () => {
     if (!repId) return;
@@ -724,17 +748,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
               <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, kiosk mode, and bulk send.</p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-4">
-                {[
-                  { emoji: "📱", name: "My QR Code", meta: "Personal page" },
-                  { emoji: "📚", name: "Course QR", meta: "Specific course" },
-                  { emoji: "📅", name: "Event QR", meta: "Event RSVP" },
-                ].map((c) => (
-                  <button key={c.name} type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("QR: " + c.name)}>
-                    <span className="text-2xl block mb-2">{c.emoji}</span>
-                    <div className="font-bold text-[13px] text-[var(--ink)]">{c.name}</div>
-                    <div className="text-[11px] text-[var(--ink-muted)]">{c.meta}</div>
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  onClick={() => setQrOpen(true)}
+                >
+                  <span className="text-2xl block mb-2">📱</span>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">Generate QR Code</div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">CE landing page link</div>
+                </button>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Generate Flyer")}>
@@ -749,6 +771,62 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </button>
               </div>
             </SectionCard>
+
+            {qrOpen && repId && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setQrOpen(false)}>
+                <div style={{ width: "92%", maxWidth: "440px", background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }} onClick={e => e.stopPropagation()}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)" }}>Generate QR Code</h3>
+                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B" }} onClick={() => setQrOpen(false)} aria-label="Close">×</button>
+                  </div>
+                  <div style={{ display: "flex", gap: "16px", marginBottom: "20px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input type="radio" name="qrMode" checked={qrMode === "any"} onChange={() => { setQrMode("any"); setQrCourseId(""); }} />
+                      <span style={{ fontSize: "14px" }}>Any Course</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                      <input type="radio" name="qrMode" checked={qrMode === "specific"} onChange={() => setQrMode("specific")} />
+                      <span style={{ fontSize: "14px" }}>Specific Course</span>
+                    </label>
+                  </div>
+                  {qrMode === "specific" && (
+                    <div style={{ marginBottom: "16px" }}>
+                      <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
+                      <select
+                        value={qrCourseId}
+                        onChange={e => setQrCourseId(e.target.value)}
+                        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                      >
+                        <option value="">Select…</option>
+                        {qrCoursesLoading ? <option disabled>Loading…</option> : qrCourses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {(() => {
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    const qrUrl = qrMode === "any" ? `${origin}/ce/${repId}` : qrCourseId ? `${origin}/ce/${repId}/${qrCourseId}` : "";
+                    return (
+                      <>
+                        {qrUrl ? (
+                          <>
+                            <div style={{ textAlign: "center", marginBottom: "16px" }}>
+                              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" style={{ display: "block", margin: "0 auto" }} />
+                            </div>
+                            <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
+                              <input readOnly value={qrUrl} style={{ flex: 1, fontSize: "12px", padding: "8px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "#F8FAFC" }} />
+                              <button type="button" className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "8px 12px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(qrUrl); }}>Copy</button>
+                            </div>
+                            <a href={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} style={{ display: "inline-block", textAlign: "center", padding: "10px 16px", fontSize: "13px", textDecoration: "none" }}>Download QR</a>
+                          </>
+                        ) : qrMode === "specific" && !qrCourseId ? (
+                          <p style={{ fontSize: "13px", color: "#64748B" }}>Select a course to see the QR code.</p>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
             <SectionCard>
               <div className="border-b border-[var(--border)] pb-3 mb-4">
                 <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
