@@ -26,6 +26,9 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     activeReps: 0,
     redemptionRate: "—",
   });
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -43,6 +46,14 @@ export function ManagerDashboard({ userName, managerId }: Props) {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  async function handleGenerateInvite() {
+    setInviteLoading(true);
+    const res = await fetch("/api/manager/invite", { method: "POST", credentials: "include" });
+    const data = await res.json();
+    setInviteLoading(false);
+    if (data.url) setInviteUrl(data.url);
+  }
 
   return (
     <PageShell>
@@ -62,9 +73,41 @@ export function ManagerDashboard({ userName, managerId }: Props) {
         </div>
 
         <SectionCard>
-          <div className="border-b border-[var(--border)] pb-3 mb-4">
-            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Rep Performance</h2>
-            <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CEs sent, network size, last activity, and redemption rate per rep</p>
+          <div className="border-b border-[var(--border)] pb-3 mb-4 flex justify-between items-start">
+            <div>
+              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Rep Performance</h2>
+              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CEs sent, network size, last activity, and redemption rate per rep</p>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'8px'}}>
+              <button
+                type="button"
+                onClick={handleGenerateInvite}
+                disabled={inviteLoading}
+                className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors disabled:opacity-60"
+              >
+                {inviteLoading ? "Generating…" : "Invite Rep"}
+              </button>
+              {inviteUrl && (
+                <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
+                  <input
+                    readOnly
+                    value={inviteUrl}
+                    style={{fontSize:'11px',padding:'6px 10px',borderRadius:'6px',border:'1px solid var(--border)',width:'220px',background:'#F8FAFC'}}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(inviteUrl);
+                      setInviteCopied(true);
+                      setTimeout(() => setInviteCopied(false), 2000);
+                    }}
+                    style={{fontSize:'11px',padding:'6px 10px',borderRadius:'6px',border:'1px solid var(--border)',background:'white',cursor:'pointer',fontWeight:600,whiteSpace:'nowrap'}}
+                  >
+                    {inviteCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           {loading ? (
             <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
