@@ -9,6 +9,7 @@ function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get("type") ?? "hcp"; // hcp | sales | manager
+  const inviteToken = searchParams.get("invite");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -18,20 +19,26 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
-  const isSales = role === "rep";
-  const isManager = role === "manager";
+  const isSales = role === "rep" || !!inviteToken;
+  const isManager = role === "manager" && !inviteToken;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const accountType = role === "rep" ? "sales" : role === "manager" ? "manager" : "hcp";
+    const effectiveRole = inviteToken ? "rep" : role;
+    const accountType = effectiveRole === "rep" ? "sales" : effectiveRole === "manager" ? "manager" : "hcp";
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, account_type: accountType, role },
+        data: {
+          full_name: fullName,
+          account_type: accountType,
+          role: effectiveRole,
+          invite_token: inviteToken ?? undefined,
+        },
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
       },
     });
@@ -51,15 +58,18 @@ function SignupForm() {
       <div className="w-full max-w-[400px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 shadow-lg">
         <div className="mb-6 flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">
           <svg width={32} height={22} viewBox="0 0 36 24"><path className="heartbeat-path" d="M0 12 L8 12 L11 4 L15 20 L19 8 L22 14 L25 12 L36 12" fill="none" stroke="#2455FF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-          {isManager ? "Manager Sign Up" : isSales ? "Request a Demo" : "Create Free Account"}
+          {inviteToken ? "Join Pulse" : isManager ? "Manager Sign Up" : isSales ? "Request a Demo" : "Create Free Account"}
         </div>
         <p className="mb-4 text-sm text-[var(--ink-muted)]">
-          {isManager
+          {inviteToken
+            ? "You've been invited to join a team on Pulse. Create your account to get started."
+            : isManager
             ? "Lead your team with visibility and tools."
             : isSales
             ? "See how Pulse helps your sales team win more referrals."
             : "Get free CE courses, event invites, career opportunities, and local rep connections."}
         </p>
+        {!inviteToken && (
         <div className="mb-4">
           <label className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">I am a</label>
           <select
@@ -72,6 +82,7 @@ function SignupForm() {
             <option value="professional">Healthcare professional</option>
           </select>
         </div>
+        )}
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div>
             <label htmlFor="fullName" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">Full Name</label>
@@ -122,7 +133,7 @@ function SignupForm() {
               isManager ? "bg-[var(--coral)] hover:opacity-90" : isSales ? "bg-[var(--blue)] hover:bg-[var(--blue-dark)]" : "bg-[var(--teal)] hover:bg-[var(--teal-dark)]"
             }`}
           >
-            {loading ? "Creating account…" : isManager ? "Create Account" : isSales ? "Request Demo" : "Create Free Account"}
+            {loading ? "Creating account…" : inviteToken ? "Create Account" : isManager ? "Create Account" : isSales ? "Request Demo" : "Create Free Account"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--ink-soft)]">
