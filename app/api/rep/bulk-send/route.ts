@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { buildCeEmailSubject, buildCeEmailHtml, buildCeEmailText } from "@/lib/email/ce-email";
 
 type Recipient = {
   name: string;
@@ -41,12 +42,21 @@ export async function POST(request: Request) {
 
     if (!course) return NextResponse.json({ error: "Course not found" }, { status: 404 });
 
-    // Get rep profile
+    // Get rep profile + org
     const { data: repProfile } = await admin
       .from("profiles")
-      .select("id, full_name")
+      .select("id, full_name, org_id, org_name")
       .eq("id", repId)
       .single();
+
+    let repOrgName = repProfile?.org_name ?? "";
+    if (!repOrgName && repProfile?.org_id) {
+      const { data: org } = await admin.from("orgs").select("name").eq("id", repProfile.org_id).single();
+      repOrgName = org?.name ?? "";
+    }
+
+    const { data: repAuthUser } = await admin.auth.admin.getUserById(repId);
+    const repEmail = repAuthUser?.user?.email ?? "";
 
     // Check which emails already received this course from this rep
     const emails = recipients.map((r: Recipient) => r.email.trim().toLowerCase());
@@ -146,6 +156,18 @@ export async function POST(request: Request) {
         });
 
         // Send email
+        const emailParams = {
+          recipientName: name,
+          courseName: course.name,
+          courseHours: course.hours,
+          couponCode,
+          accessUrl: redirectUrl,
+          discount,
+          repName: repProfile?.full_name ?? "Your Rep",
+          repEmail,
+          repOrgName,
+        };
+
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -155,23 +177,9 @@ export async function POST(request: Request) {
           body: JSON.stringify({
             from: "noreply@pulsereferrals.com",
             to: email,
-            subject: `Your free CE course from ${repProfile?.full_name ?? "your rep"}`,
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-                <h1 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Your free CE course is ready 🎉</h1>
-                <p style="color: #64748B; margin-bottom: 24px;">Hi ${name}, here's your complimentary CE course from ${repProfile?.full_name ?? "your rep"}.</p>
-                <div style="background: #F0F9FF; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
-                  <div style="font-weight: 700; font-size: 18px; margin-bottom: 4px;">${course.name}</div>
-                  <div style="color: #64748B; font-size: 14px;">${course.hours} credit hours</div>
-                </div>
-                <div style="background: #F8FAFC; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-                  <div style="font-size: 12px; color: #64748B; margin-bottom: 4px;">Your coupon code</div>
-                  <div style="font-size: 24px; font-weight: 800; letter-spacing: 2px; color: #2D5BFF;">${couponCode}</div>
-                </div>
-                <a href="${redirectUrl}" style="display: block; background: #2D5BFF; color: white; text-align: center; padding: 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 16px;">Access Your Course →</a>
-                <p style="color: #94A3B8; font-size: 12px; margin-top: 24px; text-align: center;">Powered by Pulse · hiscornerstone.com</p>
-              </div>
-            `,
+            subject: buildCeEmailSubject(emailParams),
+            html: buildCeEmailHtml(emailParams),
+            text: buildCeEmailText(emailParams),
           }),
         });
 
