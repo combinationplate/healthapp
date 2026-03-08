@@ -1170,103 +1170,497 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 </button>
                               </div>
 
-                              {/* Hidden flyer template captured by html2canvas */}
+                              {/* ── Flyer template (captured by html2canvas) ── */}
                               <div style={{ position: "fixed", left: "-9999px", top: 0 }}>
                                 <div
                                   ref={flyerRef}
                                   style={{
                                     width: flyerSize === "print" ? "816px" : "1080px",
                                     height: flyerSize === "print" ? "1056px" : "1080px",
-                                    background: "white",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "80px 60px",
-                                    fontFamily: "'DM Sans', sans-serif",
+                                    background: "#ffffff",
                                     position: "relative",
-                                    boxSizing: "border-box",
+                                    overflow: "hidden",
+                                    fontFamily: "'DM Sans', sans-serif",
+                                    boxSizing: "border-box" as const,
+                                    display: "flex",
+                                    flexDirection: "column" as const,
                                   }}
                                 >
-                                  {/* Top accent bar */}
-                                  <div style={{
-                                    position: "absolute", top: 0, left: 0, right: 0, height: "8px",
-                                    background: "linear-gradient(90deg, #2455ff, #10B981)"
-                                  }} />
-
-                                  {/* Logo */}
-                                  <div style={{
-                                    width: "56px", height: "56px", borderRadius: "14px",
-                                    background: "linear-gradient(135deg, #2455ff, #10B981)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    color: "white", fontWeight: 900, fontSize: "28px", marginBottom: "16px"
-                                  }}>P</div>
-
-                                  {/* Headline */}
-                                  <h1 style={{
-                                    fontSize: flyerSize === "print" ? "52px" : "64px",
-                                    fontWeight: 900, textAlign: "center", lineHeight: 1.1,
-                                    color: "#0b1222", marginBottom: "16px", letterSpacing: "-1px"
-                                  }}>
-                                    Get a Free<br />CE Course
-                                  </h1>
-
-                                  {/* Subheadline */}
-                                  <p style={{
-                                    fontSize: "20px", color: "#7a8ba8", textAlign: "center",
-                                    marginBottom: "48px", maxWidth: "500px", lineHeight: 1.5
-                                  }}>
-                                    Scan the QR code below to claim your complimentary continuing education course. No account required.
-                                  </p>
-
-                                  {/* QR Code */}
-                                  <div style={{
-                                    padding: "24px", background: "white", borderRadius: "16px",
-                                    border: "2px solid rgba(11,18,34,0.08)", marginBottom: "48px",
-                                    boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
-                                  }}>
-                                    <img
-                                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`}
-                                      width={220}
-                                      height={220}
-                                      alt="QR Code"
-                                      crossOrigin="anonymous"
-                                    />
-                                  </div>
-
-                                  {/* Course name if specific */}
-                                  {qrMode === "specific" && qrCourseId && qrCourses.length > 0 && (
-                                    <div style={{
-                                      background: "rgba(36,85,255,0.06)", borderRadius: "12px", padding: "16px 32px",
-                                      marginBottom: "32px", textAlign: "center", border: "1px solid rgba(36,85,255,0.20)"
-                                    }}>
-                                      <div style={{ fontSize: "13px", color: "#7a8ba8", marginBottom: "4px" }}>Featured Course</div>
-                                      <div style={{ fontWeight: 700, fontSize: "18px", color: "#0b1222" }}>
-                                        {qrCourses.find(c => c.id === qrCourseId)?.name}
+                                  {/* ▌ TOP SPONSOR BAND — dark, company name huge ────────── */}
+                                  <div
+                                    style={{
+                                      background: "linear-gradient(135deg, #0b1222 0%, #1a2744 100%)",
+                                      padding: flyerSize === "print"
+                                        ? "40px 56px 36px"
+                                        : "48px 64px 44px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                    }}
+                                  >
+                                    <div>
+                                      <div
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "11px" : "13px",
+                                          fontWeight: 600,
+                                          color: "rgba(255,255,255,0.5)",
+                                          textTransform: "uppercase" as const,
+                                          letterSpacing: "0.1em",
+                                          marginBottom: flyerSize === "print" ? "6px" : "8px",
+                                        }}
+                                      >
+                                        Compliments of
                                       </div>
-                                      <div style={{ fontSize: "14px", color: "#7a8ba8", marginTop: "2px" }}>
-                                        {qrCourses.find(c => c.id === qrCourseId)?.hours} credit hours · Complimentary
+                                      <div
+                                        style={{
+                                          fontFamily: "'Fraunces', serif",
+                                          fontSize: flyerSize === "print" ? "34px" : "40px",
+                                          fontWeight: 900,
+                                          color: "#ffffff",
+                                          letterSpacing: "-0.01em",
+                                          lineHeight: 1.1,
+                                        }}
+                                      >
+                                        {repProfile?.org_name || repProfile?.full_name || "Your Company"}
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "14px" : "16px",
+                                          color: "rgba(255,255,255,0.6)",
+                                          marginTop: flyerSize === "print" ? "4px" : "6px",
+                                        }}
+                                      >
+                                        {repProfile?.org_name
+                                          ? `${repProfile.full_name} · Business Development`
+                                          : "Business Development"}
                                       </div>
                                     </div>
-                                  )}
-
-                                  {/* Rep info */}
-                                  <div style={{ textAlign: "center", marginTop: "auto" }}>
-                                    <div style={{ fontSize: "15px", color: "#7a8ba8", marginBottom: "4px" }}>
-                                      Compliments of <strong style={{ color: "#0b1222" }}>{repProfile?.full_name ?? ""}</strong>
+                                    <div
+                                      style={{
+                                        background: "rgba(255,255,255,0.12)",
+                                        border: "1px solid rgba(255,255,255,0.15)",
+                                        padding: flyerSize === "print" ? "8px 18px" : "10px 22px",
+                                        borderRadius: flyerSize === "print" ? "8px" : "10px",
+                                        fontSize: flyerSize === "print" ? "13px" : "15px",
+                                        fontWeight: 700,
+                                        color: "#ffffff",
+                                        whiteSpace: "nowrap" as const,
+                                      }}
+                                    >
+                                      100% FREE
                                     </div>
-                                    {repProfile?.org_name && (
-                                      <div style={{ fontSize: "13px", color: "#7a8ba8" }}>
-                                        Sponsored by {repProfile.org_name}
-                                      </div>
-                                    )}
                                   </div>
 
-                                  {/* Bottom accent bar */}
-                                  <div style={{
-                                    position: "absolute", bottom: 0, left: 0, right: 0, height: "8px",
-                                    background: "linear-gradient(90deg, #2455ff, #10B981)"
-                                  }} />
+                                  {/* ▌ MAIN CONTENT ─────────────────────────────────────── */}
+                                  <div
+                                    style={{
+                                      flex: 1,
+                                      padding: flyerSize === "print"
+                                        ? "40px 56px 0"
+                                        : "44px 64px 0",
+                                      display: "flex",
+                                      flexDirection: "column" as const,
+                                    }}
+                                  >
+                                    {/* Headline */}
+                                    <div style={{ marginBottom: flyerSize === "print" ? "32px" : "32px" }}>
+                                      <h1
+                                        style={{
+                                          fontFamily: "'Fraunces', serif",
+                                          fontSize: flyerSize === "print" ? "48px" : "56px",
+                                          fontWeight: 900,
+                                          lineHeight: 1.05,
+                                          color: "#0b1222",
+                                          letterSpacing: "-0.02em",
+                                          margin: "0 0 10px",
+                                        }}
+                                      >
+                                        Get a Free
+                                        <br />
+                                        CE Course
+                                      </h1>
+                                      <p
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "17px" : "19px",
+                                          lineHeight: 1.5,
+                                          color: "#3b4963",
+                                          margin: 0,
+                                          maxWidth: flyerSize === "print" ? "420px" : "560px",
+                                        }}
+                                      >
+                                        Scan the code below to instantly claim a complimentary continuing
+                                        education course. No account needed.
+                                      </p>
+                                    </div>
+
+                                    {/* Two-column: QR left, content right */}
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        gap: flyerSize === "print" ? "36px" : "44px",
+                                        flex: 1,
+                                        alignItems: "stretch",
+                                      }}
+                                    >
+                                      {/* ── Left column: QR + course card ── */}
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          flexDirection: "column" as const,
+                                          gap: flyerSize === "print" ? "16px" : "18px",
+                                          flexShrink: 0,
+                                          width: flyerSize === "print" ? "248px" : "300px",
+                                        }}
+                                      >
+                                        {/* QR code */}
+                                        <div
+                                          style={{
+                                            background: "#f6f5f0",
+                                            padding: flyerSize === "print" ? "20px" : "24px",
+                                            borderRadius: flyerSize === "print" ? "16px" : "20px",
+                                            border: "1px solid rgba(11,18,34,0.06)",
+                                            display: "flex",
+                                            flexDirection: "column" as const,
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <img
+                                            src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(qrUrl)}`}
+                                            width={flyerSize === "print" ? 208 : 252}
+                                            height={flyerSize === "print" ? 208 : 252}
+                                            alt="QR Code"
+                                            crossOrigin="anonymous"
+                                            style={{ display: "block", borderRadius: "8px" }}
+                                          />
+                                          <div
+                                            style={{
+                                              marginTop: flyerSize === "print" ? "12px" : "14px",
+                                              fontSize: flyerSize === "print" ? "13px" : "15px",
+                                              fontWeight: 700,
+                                              color: "#0b1222",
+                                              textAlign: "center" as const,
+                                            }}
+                                          >
+                                            Scan with your phone
+                                          </div>
+                                          <div
+                                            style={{
+                                              fontSize: flyerSize === "print" ? "11px" : "12px",
+                                              color: "#7a8ba8",
+                                              textAlign: "center" as const,
+                                              marginTop: "2px",
+                                            }}
+                                          >
+                                            No app needed · Takes 30 sec
+                                          </div>
+                                        </div>
+
+                                        {/* Course card — specific course */}
+                                        {qrMode === "specific" &&
+                                          qrCourseId &&
+                                          qrCourses.length > 0 &&
+                                          (() => {
+                                            const course = qrCourses.find((c) => c.id === qrCourseId);
+                                            return course ? (
+                                              <div
+                                                style={{
+                                                  background: "rgba(36,85,255,0.05)",
+                                                  borderRadius: flyerSize === "print" ? "12px" : "14px",
+                                                  padding: flyerSize === "print" ? "16px" : "18px 20px",
+                                                  borderLeft: flyerSize === "print"
+                                                    ? "3px solid #2455ff"
+                                                    : "4px solid #2455ff",
+                                                }}
+                                              >
+                                                <div
+                                                  style={{
+                                                    fontSize: flyerSize === "print" ? "10px" : "11px",
+                                                    fontWeight: 700,
+                                                    color: "#7a8ba8",
+                                                    textTransform: "uppercase" as const,
+                                                    letterSpacing: "0.06em",
+                                                    marginBottom: "3px",
+                                                  }}
+                                                >
+                                                  Featured Course
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    fontSize: flyerSize === "print" ? "15px" : "18px",
+                                                    fontWeight: 700,
+                                                    color: "#0b1222",
+                                                    lineHeight: 1.25,
+                                                  }}
+                                                >
+                                                  {course.name}
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    fontSize: flyerSize === "print" ? "12px" : "13px",
+                                                    color: "#3b4963",
+                                                    marginTop: "3px",
+                                                  }}
+                                                >
+                                                  {course.hours} credit hours · Complimentary
+                                                </div>
+                                              </div>
+                                            ) : null;
+                                          })()}
+
+                                        {/* Course card — any course */}
+                                        {qrMode === "any" && (
+                                          <div
+                                            style={{
+                                              background: "rgba(13,148,136,0.05)",
+                                              borderRadius: flyerSize === "print" ? "12px" : "14px",
+                                              padding: flyerSize === "print" ? "16px" : "18px 20px",
+                                              borderLeft: flyerSize === "print"
+                                                ? "3px solid #0d9488"
+                                                : "4px solid #0d9488",
+                                            }}
+                                          >
+                                            <div
+                                              style={{
+                                                fontSize: flyerSize === "print" ? "10px" : "11px",
+                                                fontWeight: 700,
+                                                color: "#7a8ba8",
+                                                textTransform: "uppercase" as const,
+                                                letterSpacing: "0.06em",
+                                                marginBottom: "3px",
+                                              }}
+                                            >
+                                              Choose From
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: flyerSize === "print" ? "15px" : "18px",
+                                                fontWeight: 700,
+                                                color: "#0b1222",
+                                                lineHeight: 1.25,
+                                              }}
+                                            >
+                                              Our Full Course Catalog
+                                            </div>
+                                            <div
+                                              style={{
+                                                fontSize: flyerSize === "print" ? "12px" : "13px",
+                                                color: "#3b4963",
+                                                marginTop: "3px",
+                                              }}
+                                            >
+                                              Ethics · Palliative Care · Mental Health &amp; more
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* ── Right column: how it works + who qualifies ── */}
+                                      <div
+                                        style={{
+                                          flex: 1,
+                                          display: "flex",
+                                          flexDirection: "column" as const,
+                                          gap: flyerSize === "print" ? "20px" : "24px",
+                                          paddingTop: "4px",
+                                        }}
+                                      >
+                                        {/* How it works */}
+                                        <div>
+                                          <div
+                                            style={{
+                                              fontSize: flyerSize === "print" ? "11px" : "12px",
+                                              fontWeight: 700,
+                                              color: "#7a8ba8",
+                                              textTransform: "uppercase" as const,
+                                              letterSpacing: "0.06em",
+                                              marginBottom: flyerSize === "print" ? "12px" : "14px",
+                                            }}
+                                          >
+                                            How it works
+                                          </div>
+                                          <div style={{ display: "grid", gap: flyerSize === "print" ? "10px" : "12px" }}>
+                                            {[
+                                              { n: "1", bg: "#0b1222", title: "Scan the QR code", sub: "Use your phone camera" },
+                                              { n: "2", bg: "#0b1222", title: "Enter your email", sub: "No account or password needed" },
+                                              { n: "3", bg: "#0d9488", title: "Get your free course", sub: "Link delivered to your inbox instantly" },
+                                            ].map((step) => (
+                                              <div
+                                                key={step.n}
+                                                style={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: flyerSize === "print" ? "12px" : "14px",
+                                                }}
+                                              >
+                                                <div
+                                                  style={{
+                                                    width: flyerSize === "print" ? "32px" : "36px",
+                                                    height: flyerSize === "print" ? "32px" : "36px",
+                                                    borderRadius: flyerSize === "print" ? "8px" : "10px",
+                                                    flexShrink: 0,
+                                                    background: step.bg,
+                                                    color: "white",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    fontSize: flyerSize === "print" ? "14px" : "16px",
+                                                    fontWeight: 800,
+                                                  }}
+                                                >
+                                                  {step.n}
+                                                </div>
+                                                <div>
+                                                  <div
+                                                    style={{
+                                                      fontSize: flyerSize === "print" ? "14px" : "16px",
+                                                      fontWeight: 700,
+                                                      color: "#0b1222",
+                                                    }}
+                                                  >
+                                                    {step.title}
+                                                  </div>
+                                                  <div
+                                                    style={{
+                                                      fontSize: flyerSize === "print" ? "11px" : "13px",
+                                                      color: "#7a8ba8",
+                                                    }}
+                                                  >
+                                                    {step.sub}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        {/* Who qualifies */}
+                                        <div
+                                          style={{
+                                            background: "#f6f5f0",
+                                            borderRadius: flyerSize === "print" ? "12px" : "14px",
+                                            padding: flyerSize === "print" ? "16px" : "18px",
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              fontSize: flyerSize === "print" ? "11px" : "12px",
+                                              fontWeight: 700,
+                                              color: "#7a8ba8",
+                                              textTransform: "uppercase" as const,
+                                              letterSpacing: "0.06em",
+                                              marginBottom: flyerSize === "print" ? "8px" : "10px",
+                                            }}
+                                          >
+                                            Who qualifies
+                                          </div>
+                                          <div
+                                            style={{
+                                              display: "flex",
+                                              flexWrap: "wrap" as const,
+                                              gap: flyerSize === "print" ? "6px" : "8px",
+                                            }}
+                                          >
+                                            {["RN / LPN", "MSW / LCSW", "Case Managers", "PT / OT / SLP"].map(
+                                              (label) => (
+                                                <span
+                                                  key={label}
+                                                  style={{
+                                                    background: "white",
+                                                    border: "1px solid rgba(11,18,34,0.08)",
+                                                    borderRadius: flyerSize === "print" ? "6px" : "8px",
+                                                    padding: flyerSize === "print" ? "4px 10px" : "6px 14px",
+                                                    fontSize: flyerSize === "print" ? "12px" : "14px",
+                                                    fontWeight: 600,
+                                                    color: "#0b1222",
+                                                  }}
+                                                >
+                                                  {label}
+                                                </span>
+                                              )
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Accreditation */}
+                                        <div style={{ display: "flex", alignItems: "center", gap: flyerSize === "print" ? "8px" : "10px" }}>
+                                          <div
+                                            style={{
+                                              width: flyerSize === "print" ? "22px" : "24px",
+                                              height: flyerSize === "print" ? "22px" : "24px",
+                                              borderRadius: "50%",
+                                              background: "rgba(13,148,136,0.12)",
+                                              color: "#0d9488",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              fontSize: flyerSize === "print" ? "11px" : "12px",
+                                              fontWeight: 800,
+                                              flexShrink: 0,
+                                            }}
+                                          >
+                                            ✓
+                                          </div>
+                                          <span
+                                            style={{
+                                              fontSize: flyerSize === "print" ? "12px" : "14px",
+                                              color: "#3b4963",
+                                            }}
+                                          >
+                                            State-approved · Accredited · 100% online &amp; self-paced
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* ▌ BOTTOM BAR — Pulse small ─────────────────────────── */}
+                                  <div
+                                    style={{
+                                      padding: flyerSize === "print" ? "20px 56px" : "24px 64px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "space-between",
+                                      borderTop: "1px solid rgba(11,18,34,0.06)",
+                                      marginTop: "auto",
+                                    }}
+                                  >
+                                    <div style={{ display: "flex", alignItems: "center", gap: flyerSize === "print" ? "6px" : "8px" }}>
+                                      <div
+                                        style={{
+                                          width: flyerSize === "print" ? "20px" : "22px",
+                                          height: flyerSize === "print" ? "20px" : "22px",
+                                          borderRadius: flyerSize === "print" ? "5px" : "6px",
+                                          background: "linear-gradient(135deg, #2455ff, #0d9488)",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          color: "white",
+                                          fontWeight: 900,
+                                          fontSize: flyerSize === "print" ? "10px" : "11px",
+                                        }}
+                                      >
+                                        P
+                                      </div>
+                                      <span
+                                        style={{
+                                          fontFamily: "'Fraunces', serif",
+                                          fontSize: flyerSize === "print" ? "13px" : "14px",
+                                          fontWeight: 900,
+                                          color: "#7a8ba8",
+                                        }}
+                                      >
+                                        Pulse
+                                      </span>
+                                    </div>
+                                    <div
+                                      style={{
+                                        fontSize: flyerSize === "print" ? "11px" : "12px",
+                                        color: "#7a8ba8",
+                                      }}
+                                    >
+                                      pulsereferrals.vercel.app
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
