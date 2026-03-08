@@ -37,10 +37,10 @@ export function LandingNav() {
           <ul className="hidden items-center gap-7 list-none md:flex">
             <li>
               <Link
-                href="/#toolkit"
+                href="/how-it-works"
                 className="text-sm font-medium text-[var(--ink-soft)] transition-colors hover:text-[var(--ink)]"
               >
-                Toolkit
+                How It Works
               </Link>
             </li>
             <li>
@@ -85,7 +85,7 @@ export function LandingNav() {
         </div>
         {mobileOpen && (
           <div className="flex flex-col gap-4 border-t border-[var(--border)] py-4 md:hidden">
-            <Link href="/#toolkit" className="text-sm font-medium text-[var(--ink-soft)]" onClick={() => setMobileOpen(false)}>Toolkit</Link>
+            <Link href="/how-it-works" className="text-sm font-medium text-[var(--ink-soft)]" onClick={() => setMobileOpen(false)}>How It Works</Link>
             <Link href="/#distribution" className="text-sm font-medium text-[var(--ink-soft)]" onClick={() => setMobileOpen(false)}>Distribution</Link>
             <Link href="/#professionals" className="text-sm font-medium text-[var(--ink-soft)]" onClick={() => setMobileOpen(false)}>For Professionals</Link>
             <Link href="/signup?type=hcp" className="text-sm font-medium text-[var(--ink-soft)]" onClick={() => setMobileOpen(false)}>I&apos;m a Healthcare Pro</Link>
