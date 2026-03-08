@@ -2,50 +2,52 @@ import Container from "@/components/ui/Container";
 
 const cards = [
   {
+    accent: "teal",
+    icon: "🎓",
+    title: "Free, Nationally Accredited CEs",
+    desc: "Accredited continuing education courses in ethics, palliative care, mental health, chronic disease management, and more — free for nurses, social workers, case managers, PTs, OTs, and SLPs. Approved across all 50 states.",
+    tag: "Core Feature",
+    tagClass: "bg-[var(--teal-glow)] text-teal",
+  },
+  {
     accent: "blue",
     icon: "📚",
-    title: "CE Course Distribution",
-    desc: "Browse a unified catalog from multiple CE providers. State-compliant, discipline-specific. Send complimentary or discounted courses with one click — auto-tracked, auto-billed.",
+    title: "CE Distribution Tools",
+    desc: "Sales reps send CE courses to professionals via email, QR code, or bulk send — with one click. Auto-generated coupon codes, tracking, and billing built in.",
     tag: "Most Popular",
     tagClass: "bg-[rgba(232,96,76,.08)] text-coral",
   },
   {
     accent: "teal",
-    icon: "📷",
-    title: "QR Codes & Field Tools",
-    desc: "Generate QR codes for events, courses, or your personal rep page. Professionals scan, sign up, and claim CE access in 30 seconds. Auto-generated flyers included.",
-    tag: "New",
-    tagClass: "bg-[var(--teal-glow)] text-teal",
+    icon: "📱",
+    title: "QR Codes & Flyers",
+    desc: "Generate branded QR codes and print-ready flyers with your company name. Leave them at facilities — nurses scan and get a free CE instantly. No app needed.",
+  },
+  {
+    accent: "blue",
+    icon: "🔍",
+    title: "Professional Discovery",
+    desc: "Find nurses, social workers, case managers, and therapists in your territory who are actively requesting CE courses. Connect before your competitors do.",
   },
   {
     accent: "coral",
     icon: "📅",
-    title: "Event & Lunch Management",
-    desc: "Plan lunch-and-learns, in-services, and CE workshops. Manage RSVPs, send reminders, pair events with CE courses, and target by discipline and location.",
+    title: "Event Management",
+    desc: "Invite professionals in your network to lunch-and-learns, in-services, and CE workshops. Manage RSVPs, send reminders, and pair events with free CE courses.",
+    tag: "Coming Soon",
+    tagClass: "bg-[rgba(232,96,76,.08)] text-coral",
   },
   {
-    accent: "teal",
-    icon: "🔍",
-    title: "Professional Discovery",
-    desc: "Find nurses, social workers, case managers, and therapists in your territory who are actively looking for CE courses, events, and rep connections.",
+    accent: "coral",
+    icon: "👥",
+    title: "Network & Touchpoint Tracking",
+    desc: "Build your referral network. Import contacts via CSV or add them one by one. Log calls, visits, and CE sends. See exactly who to follow up with and when.",
   },
   {
     accent: "blue",
     icon: "📊",
-    title: "Relationship Tracking",
-    desc: "Log every touchpoint — calls, visits, CEs sent, events. See full contact history and engagement scores. Know exactly when to follow up.",
-  },
-  {
-    accent: "coral",
-    icon: "🏆",
-    title: "Team Gamification",
-    desc: "Points for every touchpoint. Weekly leaderboards. Team goals. Managers get full visibility into rep activity, CE distribution, and event performance.",
-  },
-  {
-    accent: "blue",
-    icon: "📈",
-    title: "Analytics & Reporting",
-    desc: "Track CE engagement, event attendance, touchpoint frequency, and network growth. See what's driving referrals and where to double down.",
+    title: "Manager Dashboard",
+    desc: "See how many CEs each rep is distributing, their network size, redemption rates, and last activity. Invite new reps with a link. Full team visibility.",
   },
 ];
 
@@ -63,18 +65,17 @@ const iconBg: Record<string, string> = {
 
 export default function Toolkit() {
   return (
-    <section id="toolkit" className="bg-white py-[100px]">
+    <section id="how-it-works" className="bg-white py-[100px]">
       <Container>
-        <p className="section-label text-center text-[13px] font-bold uppercase tracking-[.12em] text-blue">
-          Your Toolkit
+        <p className="section-label text-center text-[13px] font-bold uppercase tracking-[.12em] text-teal">
+          How It Works
         </p>
         <h2 className="section-title mt-3 text-center font-serif text-[clamp(30px,4vw,44px)] font-extrabold tracking-[-.02em]">
-          Seven Tools. One Platform. More Referrals.
+          Two Audiences. One Platform.
         </h2>
         <p className="section-sub mx-auto mb-16 max-w-[640px] text-center text-[18px] text-ink-soft">
-          Stop juggling spreadsheets, emails, and catalogs. Pulse gives your
-          sales team every tool they need to build and maintain referral
-          relationships.
+          Professionals get free, nationally accredited CEs. Sales teams get the
+          referral relationships that come from providing them. Everybody wins.
         </p>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((c) => (

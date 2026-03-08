@@ -15,9 +15,12 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Pulse — The Marketing Toolkit for Healthcare Sales Teams",
+  title: "Pulse — Free CE Courses for Healthcare Pros | Referral Tools for Sales Teams",
   description:
-    "CE course distribution, event management, QR-powered field tools, relationship tracking, and professional discovery for hospice, home health & rehab sales teams.",
+    "Free, nationally accredited CE courses for nurses, social workers, case managers, PTs, OTs, and SLPs. CE distribution, QR codes, branded flyers, and network tools for hospice, home health & rehab sales teams.",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({

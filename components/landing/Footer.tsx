@@ -7,18 +7,34 @@ export default function Footer() {
       <Container>
         <div className="mb-10 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
-            <div className="mb-2.5 flex items-center gap-2 font-serif text-[26px] font-extrabold">
-              <svg
-                width="28"
-                height="18"
-                viewBox="0 0 36 24"
-                fill="none"
-                stroke="#6B8AFF"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M0 12 L8 12 L11 4 L15 20 L19 8 L22 14 L25 12 L36 12" />
+            <div className="mb-2.5 flex items-center gap-2.5 font-serif text-[26px] font-extrabold">
+              <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
+                <rect width="56" height="56" rx="14" fill="#1a2744" />
+                <path
+                  d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                  stroke="url(#footer-glow)"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.3"
+                />
+                <path
+                  d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                  stroke="url(#footer-line)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <defs>
+                  <linearGradient id="footer-line" x1="10" y1="28" x2="46" y2="28">
+                    <stop offset="0%" stopColor="#6B8AFF" />
+                    <stop offset="100%" stopColor="#5EEAD4" />
+                  </linearGradient>
+                  <linearGradient id="footer-glow" x1="10" y1="28" x2="46" y2="28">
+                    <stop offset="0%" stopColor="#2455ff" />
+                    <stop offset="100%" stopColor="#0d9488" />
+                  </linearGradient>
+                </defs>
               </svg>
               Pulse
             </div>

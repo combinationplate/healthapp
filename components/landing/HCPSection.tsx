@@ -5,24 +5,24 @@ import { showModal } from "./LandingModals";
 
 const benefits = [
   {
-    title: "Free CE Courses",
-    desc: "Access accredited courses in ethics, palliative care, mental health, and more — completely free, matched to your state licensing requirements and discipline.",
+    title: "Nationally Accredited CE Courses — Free",
+    desc: "Access accredited courses in ethics, palliative care, mental health, chronic disease management, and more. Approved for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs across all 50 states. Completely free.",
   },
   {
-    title: "Local Events & Lunch-and-Learns",
-    desc: "Get notified about educational events, in-services, and lunch-and-learns near you. RSVP directly through Pulse — many include free CE credit.",
+    title: "100% Online, Self-Paced",
+    desc: "Complete your CE courses on any device, anytime. No classroom, no travel, no scheduling. Start and finish when it works for you.",
   },
   {
-    title: "Career Opportunities",
-    desc: "Discover open positions at hospice, home health, and rehab companies in your area. Reps share opportunities directly — often before they're posted publicly.",
+    title: "Request the CEs You Need",
+    desc: "Need specific CE hours before your license renewal deadline? Submit a request through Pulse and get matched with a local rep who can provide the right course — for free.",
   },
   {
-    title: "Network with Local Reps",
-    desc: "Connect with representatives who can provide resources, CE courses, and support for your patients. You control your visibility and privacy.",
+    title: "Connect with Local Reps",
+    desc: "Reps at hospice, home health, and rehab companies in your area want to provide you with free CEs. You control your visibility — your contact info is only shared if you accept.",
   },
   {
-    title: "Request What You Need",
-    desc: "Need specific CE hours before your deadline? Submit a request and get matched with a rep who can provide the right course.",
+    title: "No Account Needed to Start",
+    desc: "Scan a QR code or click a link from a rep and you'll receive your free CE course by email instantly. Register later to manage your courses, make requests, and connect with more reps.",
   },
 ];
 
@@ -33,15 +33,15 @@ export default function HCPSection() {
     <section id="professionals" className="bg-cream py-[100px]">
       <Container>
         <p className="section-label text-center text-[13px] font-bold uppercase tracking-[.12em] text-teal">
-          For Healthcare Professionals
+          For Nurses, Social Workers, Case Managers &amp; Therapists
         </p>
         <h2 className="section-title mt-3 text-center font-serif text-[clamp(30px,4vw,44px)] font-extrabold tracking-[-.02em]">
-          Free CEs, Events, Career Opportunities &amp; More
+          Free, Nationally Accredited CE Courses
         </h2>
         <p className="section-sub mx-auto mb-16 max-w-[640px] text-center text-[18px] text-ink-soft">
-          Pulse isn&apos;t just for sales teams. Register and get direct access
-          to free continuing education, local events, career opportunities, and
-          connections with reps who want to help.
+          Every licensed healthcare professional needs continuing education credits
+          — and most facilities don&apos;t pay for them. Register for Pulse and
+          get free, accredited CE courses delivered to your inbox. No catch.
         </p>
         <div className="grid gap-14 lg:grid-cols-2 lg:items-start">
           <ul className="list-none">
@@ -66,8 +66,8 @@ export default function HCPSection() {
             <div className="mb-3.5 text-[52px]">🎓</div>
             <h3 className="text-[26px] font-extrabold">100% Free. Always.</h3>
             <p className="mt-2.5 mb-6 text-[15px] leading-[1.6] text-ink-soft">
-              Register and start getting free CE courses, event invites, career
-              opportunities, and rep connections in your area.
+              Register and start getting free, nationally accredited CE courses
+              matched to your discipline and state.
             </p>
             <button
               type="button"

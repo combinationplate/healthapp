@@ -133,12 +133,23 @@ export default function CELandingPage() {
         fontFamily: ds.fontBody,
       }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{
-            width: "36px", height: "36px", borderRadius: "10px",
-            background: `linear-gradient(135deg, ${ds.blue}, ${ds.teal})`,
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontWeight: 900, fontSize: "18px", marginBottom: "16px",
-          }}>P</div>
+          <svg width="36" height="36" viewBox="0 0 56 56" fill="none" style={{ marginBottom: "16px" }}>
+            <rect width="56" height="56" rx="14" fill="#0b1222" />
+            <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+              stroke="url(#qr-load-glow)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
+            <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+              stroke="url(#qr-load-line)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <defs>
+              <linearGradient id="qr-load-line" x1="10" y1="28" x2="46" y2="28">
+                <stop offset="0%" stopColor="#6B8AFF" />
+                <stop offset="100%" stopColor="#5EEAD4" />
+              </linearGradient>
+              <linearGradient id="qr-load-glow" x1="10" y1="28" x2="46" y2="28">
+                <stop offset="0%" stopColor="#2455ff" />
+                <stop offset="100%" stopColor="#0d9488" />
+              </linearGradient>
+            </defs>
+          </svg>
           <p style={{ color: ds.inkMuted, fontSize: "14px" }}>Loading…</p>
         </div>
       </div>
@@ -232,12 +243,23 @@ export default function CELandingPage() {
         {/* Header */}
         <div style={{ marginBottom: "32px", textAlign: "center" }}>
           {/* Pulse logo mark */}
-          <div style={{
-            width: "44px", height: "44px", borderRadius: "12px",
-            background: `linear-gradient(135deg, ${ds.blue}, ${ds.teal})`,
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontWeight: 900, fontSize: "22px", marginBottom: "16px",
-          }}>P</div>
+          <svg width="44" height="44" viewBox="0 0 56 56" fill="none" style={{ marginBottom: "16px" }}>
+            <rect width="56" height="56" rx="14" fill="#0b1222" />
+            <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+              stroke="url(#qr-glow)" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
+            <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+              stroke="url(#qr-line)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <defs>
+              <linearGradient id="qr-line" x1="10" y1="28" x2="46" y2="28">
+                <stop offset="0%" stopColor="#6B8AFF" />
+                <stop offset="100%" stopColor="#5EEAD4" />
+              </linearGradient>
+              <linearGradient id="qr-glow" x1="10" y1="28" x2="46" y2="28">
+                <stop offset="0%" stopColor="#2455ff" />
+                <stop offset="100%" stopColor="#0d9488" />
+              </linearGradient>
+            </defs>
+          </svg>
           <h1 style={{
             fontFamily: ds.fontDisplay,
             fontSize: "26px",

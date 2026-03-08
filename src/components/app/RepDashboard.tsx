@@ -1696,22 +1696,28 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     }}
                                   >
                                     <div style={{ display: "flex", alignItems: "center", gap: flyerSize === "print" ? "6px" : "8px" }}>
-                                      <div
-                                        style={{
-                                          width: flyerSize === "print" ? "20px" : "22px",
-                                          height: flyerSize === "print" ? "20px" : "22px",
-                                          borderRadius: flyerSize === "print" ? "5px" : "6px",
-                                          background: "linear-gradient(135deg, #2455ff, #0d9488)",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          color: "white",
-                                          fontWeight: 900,
-                                          fontSize: flyerSize === "print" ? "10px" : "11px",
-                                        }}
+                                      <svg
+                                        width={flyerSize === "print" ? "20" : "22"}
+                                        height={flyerSize === "print" ? "20" : "22"}
+                                        viewBox="0 0 56 56"
+                                        fill="none"
                                       >
-                                        P
-                                      </div>
+                                        <rect width="56" height="56" rx="14" fill="#0b1222" />
+                                        <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                                          stroke="url(#flyer-sm-glow)" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" opacity="0.3" />
+                                        <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                                          stroke="url(#flyer-sm-line)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+                                        <defs>
+                                          <linearGradient id="flyer-sm-line" x1="10" y1="28" x2="46" y2="28">
+                                            <stop offset="0%" stopColor="#6B8AFF" />
+                                            <stop offset="100%" stopColor="#5EEAD4" />
+                                          </linearGradient>
+                                          <linearGradient id="flyer-sm-glow" x1="10" y1="28" x2="46" y2="28">
+                                            <stop offset="0%" stopColor="#2455ff" />
+                                            <stop offset="100%" stopColor="#0d9488" />
+                                          </linearGradient>
+                                        </defs>
+                                      </svg>
                                       <span
                                         style={{
                                           fontFamily: "'Fraunces', serif",

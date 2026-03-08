@@ -4,17 +4,17 @@ import Container from "@/components/ui/Container";
 import { showModal } from "./LandingModals";
 
 const problemItems = [
-  "Finding the right CE course for each discipline & state takes forever",
-  "Event planning is scattered across email, phone, and paper",
-  "No way to discover new professionals seeking resources",
-  "Managers can't see what the team is actually doing",
+  "Finding the right CE for each discipline & state takes forever",
+  "Sending courses means manually copying coupon codes into emails",
+  "No way to discover new professionals seeking CEs in your territory",
+  "Managers have zero visibility into rep CE activity or engagement",
 ];
 
 const solutionItems = [
-  "Unified CE catalog with one-click sending and QR distribution",
-  "Built-in event management with RSVP tracking",
-  "Discover professionals actively seeking resources",
-  "Gamified team performance with manager dashboards",
+  "Unified CE catalog — one-click send, QR distribution, or bulk send",
+  "Branded flyers with your company name and QR code",
+  "Discover professionals actively requesting CEs in your territory",
+  "Manager dashboard with per-rep CE tracking and redemption rates",
 ];
 
 export default function ProblemSolution() {
@@ -30,9 +30,11 @@ export default function ProblemSolution() {
               Healthcare Marketing Is Manual, Fragmented, and Hard to Track
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
-              Your team is searching CE catalogs manually, managing events in
-              spreadsheets, and hoping people remember your lunches. There&apos;s
-              no single system — and no visibility into what&apos;s working.
+              Your reps know that providing free CEs builds referral relationships
+              — but the logistics are a nightmare. Finding the right course,
+              generating codes, emailing individuals, tracking who used what.
+              There&apos;s no single system, and no visibility into what&apos;s
+              actually working.
             </p>
             <ul className="mt-7 list-none">
               {problemItems.map((item) => (
@@ -80,9 +82,10 @@ export default function ProblemSolution() {
               Pulse Puts Everything Your Sales Team Needs in One Place
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
-              Distribute CE courses in seconds — via QR, email, or in bulk. Plan
-              and promote events. Discover professionals in your territory. Track
-              every touchpoint. All state and discipline-aware.
+              Send free, nationally accredited CE courses in seconds — via email,
+              QR code, or bulk send. Build your referral network, discover
+              professionals seeking CEs, track every touchpoint, and give
+              managers full team visibility.
             </p>
             <ul className="mt-7 list-none">
               {solutionItems.map((item) => (
