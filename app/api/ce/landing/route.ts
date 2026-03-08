@@ -152,7 +152,7 @@ export async function POST(request: Request) {
         course_hours: course.hours,
         product_id: course.product_id,
         coupon_code: couponCode,
-        discount: "100%",
+        discount: "100% Free",
         redirect_url: redirectUrl,
       })
       .select()
