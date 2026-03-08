@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       `${process.env.WOOCOMMERCE_KEY}:${process.env.WOOCOMMERCE_SECRET}`
     ).toString("base64");
 
-    await fetch(`${process.env.WOOCOMMERCE_URL}/wp-json/wc/v3/coupons`, {
+    const wcResult = await fetch(`${process.env.WOOCOMMERCE_URL}/wp-json/wc/v3/coupons`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -138,6 +138,9 @@ export async function POST(request: Request) {
         product_ids: course.product_id ? [course.product_id] : [],
       }),
     });
+    const wcData = await wcResult.json();
+    if (!wcResult.ok) console.error("WooCommerce coupon error:", JSON.stringify(wcData));
+    else console.log("WooCommerce coupon created:", wcData.code);
 
     // Log CE send (link to auth user if they have a Pulse account so it appears in their dashboard)
     const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${couponCode}`;
