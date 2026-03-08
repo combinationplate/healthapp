@@ -330,6 +330,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [bulkSending, setBulkSending] = useState(false);
   const [bulkResults, setBulkResults] = useState<null | { succeeded: number; skipped: number; failed: number; results: { email: string; name: string; success: boolean; error?: string }[] }>(null);
   const [bulkCsvData, setBulkCsvData] = useState<{ name: string; email: string; discipline: string }[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importCsvData, setImportCsvData] = useState<{ name: string; email: string; phone: string; facility: string; city: string; state: string; discipline: string }[]>([]);
+  const [importSaving, setImportSaving] = useState(false);
+  const [importResults, setImportResults] = useState<{ added: number; skipped: number; errors: string[] } | null>(null);
 
   useEffect(() => {
     if (!qrOpen || !repId) return;
@@ -470,6 +474,67 @@ export function RepDashboard({ repId }: { repId?: string }) {
       const [name = "", email = "", discipline = ""] = line.split(",").map((s) => s.replace(/^"|"$/g, "").trim());
       return { name, email, discipline };
     }).filter((r) => r.name && r.email);
+  }
+
+  function parseImportCsv(text: string) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim().toLowerCase());
+    return lines.slice(1).map((line) => {
+      const vals = line.split(",").map(s => s.replace(/^"|"$/g, "").trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = vals[i] ?? ""; });
+      return {
+        name: row["name"] || row["full name"] || row["fullname"] || "",
+        email: row["email"] || row["email address"] || "",
+        phone: row["phone"] || row["phone number"] || "",
+        facility: row["facility"] || row["facility name"] || row["organization"] || "",
+        city: row["city"] || "",
+        state: row["state"] || "",
+        discipline: row["discipline"] || row["profession"] || "",
+      };
+    }).filter(r => r.name && r.email);
+  }
+
+  async function handleImportCsv() {
+    if (!repId || importCsvData.length === 0) return;
+    setImportSaving(true);
+    const supabase = createClient();
+    const existingEmails = new Set(professionals.map(p => p.email.toLowerCase()));
+    const toInsert = importCsvData.filter(r => !existingEmails.has(r.email.toLowerCase()));
+    const skipped = importCsvData.length - toInsert.length;
+    const errors: string[] = [];
+    let added = 0;
+
+    for (let i = 0; i < toInsert.length; i += 50) {
+      const batch = toInsert.slice(i, i + 50).map(r => ({
+        rep_id: repId,
+        name: r.name,
+        email: r.email,
+        phone: r.phone || null,
+        facility: r.facility || null,
+        city: r.city || null,
+        state: r.state || null,
+        discipline: r.discipline || null,
+      }));
+      const { error, data } = await supabase.from("professionals").insert(batch).select();
+      if (error) {
+        errors.push(error.message);
+      } else {
+        added += data?.length ?? batch.length;
+      }
+    }
+
+    setImportResults({ added, skipped, errors });
+    setImportSaving(false);
+    if (added > 0) fetchProfessionals();
+  }
+
+  function resetImportModal() {
+    setImportOpen(false);
+    setImportCsvData([]);
+    setImportResults(null);
+    setImportSaving(false);
   }
 
   async function handleBulkSend() {
@@ -1920,7 +1985,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My Network</h2>
               <div className="flex gap-2 flex-wrap">
-                <button type="button" className={BTN_SECONDARY}>Import CSV</button>
+                <button type="button" className={BTN_SECONDARY} onClick={() => setImportOpen(true)}>Import CSV</button>
                 <button type="button" className={BTN_PRIMARY} onClick={() => setAddOpen(true)}>+ Add Professional</button>
               </div>
             </div>
@@ -1956,31 +2021,46 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   .map((pro) => (
                     <div
                       key={pro.id}
-                      className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06)] grid grid-cols-[auto_1fr_auto] gap-3 items-center"
+                      style={{
+                        borderRadius: '12px',
+                        border: '1px solid rgba(11,18,34,0.08)',
+                        background: 'white',
+                        padding: '16px',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        display: 'grid',
+                        gridTemplateColumns: '40px 1fr auto',
+                        gap: '14px',
+                        alignItems: 'center',
+                      }}
                     >
-                      <div className="w-10 h-10 shrink-0 rounded-full bg-[var(--blue-glow)] text-[var(--blue)] flex items-center justify-center font-bold text-sm">
+                      <div
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: 'rgba(36,85,255,0.10)',
+                          color: '#2455ff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 700,
+                          fontSize: '14px',
+                          flexShrink: 0,
+                        }}
+                      >
                         {initials(pro.name)}
                       </div>
-                      <div className="min-w-0 space-y-1">
-                        <div className="font-semibold text-[13px] text-[var(--ink)]">{pro.name}</div>
-                        {pro.facility && (
-                          <div className="text-[11px] text-[var(--ink-muted)]">
-                            <strong className="text-[var(--ink)]">Facility:</strong> {pro.facility}
-                          </div>
-                        )}
-                        {(pro.city || pro.state) && (
-                          <div className="text-[11px] text-[var(--ink-muted)]">
-                            <strong className="text-[var(--ink)]">Location:</strong>{" "}
-                            {[pro.city, pro.state].filter(Boolean).join(", ")}
-                          </div>
-                        )}
-                        {pro.discipline && (
-                          <div className="text-[11px] text-[var(--ink-muted)]">
-                            <strong className="text-[var(--ink)]">Discipline:</strong> {pro.discipline}
-                          </div>
-                        )}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#0b1222' }}>{pro.name}</div>
+                        <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '2px' }}>
+                          {[
+                            pro.discipline,
+                            pro.facility,
+                            pro.city && pro.state ? `${pro.city}, ${pro.state}` : (pro.city || pro.state),
+                          ].filter(Boolean).join(' · ')}
+                        </div>
                       </div>
-                      <div className="flex gap-2 shrink-0">
+                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                         <button
                           type="button"
                           className={BTN_PRIMARY}
@@ -1993,7 +2073,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           className={BTN_SECONDARY}
                           onClick={() => openTouchpointModal(pro)}
                         >
-                          Log Touchpoint
+                          Log Touch
                         </button>
                       </div>
                     </div>
@@ -2421,6 +2501,164 @@ export function RepDashboard({ repId }: { repId?: string }) {
       )}
       </div>
     </PageShell>
+
+    {importOpen && (
+      <div
+        style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(6px)", padding: "16px" }}
+        onClick={resetImportModal}
+      >
+        <div
+          style={{ width: "92%", maxWidth: "560px", background: "white", borderRadius: "16px", padding: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+            <div>
+              <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "18px", fontWeight: 800, color: "#0b1222", margin: 0 }}>Import Professionals</h3>
+              <p style={{ fontSize: "13px", color: "#7a8ba8", marginTop: "4px" }}>Upload a CSV to add multiple professionals at once.</p>
+            </div>
+            <button type="button" onClick={resetImportModal} style={{ background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "#7a8ba8", lineHeight: 1 }}>×</button>
+          </div>
+
+          {importResults ? (
+            /* ── Results view ── */
+            <div>
+              <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                <div style={{ fontSize: "48px", marginBottom: "8px" }}>{importResults.errors.length === 0 ? "✅" : "⚠️"}</div>
+                <h4 style={{ fontSize: "16px", fontWeight: 700, color: "#0b1222", margin: 0 }}>Import Complete</h4>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                <div style={{ background: "rgba(13,148,136,0.08)", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+                  <div style={{ fontSize: "28px", fontWeight: 800, color: "#0d9488" }}>{importResults.added}</div>
+                  <div style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "2px" }}>Added</div>
+                </div>
+                <div style={{ background: "rgba(217,119,6,0.08)", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+                  <div style={{ fontSize: "28px", fontWeight: 800, color: "#92670A" }}>{importResults.skipped}</div>
+                  <div style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "2px" }}>Skipped (already in network)</div>
+                </div>
+              </div>
+              {importResults.errors.length > 0 && (
+                <div style={{ background: "rgba(232,96,76,0.08)", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#B91C1C", marginBottom: "16px" }}>
+                  {importResults.errors.map((err, i) => <div key={i}>{err}</div>)}
+                </div>
+              )}
+              <button type="button" className={BTN_PRIMARY} style={{ width: "100%" }} onClick={resetImportModal}>Done</button>
+            </div>
+          ) : (
+            /* ── Upload view ── */
+            <div>
+              {/* Required columns info */}
+              <div style={{ background: "#f6f5f0", borderRadius: "10px", padding: "16px", marginBottom: "20px" }}>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#3b4963", marginBottom: "8px" }}>Required CSV columns:</div>
+                <div style={{ fontSize: "12px", color: "#7a8ba8", lineHeight: 1.7 }}>
+                  <strong style={{ color: "#0b1222" }}>Name</strong> and <strong style={{ color: "#0b1222" }}>Email</strong> (required)<br/>
+                  Facility, City, State, Discipline, Phone (optional)
+                </div>
+                <a
+                  href={`data:text/csv;charset=utf-8,${encodeURIComponent("Name,Email,Facility,City,State,Discipline,Phone\nJennifer Smith,jennifer@hospital.com,Memorial Hospital,Houston,TX,Nursing,555-0100\nMike Chen,mike@hospice.com,Sunrise Hospice,Dallas,TX,Social Work,")}`}
+                  download="pulse-import-template.csv"
+                  style={{ display: "inline-block", marginTop: "10px", fontSize: "12px", color: "#2455ff", fontWeight: 600, textDecoration: "none" }}
+                >
+                  ⬇ Download template
+                </a>
+              </div>
+
+              {/* File upload area */}
+              <label style={{
+                display: "block",
+                border: "2px dashed rgba(11,18,34,0.12)",
+                borderRadius: "12px",
+                padding: "32px",
+                textAlign: "center",
+                cursor: "pointer",
+                marginBottom: "20px",
+                transition: "border-color 0.15s",
+              }}>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: "none" }}
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      const text = ev.target?.result as string;
+                      setImportCsvData(parseImportCsv(text));
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+                <div style={{ fontSize: "32px", marginBottom: "8px" }}>📁</div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "#0b1222" }}>Click to upload a CSV file</div>
+                <div style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "4px" }}>or drag and drop</div>
+              </label>
+
+              {/* Preview */}
+              {importCsvData.length > 0 && (
+                <div style={{ marginBottom: "20px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#0b1222", marginBottom: "8px" }}>
+                    Preview — {importCsvData.length} professional{importCsvData.length !== 1 ? "s" : ""} found
+                  </div>
+                  <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(11,18,34,0.08)", borderRadius: "10px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(11,18,34,0.08)", background: "#f6f5f0" }}>
+                          <th style={{ textAlign: "left", padding: "8px 12px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Name</th>
+                          <th style={{ textAlign: "left", padding: "8px 12px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Email</th>
+                          <th style={{ textAlign: "left", padding: "8px 12px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Facility</th>
+                          <th style={{ textAlign: "left", padding: "8px 12px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Discipline</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importCsvData.slice(0, 10).map((r, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid rgba(11,18,34,0.06)" }}>
+                            <td style={{ padding: "8px 12px", fontWeight: 600, color: "#0b1222" }}>{r.name}</td>
+                            <td style={{ padding: "8px 12px", color: "#7a8ba8" }}>{r.email}</td>
+                            <td style={{ padding: "8px 12px", color: "#7a8ba8" }}>{r.facility || "—"}</td>
+                            <td style={{ padding: "8px 12px", color: "#7a8ba8" }}>{r.discipline || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {importCsvData.length > 10 && (
+                      <div style={{ padding: "8px 12px", fontSize: "11px", color: "#7a8ba8", textAlign: "center" }}>
+                        + {importCsvData.length - 10} more rows
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={resetImportModal}
+                  style={{ padding: "10px 20px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", background: "white", fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "#3b4963" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={importSaving || importCsvData.length === 0}
+                  onClick={handleImportCsv}
+                  style={{
+                    padding: "10px 20px", borderRadius: "10px", border: "none",
+                    background: "#2455ff", color: "white", fontSize: "13px", fontWeight: 700,
+                    cursor: importSaving || importCsvData.length === 0 ? "not-allowed" : "pointer",
+                    opacity: importSaving || importCsvData.length === 0 ? 0.5 : 1,
+                    boxShadow: "0 2px 10px rgba(36,85,255,0.18)",
+                  }}
+                >
+                  {importSaving ? "Importing…" : `Import ${importCsvData.length} Professional${importCsvData.length !== 1 ? "s" : ""}`}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
     {repOnboarding && (
       <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)" }}>
