@@ -307,6 +307,16 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [qrCap, setQrCap] = useState<number | null>(25);
   const [qrScanCount, setQrScanCount] = useState<number | null>(null);
   const [qrCapSaving, setQrCapSaving] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkTab, setBulkTab] = useState<"manual" | "network" | "csv">("manual");
+  const [bulkRows, setBulkRows] = useState([{ name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }]);
+  const [bulkSelectedPros, setBulkSelectedPros] = useState<string[]>([]);
+  const [bulkNetworkSearch, setBulkNetworkSearch] = useState("");
+  const [bulkCourseId, setBulkCourseId] = useState("");
+  const [bulkDiscount, setBulkDiscount] = useState("100% Free");
+  const [bulkSending, setBulkSending] = useState(false);
+  const [bulkResults, setBulkResults] = useState<null | { succeeded: number; skipped: number; failed: number; results: { email: string; name: string; success: boolean; error?: string }[] }>(null);
+  const [bulkCsvData, setBulkCsvData] = useState<{ name: string; email: string; discipline: string }[]>([]);
 
   useEffect(() => {
     if (!qrOpen || !repId) return;
@@ -354,6 +364,96 @@ export function RepDashboard({ repId }: { repId?: string }) {
       body: JSON.stringify({ repId, courseId: courseParam || null, cap }),
     });
     setQrCapSaving(false);
+  }
+
+  // Load courses when bulk modal opens (reuse availableCourses state)
+  useEffect(() => {
+    if (!bulkOpen || availableCourses.length > 0) return;
+    setAvailableCoursesLoading(true);
+    const supabase = createClient();
+    supabase
+      .from("course_professions")
+      .select("profession, courses(id, name, hours, price, topic, product_id)")
+      .then(({ data }) => {
+        const rows = ((data as CourseProfessionRow[]) ?? [])
+          .map((r) => ({ ...r, courses: Array.isArray(r.courses) ? r.courses[0] : r.courses }))
+          .filter((r): r is NormalizedCourseProfessionRow => r.courses != null);
+        rows.sort((a, b) => a.courses.name.localeCompare(b.courses.name));
+        setAvailableCourses(rows);
+        setAvailableCoursesLoading(false);
+      });
+  }, [bulkOpen, availableCourses.length]);
+
+  const bulkCourseOptions = useMemo(() => {
+    const seen = new Set<string>();
+    const result: CourseRow[] = [];
+    for (const row of availableCourses) {
+      if (!seen.has(row.courses.id)) {
+        seen.add(row.courses.id);
+        result.push(row.courses);
+      }
+    }
+    return result;
+  }, [availableCourses]);
+
+  const bulkCourse = useMemo(
+    () => bulkCourseOptions.find((c) => c.id === bulkCourseId) ?? null,
+    [bulkCourseOptions, bulkCourseId]
+  );
+
+  const bulkRecipients = useMemo(() => {
+    if (bulkTab === "manual") return bulkRows.filter((r) => r.name.trim() && r.email.trim());
+    if (bulkTab === "network") {
+      return professionals
+        .filter((p) => bulkSelectedPros.includes(p.id))
+        .map((p) => ({ name: p.name, email: p.email, discipline: p.discipline ?? "" }));
+    }
+    return bulkCsvData;
+  }, [bulkTab, bulkRows, bulkSelectedPros, professionals, bulkCsvData]);
+
+  const bulkEstimatedCost = useMemo(() => {
+    if (!bulkCourse || bulkDiscount === "100% Free") return 0;
+    const multiplier = bulkDiscount === "50% Off" ? 0.5 : 0.75;
+    return Math.round(bulkCourse.price * multiplier * bulkRecipients.length * 100) / 100;
+  }, [bulkCourse, bulkDiscount, bulkRecipients]);
+
+  function parseBulkCsv(text: string) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    return lines.slice(1).map((line) => {
+      const [name = "", email = "", discipline = ""] = line.split(",").map((s) => s.replace(/^"|"$/g, "").trim());
+      return { name, email, discipline };
+    }).filter((r) => r.name && r.email);
+  }
+
+  async function handleBulkSend() {
+    if (!repId || !bulkRecipients.length || !bulkCourseId) return;
+    setBulkSending(true);
+    try {
+      const res = await fetch("/api/rep/bulk-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ repId, courseId: bulkCourseId, discount: bulkDiscount, recipients: bulkRecipients }),
+      });
+      const data = await res.json();
+      setBulkResults(data);
+    } finally {
+      setBulkSending(false);
+    }
+  }
+
+  function resetBulkModal() {
+    setBulkOpen(false);
+    setBulkTab("manual");
+    setBulkRows([{ name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }]);
+    setBulkSelectedPros([]);
+    setBulkNetworkSearch("");
+    setBulkCourseId("");
+    setBulkDiscount("100% Free");
+    setBulkSending(false);
+    setBulkResults(null);
+    setBulkCsvData([]);
   }
 
   useEffect(() => {
@@ -831,6 +931,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <div className="font-bold text-[13px] text-[var(--ink)]">Generate QR Code</div>
                   <div className="text-[11px] text-[var(--ink-muted)]">CE landing page link</div>
                 </button>
+                <button
+                  type="button"
+                  className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  onClick={() => setBulkOpen(true)}
+                >
+                  <span className="text-2xl block mb-2">📨</span>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">Bulk Send</div>
+                  <div className="text-[11px] text-[var(--ink-muted)]">Send to multiple people</div>
+                </button>
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Generate Flyer")}>
@@ -999,11 +1108,241 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <button type="button" className={BTN_PRIMARY} onClick={() => alert("Select professionals, choose course, send to all.")}>Send to Group</button>
-                <button type="button" className={BTN_SECONDARY}>Event Attendees</button>
-                <button type="button" className={BTN_SECONDARY}>Import & Send</button>
+                <button type="button" className={BTN_PRIMARY} onClick={() => setBulkOpen(true)}>Send to Group</button>
+                <button type="button" className={BTN_SECONDARY} onClick={() => { setBulkTab("csv"); setBulkOpen(true); }}>Import & Send</button>
               </div>
             </SectionCard>
+
+            {/* Bulk Send Modal */}
+            {bulkOpen && (
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={resetBulkModal}>
+                <div style={{ width: "100%", maxWidth: "760px", background: "white", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "92vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
+                  {/* Header */}
+                  <div style={{ padding: "20px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Bulk Send CE</h3>
+                      <p style={{ fontSize: "13px", color: "#64748B", margin: "4px 0 0" }}>Send free CE courses to multiple people at once.</p>
+                    </div>
+                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B" }} onClick={resetBulkModal} aria-label="Close">×</button>
+                  </div>
+
+                  {bulkResults ? (
+                    /* Results view */
+                    <div style={{ padding: "24px" }}>
+                      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                        <div style={{ fontSize: "48px", marginBottom: "8px" }}>
+                          {bulkResults.failed === 0 ? "✅" : "⚠️"}
+                        </div>
+                        <h4 style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Send Complete</h4>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                        <div style={{ background: "#F0FDF4", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                          <div style={{ fontSize: "22px", fontWeight: 700, color: "#16A34A" }}>{bulkResults.succeeded}</div>
+                          <div style={{ fontSize: "12px", color: "#64748B" }}>Sent</div>
+                        </div>
+                        <div style={{ background: "#FFF7ED", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                          <div style={{ fontSize: "22px", fontWeight: 700, color: "#D97706" }}>{bulkResults.skipped}</div>
+                          <div style={{ fontSize: "12px", color: "#64748B" }}>Skipped</div>
+                        </div>
+                        <div style={{ background: bulkResults.failed > 0 ? "#FEF2F2" : "#F8FAFC", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                          <div style={{ fontSize: "22px", fontWeight: 700, color: bulkResults.failed > 0 ? "#DC2626" : "#94A3B8" }}>{bulkResults.failed}</div>
+                          <div style={{ fontSize: "12px", color: "#64748B" }}>Failed</div>
+                        </div>
+                      </div>
+                      {bulkResults.skipped > 0 && (
+                        <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "8px" }}>⏭️ {bulkResults.skipped} recipient{bulkResults.skipped !== 1 ? "s" : ""} skipped — they already received this course.</p>
+                      )}
+                      {bulkResults.failed > 0 && (
+                        <div style={{ marginBottom: "12px" }}>
+                          <p style={{ fontSize: "12px", fontWeight: 600, color: "#DC2626", marginBottom: "6px" }}>❌ Failed sends:</p>
+                          <div style={{ background: "#FEF2F2", borderRadius: "8px", padding: "10px", fontSize: "12px", color: "#7F1D1D", maxHeight: "120px", overflowY: "auto" }}>
+                            {bulkResults.results.filter(r => !r.success && r.error !== "already_sent").map((r, i) => (
+                              <div key={i}>{r.name} ({r.email}) — {r.error}</div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <button type="button" className={BTN_PRIMARY} style={{ width: "100%" }} onClick={resetBulkModal}>Done</button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Tabs */}
+                      <div style={{ padding: "16px 24px 0", display: "flex", gap: "4px", borderBottom: "1px solid var(--border)", marginTop: "16px" }}>
+                        {(["manual", "network", "csv"] as const).map((t) => {
+                          const labels: Record<string, string> = { manual: "Manual Entry", network: "From Network", csv: "Upload CSV" };
+                          return (
+                            <button key={t} type="button" onClick={() => setBulkTab(t)} style={{ padding: "8px 14px", fontSize: "13px", fontWeight: bulkTab === t ? 700 : 400, borderBottom: `2px solid ${bulkTab === t ? "var(--blue)" : "transparent"}`, background: "none", border: "none", borderBottomWidth: "2px", borderBottomStyle: "solid", borderBottomColor: bulkTab === t ? "var(--blue)" : "transparent", color: bulkTab === t ? "var(--blue)" : "#64748B", cursor: "pointer", marginBottom: "-1px" }}>{labels[t]}</button>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ padding: "20px 24px", flex: 1, overflowY: "auto" }}>
+                        {/* Manual Entry tab */}
+                        {bulkTab === "manual" && (
+                          <div>
+                            <div style={{ overflowX: "auto" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                                <thead>
+                                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Name</th>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Email</th>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Discipline</th>
+                                    <th style={{ width: "32px" }}></th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {bulkRows.map((row, i) => (
+                                    <tr key={i}>
+                                      <td style={{ padding: "4px 4px 4px 0" }}>
+                                        <input value={row.name} onChange={e => { const r = [...bulkRows]; r[i] = { ...r[i], name: e.target.value }; setBulkRows(r); }} placeholder="Full name" style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", boxSizing: "border-box" }} />
+                                      </td>
+                                      <td style={{ padding: "4px" }}>
+                                        <input type="email" value={row.email} onChange={e => { const r = [...bulkRows]; r[i] = { ...r[i], email: e.target.value }; setBulkRows(r); }} placeholder="email@example.com" style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", boxSizing: "border-box" }} />
+                                      </td>
+                                      <td style={{ padding: "4px" }}>
+                                        <select value={row.discipline} onChange={e => { const r = [...bulkRows]; r[i] = { ...r[i], discipline: e.target.value }; setBulkRows(r); }} style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px" }}>
+                                          <option value="">Any</option>
+                                          {["Nursing","Social Work","Case Management","PT","OT","ST"].map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                      </td>
+                                      <td style={{ padding: "4px", textAlign: "center" }}>
+                                        <button type="button" onClick={() => setBulkRows(bulkRows.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "16px", lineHeight: 1 }}>×</button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                            <button type="button" onClick={() => { if (bulkRows.length < 100) setBulkRows([...bulkRows, { name: "", email: "", discipline: "" }]); }} disabled={bulkRows.length >= 100} style={{ marginTop: "10px", fontSize: "12px", color: "var(--blue)", background: "none", border: "1px dashed #CBD5E1", borderRadius: "6px", padding: "6px 14px", cursor: bulkRows.length >= 100 ? "not-allowed" : "pointer", opacity: bulkRows.length >= 100 ? 0.5 : 1 }}>+ Add Row</button>
+                          </div>
+                        )}
+
+                        {/* From Network tab */}
+                        {bulkTab === "network" && (
+                          <div>
+                            <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                              <input value={bulkNetworkSearch} onChange={e => setBulkNetworkSearch(e.target.value)} placeholder="Search by name, email, facility…" style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "13px" }} />
+                              <button type="button" onClick={() => setBulkSelectedPros(professionals.map(p => p.id))} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Select All</button>
+                              <button type="button" onClick={() => setBulkSelectedPros([])} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Deselect All</button>
+                            </div>
+                            {professionals.length === 0 ? (
+                              <p style={{ color: "#94A3B8", fontSize: "13px", textAlign: "center", padding: "24px 0" }}>No professionals in your network yet.</p>
+                            ) : (
+                              <div style={{ maxHeight: "260px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "8px" }}>
+                                {professionals
+                                  .filter(p => {
+                                    const q = bulkNetworkSearch.toLowerCase();
+                                    return !q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || (p.facility ?? "").toLowerCase().includes(q);
+                                  })
+                                  .map(p => (
+                                    <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderBottom: "1px solid var(--border)", cursor: "pointer", background: bulkSelectedPros.includes(p.id) ? "#EFF6FF" : "white" }}>
+                                      <input type="checkbox" checked={bulkSelectedPros.includes(p.id)} onChange={e => { if (e.target.checked) setBulkSelectedPros([...bulkSelectedPros, p.id]); else setBulkSelectedPros(bulkSelectedPros.filter(id => id !== p.id)); }} />
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--ink)" }}>{p.name}</div>
+                                        <div style={{ fontSize: "11px", color: "#64748B" }}>{[p.discipline, p.facility].filter(Boolean).join(" · ")}</div>
+                                      </div>
+                                      <div style={{ fontSize: "11px", color: "#94A3B8", flexShrink: 0 }}>{p.email}</div>
+                                    </label>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* CSV tab */}
+                        {bulkTab === "csv" && (
+                          <div>
+                            <div style={{ display: "flex", gap: "8px", marginBottom: "12px", alignItems: "center" }}>
+                              <a href={`data:text/csv;charset=utf-8,${encodeURIComponent("Name,Email,Discipline\nJennifer Smith,jennifer@hospital.com,Nursing")}`} download="pulse-bulk-template.csv" style={{ fontSize: "12px", color: "var(--blue)", textDecoration: "underline" }}>Download template</a>
+                              <span style={{ color: "#CBD5E1" }}>·</span>
+                              <span style={{ fontSize: "12px", color: "#64748B" }}>Columns: Name, Email, Discipline</span>
+                            </div>
+                            <label style={{ display: "block", border: "2px dashed #CBD5E1", borderRadius: "10px", padding: "28px", textAlign: "center", cursor: "pointer", marginBottom: "16px" }}>
+                              <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                  const text = ev.target?.result as string;
+                                  setBulkCsvData(parseBulkCsv(text));
+                                };
+                                reader.readAsText(file);
+                              }} />
+                              <div style={{ fontSize: "24px", marginBottom: "6px" }}>📁</div>
+                              <div style={{ fontSize: "13px", color: "#64748B" }}>Click to upload a CSV file</div>
+                            </label>
+                            {bulkCsvData.length > 0 && (
+                              <div>
+                                <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "8px" }}>{bulkCsvData.length} recipients loaded</p>
+                                <div style={{ maxHeight: "180px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "8px" }}>
+                                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                                    <thead><tr style={{ borderBottom: "1px solid var(--border)", background: "#F8FAFC" }}>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Name</th>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Email</th>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Discipline</th>
+                                    </tr></thead>
+                                    <tbody>
+                                      {bulkCsvData.map((r, i) => (
+                                        <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                                          <td style={{ padding: "6px 10px" }}>{r.name}</td>
+                                          <td style={{ padding: "6px 10px" }}>{r.email}</td>
+                                          <td style={{ padding: "6px 10px" }}>{r.discipline || "—"}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Course + Discount + Cost summary — always visible */}
+                        <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                            <div>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
+                              <select value={bulkCourseId} onChange={e => setBulkCourseId(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px" }}>
+                                <option value="">Select a course…</option>
+                                {availableCoursesLoading ? <option disabled>Loading…</option> : bulkCourseOptions.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discount</label>
+                              <select value={bulkDiscount} onChange={e => setBulkDiscount(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px" }}>
+                                <option>100% Free</option>
+                                <option>50% Off</option>
+                                <option>25% Off</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Cost summary */}
+                          {bulkRecipients.length > 0 && bulkCourse && (
+                            <div style={{ background: "#EFF6FF", borderRadius: "8px", padding: "12px", fontSize: "13px", color: "#1E40AF", marginBottom: "12px", lineHeight: 1.6 }}>
+                              <div>Sending to <strong>{bulkRecipients.length}</strong> recipient{bulkRecipients.length !== 1 ? "s" : ""}</div>
+                              <div>Course: <strong>{bulkCourse.name}</strong> · ${bulkCourse.price?.toFixed(2) ?? "—"}</div>
+                              <div>Discount: <strong>{bulkDiscount}</strong></div>
+                              <div>Estimated cost: <strong>${bulkEstimatedCost.toFixed(2)}</strong></div>
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            className={BTN_PRIMARY}
+                            disabled={bulkSending || bulkRecipients.length === 0 || !bulkCourseId}
+                            onClick={handleBulkSend}
+                            style={{ width: "100%", padding: "12px", fontSize: "14px", opacity: (bulkSending || bulkRecipients.length === 0 || !bulkCourseId) ? 0.6 : 1 }}
+                          >
+                            {bulkSending ? "Sending…" : `Send to ${bulkRecipients.length} ${bulkRecipients.length === 1 ? "Person" : "People"}`}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
