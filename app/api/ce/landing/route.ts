@@ -89,6 +89,43 @@ export async function POST(request: Request) {
       .eq("id", repId)
       .single();
 
+    // Upsert qr_codes record and get the cap for this rep+course
+    const { data: qrCode } = await admin
+      .from("qr_codes")
+      .upsert({
+        rep_id: repId,
+        course_id: courseId || null,
+        cap: 25,
+      }, { onConflict: "rep_id,course_id" })
+      .select("id, cap")
+      .single();
+
+    // Count existing QR sends for this rep+course
+    const { count: scanCount } = await admin
+      .from("ce_sends")
+      .select("*", { count: "exact", head: true })
+      .eq("rep_id", repId)
+      .eq("source", "qr")
+      .eq("course_id", courseId);
+
+    // Enforce cap
+    if (qrCode?.cap !== null && (scanCount ?? 0) >= (qrCode?.cap ?? 25)) {
+      return NextResponse.json({ error: "cap_reached" }, { status: 403 });
+    }
+
+    // Deduplication — one QR send per email per rep
+    const { data: alreadySent } = await admin
+      .from("ce_sends")
+      .select("id")
+      .eq("rep_id", repId)
+      .eq("source", "qr")
+      .eq("recipient_email", emailNormalized)
+      .maybeSingle();
+
+    if (alreadySent) {
+      return NextResponse.json({ error: "already_sent" }, { status: 409 });
+    }
+
     // Upsert professional into rep's network
     const { data: pro } = await admin
       .from("professionals")
@@ -157,6 +194,8 @@ export async function POST(request: Request) {
         coupon_code: couponCode,
         discount: "100% Free",
         redirect_url: redirectUrl,
+        source: "qr",
+        recipient_email: emailNormalized,
       })
       .select()
       .single();

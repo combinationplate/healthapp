@@ -66,7 +66,13 @@ export default function CELandingPage() {
     const data = await res.json();
     setSubmitting(false);
     if (!res.ok) {
-      setError(data.error ?? "Something went wrong.");
+      if (data.error === "cap_reached") {
+        setError("This QR code has reached its scan limit. Please contact your representative directly.");
+      } else if (data.error === "already_sent") {
+        setError("You've already received a course from this representative. Check your email for your previous course link.");
+      } else {
+        setError(data.error ?? "Something went wrong.");
+      }
       return;
     }
     setSuccess(true);

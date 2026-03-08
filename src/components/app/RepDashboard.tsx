@@ -304,6 +304,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [qrStateFilter, setQrStateFilter] = useState("");
   const [qrCourseRows, setQrCourseRows] = useState<{ profession: string; course: { id: string; name: string; hours: number } }[]>([]);
   const [qrApprovedProfessions, setQrApprovedProfessions] = useState<string[]>([]);
+  const [qrCap, setQrCap] = useState<number | null>(25);
+  const [qrScanCount, setQrScanCount] = useState<number | null>(null);
+  const [qrCapSaving, setQrCapSaving] = useState(false);
 
   useEffect(() => {
     if (!qrOpen || !repId) return;
@@ -326,6 +329,32 @@ export function RepDashboard({ repId }: { repId?: string }) {
         setQrCoursesLoading(false);
       });
   }, [qrOpen, repId]);
+
+  useEffect(() => {
+    if (!qrOpen || !repId) return;
+    const courseParam = qrMode === "specific" && qrCourseId ? qrCourseId : "";
+    fetch(`/api/qr/cap?repId=${repId}&courseId=${encodeURIComponent(courseParam)}`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setQrCap(data.cap ?? 25);
+          setQrScanCount(data.scanCount ?? 0);
+        }
+      });
+  }, [qrOpen, repId, qrMode, qrCourseId]);
+
+  async function saveQrCap(cap: number | null) {
+    if (!repId) return;
+    setQrCapSaving(true);
+    const courseParam = qrMode === "specific" && qrCourseId ? qrCourseId : "";
+    await fetch("/api/qr/cap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ repId, courseId: courseParam || null, cap }),
+    });
+    setQrCapSaving(false);
+  }
 
   useEffect(() => {
     if (!qrOpen || !qrStateFilter) {
@@ -903,6 +932,45 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       </>
                     );
                   })()}
+                  <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45, marginBottom: "12px" }}>
+                    <div style={{ fontWeight: 600, color: "#374151", marginBottom: "4px" }}>Scan Limit</div>
+                    <div style={{ marginBottom: "10px", lineHeight: 1.4 }}>How many times can this QR code be used? Each scan sends one free course and counts toward your billing.</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {([10, 25, 50, 100] as const).map((n) => (
+                        <label key={n} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                          <input
+                            type="radio"
+                            name="qrCap"
+                            checked={qrCap === n}
+                            onChange={() => { setQrCap(n); saveQrCap(n); }}
+                          />
+                          <span style={{ fontSize: "13px", color: "#374151" }}>{n} scans</span>
+                          {n === 25 && (
+                            <span style={{ fontSize: "11px", fontWeight: 600, background: "#D1FAE5", color: "#065F46", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
+                          )}
+                        </label>
+                      ))}
+                      <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
+                        <input
+                          type="radio"
+                          name="qrCap"
+                          checked={qrCap === null}
+                          onChange={() => { setQrCap(null); saveQrCap(null); }}
+                          style={{ marginTop: "2px" }}
+                        />
+                        <span style={{ fontSize: "13px", color: "#374151" }}>
+                          Unlimited
+                          <span style={{ display: "block", fontSize: "11px", color: "#92400E", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
+                        </span>
+                      </label>
+                    </div>
+                    {qrScanCount !== null && (
+                      <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748B" }}>
+                        🔍 {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
+                        {qrCapSaving && <span style={{ marginLeft: "8px", color: "#94A3B8" }}>Saving…</span>}
+                      </div>
+                    )}
+                  </div>
                   <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45 }}>
                     💳 Billing: Each course sent via QR is charged at the standard course rate. You will see all QR sends in your CE History tab.
                   </div>
