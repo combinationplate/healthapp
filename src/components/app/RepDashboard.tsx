@@ -1056,7 +1056,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="space-y-6">
             <SectionCard>
               <div className="border-b border-[var(--border)] pb-3 mb-4">
-                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Distribution Tools</h2>
+                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>CE Course Distribution Tools</h2>
               </div>
               <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, and bulk send.</p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">

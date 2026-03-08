@@ -223,57 +223,120 @@ const [networkLoading, setNetworkLoading] = useState(true);
               </div>
             ) : (
               <>
-                <div className="space-y-3">
-                  {myCoursesVisible.map((c) => (
-                    <div
-                      key={c.id}
-                      className="rounded-xl border border-[var(--border)] bg-white p-4 mb-3 shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-                    >
-                      <div className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto] sm:gap-4">
-                        <div>
-                          <div className="font-semibold text-[13px] text-[var(--ink)]">{c.courseName}</div>
-                          <div className="text-[11px] text-[var(--ink-muted)]">
-                            Sent by {c.sentBy} · {formatDate(c.sentAt)} · Expires {formatDate(c.expiryAt)}
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  {myCoursesVisible.map((c) => {
+                    const isRedeemed = !!c.redeemedAt;
+                    return (
+                      <div
+                        key={c.id}
+                        style={{
+                          borderRadius: '14px',
+                          border: `1px solid ${isRedeemed ? 'rgba(13,148,136,0.15)' : 'rgba(11,18,34,0.08)'}`,
+                          background: isRedeemed ? 'rgba(13,148,136,0.03)' : '#ffffff',
+                          padding: '20px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                          transition: 'box-shadow 0.2s',
+                        }}
+                      >
+                        {/* Top row: course info + hours badge */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '16px', marginBottom: '12px' }}>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: '15px', color: '#0b1222', lineHeight: 1.3, marginBottom: '4px' }}>
+                              {c.courseName.replace(/^\*NEW\*\s*/i, "").replace(/^\*[^*]+\*\s*/i, "")}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#7a8ba8', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <span>From {c.sentBy}</span>
+                              <span style={{ color: 'rgba(11,18,34,0.15)' }}>·</span>
+                              <span>{formatDate(c.sentAt)}</span>
+                              <span style={{ color: 'rgba(11,18,34,0.15)' }}>·</span>
+                              <span>Expires {formatDate(c.expiryAt)}</span>
+                            </div>
+                          </div>
+                          <div style={{
+                            flexShrink: 0,
+                            background: '#f6f5f0',
+                            borderRadius: '8px',
+                            padding: '6px 12px',
+                            textAlign: 'center',
+                          }}>
+                            <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '20px', fontWeight: 800, color: '#0b1222', lineHeight: 1 }}>
+                              {c.courseHours}
+                            </div>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#7a8ba8', marginTop: '2px' }}>
+                              {c.courseHours === 1 ? 'hour' : 'hours'}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
-                          {c.redeemedAt ? (
+
+                        {/* Bottom row: status + actions */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                          {isRedeemed ? (
                             <>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">
-                                Redeemed
-                              </span>
-                              <span className="text-[10px] text-[var(--ink-muted)]">
-                                Redeemed {formatDate(c.redeemedAt)}
-                              </span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                                  background: 'rgba(13,148,136,0.10)', color: '#0d9488',
+                                  padding: '4px 12px', borderRadius: '999px',
+                                  fontSize: '12px', fontWeight: 700,
+                                }}>✓ Completed</span>
+                                <span style={{ fontSize: '11px', color: '#7a8ba8' }}>
+                                  {formatDate(c.redeemedAt!)}
+                                </span>
+                              </div>
+                              <a
+                                href={c.redeemUrl || "https://hiscornerstone.com"}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  fontSize: '12px', color: '#2455ff', fontWeight: 600,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                View Course →
+                              </a>
                             </>
                           ) : (
                             <>
-                              <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#92670A]">
-                                  Pending
-                                </span>
+                              <span style={{
+                                display: 'inline-flex', alignItems: 'center',
+                                background: 'rgba(217,119,6,0.08)', color: '#92670A',
+                                padding: '4px 12px', borderRadius: '999px',
+                                fontSize: '12px', fontWeight: 700,
+                              }}>Ready to redeem</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkRedeemed(c.id)}
+                                  style={{
+                                    fontSize: '12px', color: '#7a8ba8', fontWeight: 500,
+                                    background: 'none', border: 'none', cursor: 'pointer',
+                                    textDecoration: 'underline', textUnderlineOffset: '2px',
+                                  }}
+                                >
+                                  Already completed?
+                                </button>
                                 <a
                                   href={c.redeemUrl || "https://hiscornerstone.com"}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={`ml-3 ${BTN_PRIMARY}`}
+                                  style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                    background: '#2455ff', color: '#ffffff', fontWeight: 700,
+                                    padding: '10px 24px', borderRadius: '10px',
+                                    fontSize: '14px', textDecoration: 'none',
+                                    boxShadow: '0 2px 10px rgba(36,85,255,0.18)',
+                                    transition: 'background 0.2s, transform 0.15s',
+                                  }}
                                 >
-                                  Redeem Course
+                                  Access Course →
                                 </a>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => handleMarkRedeemed(c.id)}
-                                className="text-[10px] text-[var(--ink-soft)] hover:underline"
-                              >
-                                Mark as Redeemed
-                              </button>
                             </>
                           )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {hasMoreMyCourses && (
                   <div className="mt-4 pt-3 border-t border-[var(--border)]">
