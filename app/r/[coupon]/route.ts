@@ -16,7 +16,7 @@ export async function GET(
 
     const { data: ceSend } = await admin
       .from("ce_sends")
-      .select("id, coupon_code, product_id, clicked_at")
+      .select("id, coupon_code, product_id, course_id, clicked_at")
       .eq("coupon_code", couponCode)
       .single();
 
@@ -27,7 +27,16 @@ export async function GET(
         .eq("id", ceSend.id);
     }
 
-    const productId = ceSend?.product_id;
+    let productId = ceSend?.product_id ?? null;
+    if (productId == null && ceSend?.course_id) {
+      const { data: course } = await admin
+        .from("courses")
+        .select("product_id")
+        .eq("id", ceSend.course_id)
+        .single();
+      productId = course?.product_id ?? null;
+    }
+
     let redirectUrl = "https://hiscornerstone.com/";
     if (productId) {
       const params = new URLSearchParams({

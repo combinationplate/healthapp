@@ -148,6 +148,7 @@ export async function POST(request: Request) {
       course_id: courseId,
       course_name: course.name,
       course_hours: course.hours,
+      product_id: course.product_id,
       coupon_code: couponCode,
       discount: "100%",
       redirect_url: redirectUrl,
