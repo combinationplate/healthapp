@@ -847,132 +847,149 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </SectionCard>
 
             {qrOpen && repId && (
-              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setQrOpen(false)}>
-                <div style={{ width: "92%", maxWidth: "440px", background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }} onClick={e => e.stopPropagation()}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => setQrOpen(false)}>
+                <div style={{ width: "100%", maxWidth: "800px", background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "90vh" }} onClick={e => e.stopPropagation()}>
+                  {/* Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
                     <div>
                       <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Generate a QR Code</h3>
                       <p style={{ fontSize: "13px", color: "#64748B", margin: "6px 0 0", lineHeight: 1.45 }}>Print this or show it on your phone during visits. When a nurse or social worker scans it, they enter their email and instantly receive a free CE course — no app required.</p>
                     </div>
-                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B", flexShrink: 0 }} onClick={() => setQrOpen(false)} aria-label="Close">×</button>
+                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B", flexShrink: 0, marginLeft: "12px" }} onClick={() => setQrOpen(false)} aria-label="Close">×</button>
                   </div>
-                  <div style={{ marginBottom: "16px" }}>
-                    <div style={{ display: "flex", gap: "16px", marginBottom: "8px" }}>
-                      <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                        <input type="radio" name="qrMode" checked={qrMode === "any"} onChange={() => { setQrMode("any"); setQrCourseId(""); }} />
-                        <span style={{ fontSize: "14px" }}>Any Course</span>
-                      </label>
-                      <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                        <input type="radio" name="qrMode" checked={qrMode === "specific"} onChange={() => setQrMode("specific")} />
-                        <span style={{ fontSize: "14px" }}>Specific Course</span>
-                      </label>
-                    </div>
-                    {qrMode === "any" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>The professional picks from your full course catalog. Best for general visits.</p>}
-                    {qrMode === "specific" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>You pick one course upfront. Best for targeting a specific need like Ethics or Palliative Care.</p>}
-                  </div>
-                  {qrMode === "specific" && (
-                    <div style={{ marginBottom: "16px" }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discipline</label>
-                          <select
-                            value={qrDisciplineFilter}
-                            onChange={e => setQrDisciplineFilter(e.target.value)}
-                            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
-                          >
-                            {QR_DISCIPLINE_OPTIONS.map((d) => (
-                              <option key={d} value={d}>{d}</option>
-                            ))}
-                          </select>
+
+                  {/* Two-column body on wide screens, single on mobile */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "32px", alignItems: "start" }}>
+                    {/* LEFT: controls */}
+                    <div>
+                      {/* Mode toggle */}
+                      <div style={{ marginBottom: "16px" }}>
+                        <div style={{ display: "flex", gap: "16px", marginBottom: "8px" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input type="radio" name="qrMode" checked={qrMode === "any"} onChange={() => { setQrMode("any"); setQrCourseId(""); }} />
+                            <span style={{ fontSize: "14px" }}>Any Course</span>
+                          </label>
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                            <input type="radio" name="qrMode" checked={qrMode === "specific"} onChange={() => setQrMode("specific")} />
+                            <span style={{ fontSize: "14px" }}>Specific Course</span>
+                          </label>
                         </div>
-                        <div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>State</label>
-                          <select
-                            value={qrStateFilter}
-                            onChange={e => setQrStateFilter(e.target.value)}
-                            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
-                          >
-                            <option value="">All states</option>
-                            {US_STATES.map((s) => (
-                              <option key={s} value={s}>{s}</option>
-                            ))}
-                          </select>
-                        </div>
+                        {qrMode === "any" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>The professional picks from your full course catalog. Best for general visits.</p>}
+                        {qrMode === "specific" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>You pick one course upfront. Best for targeting a specific need like Ethics or Palliative Care.</p>}
                       </div>
-                      <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
-                      <select
-                        value={qrCourseId}
-                        onChange={e => setQrCourseId(e.target.value)}
-                        style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
-                      >
-                        <option value="">Select…</option>
-                        {qrCoursesLoading ? <option disabled>Loading…</option> : qrFilteredCourses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
-                      </select>
+
+                      {/* Course selector + filters */}
+                      {qrMode === "specific" && (
+                        <div style={{ marginBottom: "16px" }}>
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                            <div>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discipline</label>
+                              <select
+                                value={qrDisciplineFilter}
+                                onChange={e => setQrDisciplineFilter(e.target.value)}
+                                style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                              >
+                                {QR_DISCIPLINE_OPTIONS.map((d) => (
+                                  <option key={d} value={d}>{d}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>State</label>
+                              <select
+                                value={qrStateFilter}
+                                onChange={e => setQrStateFilter(e.target.value)}
+                                style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                              >
+                                <option value="">All states</option>
+                                {US_STATES.map((s) => (
+                                  <option key={s} value={s}>{s}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
+                          <select
+                            value={qrCourseId}
+                            onChange={e => setQrCourseId(e.target.value)}
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px", boxSizing: "border-box" }}
+                          >
+                            <option value="">Select…</option>
+                            {qrCoursesLoading ? <option disabled>Loading…</option> : qrFilteredCourses.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Scan limit */}
+                      <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45, marginBottom: "12px" }}>
+                        <div style={{ fontWeight: 600, color: "#374151", marginBottom: "4px" }}>Scan Limit</div>
+                        <div style={{ marginBottom: "10px", lineHeight: 1.4 }}>How many times can this QR code be used? Each scan sends one free course and counts toward your billing.</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                          {([10, 25, 50, 100] as const).map((n) => (
+                            <label key={n} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                              <input
+                                type="radio"
+                                name="qrCap"
+                                checked={qrCap === n}
+                                onChange={() => { setQrCap(n); saveQrCap(n); }}
+                              />
+                              <span style={{ fontSize: "13px", color: "#374151" }}>{n} scans</span>
+                              {n === 25 && (
+                                <span style={{ fontSize: "11px", fontWeight: 600, background: "#D1FAE5", color: "#065F46", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
+                              )}
+                            </label>
+                          ))}
+                          <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
+                            <input
+                              type="radio"
+                              name="qrCap"
+                              checked={qrCap === null}
+                              onChange={() => { setQrCap(null); saveQrCap(null); }}
+                              style={{ marginTop: "2px" }}
+                            />
+                            <span style={{ fontSize: "13px", color: "#374151" }}>
+                              Unlimited
+                              <span style={{ display: "block", fontSize: "11px", color: "#92400E", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
+                            </span>
+                          </label>
+                        </div>
+                        {qrScanCount !== null && (
+                          <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748B" }}>
+                            🔍 {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
+                            {qrCapSaving && <span style={{ marginLeft: "8px", color: "#94A3B8" }}>Saving…</span>}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Billing note */}
+                      <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45 }}>
+                        💳 Billing: Each course sent via QR is charged at the standard course rate. You will see all QR sends in your CE History tab.
+                      </div>
                     </div>
-                  )}
-                  {(() => {
-                    const origin = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
-                    const qrUrl = qrMode === "any" ? `${origin}/ce/${repId}` : qrCourseId ? `${origin}/ce/${repId}/${qrCourseId}` : "";
-                    return (
-                      <>
-                        {qrUrl ? (
+
+                    {/* RIGHT: QR code + URL + actions */}
+                    <div>
+                      {(() => {
+                        const origin = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
+                        const qrUrl = qrMode === "any" ? `${origin}/ce/${repId}` : qrCourseId ? `${origin}/ce/${repId}/${qrCourseId}` : "";
+                        return qrUrl ? (
                           <>
                             <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" style={{ display: "block", margin: "0 auto" }} />
+                              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" style={{ display: "block", margin: "0 auto", maxWidth: "250px", width: "100%" }} />
                             </div>
                             <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
                               <input readOnly value={qrUrl} style={{ flex: 1, fontSize: "12px", padding: "8px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "#F8FAFC" }} />
                               <button type="button" className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "8px 12px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(qrUrl); }}>Copy</button>
                             </div>
-                            <a href={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} style={{ display: "inline-block", textAlign: "center", padding: "10px 16px", fontSize: "13px", textDecoration: "none", marginBottom: "16px" }}>Download QR</a>
+                            <a href={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} style={{ display: "inline-block", textAlign: "center", padding: "10px 16px", fontSize: "13px", textDecoration: "none" }}>Download QR</a>
                           </>
                         ) : qrMode === "specific" && !qrCourseId ? (
-                          <p style={{ fontSize: "13px", color: "#64748B" }}>Select a course to see the QR code.</p>
-                        ) : null}
-                      </>
-                    );
-                  })()}
-                  <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45, marginBottom: "12px" }}>
-                    <div style={{ fontWeight: 600, color: "#374151", marginBottom: "4px" }}>Scan Limit</div>
-                    <div style={{ marginBottom: "10px", lineHeight: 1.4 }}>How many times can this QR code be used? Each scan sends one free course and counts toward your billing.</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                      {([10, 25, 50, 100] as const).map((n) => (
-                        <label key={n} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                          <input
-                            type="radio"
-                            name="qrCap"
-                            checked={qrCap === n}
-                            onChange={() => { setQrCap(n); saveQrCap(n); }}
-                          />
-                          <span style={{ fontSize: "13px", color: "#374151" }}>{n} scans</span>
-                          {n === 25 && (
-                            <span style={{ fontSize: "11px", fontWeight: 600, background: "#D1FAE5", color: "#065F46", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
-                          )}
-                        </label>
-                      ))}
-                      <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
-                        <input
-                          type="radio"
-                          name="qrCap"
-                          checked={qrCap === null}
-                          onChange={() => { setQrCap(null); saveQrCap(null); }}
-                          style={{ marginTop: "2px" }}
-                        />
-                        <span style={{ fontSize: "13px", color: "#374151" }}>
-                          Unlimited
-                          <span style={{ display: "block", fontSize: "11px", color: "#92400E", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
-                        </span>
-                      </label>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#94A3B8", fontSize: "13px", textAlign: "center", border: "2px dashed #E2E8F0", borderRadius: "12px" }}>
+                            Select a course to preview the QR code.
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
-                    {qrScanCount !== null && (
-                      <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748B" }}>
-                        🔍 {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
-                        {qrCapSaving && <span style={{ marginLeft: "8px", color: "#94A3B8" }}>Saving…</span>}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45 }}>
-                    💳 Billing: Each course sent via QR is charged at the standard course rate. You will see all QR sends in your CE History tab.
                   </div>
                 </div>
               </div>
