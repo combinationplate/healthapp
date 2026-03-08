@@ -1507,12 +1507,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                                     justifyContent: "center",
                                                     fontSize: flyerSize === "print" ? "14px" : "16px",
                                                     fontWeight: 800,
-                                                    marginTop: "1px",
                                                   }}
                                                 >
                                                   {step.n}
                                                 </div>
-                                                <div style={{ paddingTop: flyerSize === "print" ? "2px" : "3px" }}>
+                                                <div>
                                                   <div
                                                     style={{
                                                       fontSize: flyerSize === "print" ? "14px" : "16px",
