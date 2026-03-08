@@ -964,15 +964,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <div className="border-b border-[var(--border)] pb-3 mb-4">
                 <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
               </div>
-              <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, kiosk mode, and bulk send.</p>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 mb-4">
+              <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, and bulk send.</p>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <button
                   type="button"
                   className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                   onClick={() => setQrOpen(true)}
                 >
                   <span className="text-2xl block mb-2">📱</span>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">Generate QR Code</div>
+                  <div className="font-bold text-[13px] text-[var(--ink)]">Generate QR Code &amp; Flyer</div>
                   <div className="text-[11px] text-[var(--ink-muted)]">CE landing page link</div>
                 </button>
                 <button
@@ -983,18 +983,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <span className="text-2xl block mb-2">📨</span>
                   <div className="font-bold text-[13px] text-[var(--ink)]">Bulk Send</div>
                   <div className="text-[11px] text-[var(--ink-muted)]">Send to multiple people</div>
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Generate Flyer")}>
-                  <span className="text-2xl block mb-2">📄</span>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">Generate Flyer</div>
-                  <div className="text-[11px] text-[var(--ink-muted)]">PDF with QR</div>
-                </button>
-                <button type="button" className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]" onClick={() => alert("Kiosk Mode")}>
-                  <span className="text-2xl block mb-2">💻</span>
-                  <div className="font-bold text-[13px] text-[var(--ink)]">Kiosk Mode</div>
-                  <div className="text-[11px] text-[var(--ink-muted)]">Event sign-up</div>
                 </button>
               </div>
             </SectionCard>
@@ -1290,16 +1278,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </div>
               </div>
             )}
-            <SectionCard>
-              <div className="border-b border-[var(--border)] pb-3 mb-4">
-                <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Bulk Send</h2>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                <button type="button" className={BTN_PRIMARY} onClick={() => setBulkOpen(true)}>Send to Group</button>
-                <button type="button" className={BTN_SECONDARY} onClick={() => { setBulkTab("csv"); setBulkOpen(true); }}>Import & Send</button>
-              </div>
-            </SectionCard>
-
             {/* Bulk Send Modal */}
             {bulkOpen && (
               <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={resetBulkModal}>
