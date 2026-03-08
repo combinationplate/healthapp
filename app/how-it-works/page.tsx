@@ -1,4 +1,4 @@
-import HowItWorksPage from "@/components/landing/HowItWorksPage";
+import HowItWorksPage from "@/src/components/landing/HowItWorksPage";
 
 export const metadata = {
   title: "How It Works — Pulse",
