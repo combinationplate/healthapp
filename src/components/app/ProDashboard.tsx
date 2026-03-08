@@ -22,8 +22,8 @@ type MyCourseRow = {
   redeemedAt: string | null;
 };
 
-const BTN_PRIMARY = "rounded-lg bg-[var(--blue)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors shadow-sm";
-const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] transition-colors";
+const BTN_PRIMARY = "rounded-xl bg-[var(--blue)] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--blue-dark)] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
+const BTN_SECONDARY = "rounded-xl border border-[var(--border)] bg-white px-5 py-2.5 text-[13px] font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)] active:scale-[0.98] transition-all disabled:opacity-50";
 
 function displayName(nameOrEmail: string): string {
   if (!nameOrEmail) return "there";
@@ -168,11 +168,11 @@ const [networkLoading, setNetworkLoading] = useState(true);
     <PageShell>
       <div className="space-y-6 pb-20 pt-6">
         <div>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Welcome, {welcomeName}</h1>
-          <p className="mt-1 text-[13px] text-[var(--ink-muted)]">View your CE courses and network</p>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '26px', fontWeight: 800, color: '#0b1222', letterSpacing: '-0.01em', margin: 0 }}>Welcome, {welcomeName}</h1>
+          <p style={{ marginTop: '4px', fontSize: '13px', color: '#7a8ba8' }}>View your CE courses and network</p>
         </div>
 
-        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div style={{ borderRadius: '16px', background: '#ffffff', border: '1px solid rgba(11,18,34,0.08)', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <StatsGrid>
             <StatCard
               label="Courses"
@@ -208,7 +208,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
             <SectionCard>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <div>
-                <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Courses</h2>
+                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My Courses</h2>
                 <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CE courses sent to you by your reps</p>
               </div>
               <button type="button" className={BTN_PRIMARY} onClick={() => setRequestOpen(true)}>+ Request CE</button>
@@ -249,7 +249,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
                           ) : (
                             <>
                               <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#92670A]">
                                   Pending
                                 </span>
                                 <a
@@ -292,7 +292,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
 
             <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Requests</h2>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Your Requests</h2>
             </div>
             {myRequests.length === 0 ? (
   <div className="py-8 text-center">
@@ -308,7 +308,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
             <div style={{fontWeight:600,fontSize:'13px',color:'var(--ink)'}}>{r.topic}</div>
             <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>{r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
           </div>
-          <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background: r.status === 'pending' ? 'var(--gold-glow)' : 'var(--green-glow)',color: r.status === 'pending' ? '#B8860B' : 'var(--green)'}}>{r.status}</span>
+          <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background: r.status === 'pending' ? 'var(--gold-glow)' : 'var(--green-glow)',color: r.status === 'pending' ? '#92670A' : 'var(--green)'}}>{r.status}</span>
         </div>
       </div>
     ))}
@@ -321,7 +321,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
       {tab === "network" && (
         <SectionCard>
           <div className="border-b border-[var(--border)] pb-3 mb-4">
-            <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Your Network</h2>
+            <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Your Network</h2>
             <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Sales reps connected to you</p>
           </div>
           {networkLoading ? (
@@ -460,7 +460,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
               )}
             </div>
           )}
-          <div style={{padding:'12px',borderRadius:'10px',border:'1px solid var(--border)',background:'var(--bg-light)',cursor:'pointer'}} onClick={() => setRequestForm(f => ({...f, visible: !f.visible}))}>
+          <div style={{padding:'12px',borderRadius:'10px',border:'1px solid var(--border)',background:'#f6f5f0',cursor:'pointer'}} onClick={() => setRequestForm(f => ({...f, visible: !f.visible}))}>
             <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
             <input type="checkbox" checked={requestForm.visible} onChange={() => {}} style={{width:'16px',height:'16px'}} />
               <div>

@@ -59,11 +59,11 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     <PageShell>
       <div className="space-y-6 pb-20 pt-6">
         <div>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Team Dashboard</h1>
-          <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Overview of your team</p>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '26px', fontWeight: 800, color: '#0b1222', letterSpacing: '-0.01em', margin: 0 }}>Team Dashboard</h1>
+          <p style={{ marginTop: '4px', fontSize: '13px', color: '#7a8ba8' }}>Overview of your team</p>
         </div>
 
-        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div style={{ borderRadius: '16px', background: '#ffffff', border: '1px solid rgba(11,18,34,0.08)', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <StatsGrid>
             <StatCard label="CEs Distributed" value={loading ? "…" : stats.totalCesThisMonth} note="This month" noteClass="text-[var(--green)]" />
             <StatCard label="Professionals in Network" value={loading ? "…" : stats.totalProfessionals} note="Across all reps" noteClass="text-[var(--blue)]" />
@@ -75,7 +75,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
         <SectionCard>
           <div className="border-b border-[var(--border)] pb-3 mb-4 flex justify-between items-start">
             <div>
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Rep Performance</h2>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Rep Performance</h2>
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">CEs sent, network size, last activity, and redemption rate per rep</p>
             </div>
             <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:'8px'}}>
@@ -83,7 +83,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 type="button"
                 onClick={handleGenerateInvite}
                 disabled={inviteLoading}
-                className="rounded-lg bg-[var(--blue)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors disabled:opacity-60"
+                style={{ borderRadius: '10px', background: '#2455ff', padding: '10px 20px', fontSize: '13px', fontWeight: 700, color: 'white', border: 'none', cursor: 'pointer', opacity: inviteLoading ? 0.6 : 1, boxShadow: '0 2px 10px rgba(36,85,255,0.18)', fontFamily: "'DM Sans', system-ui, sans-serif" }}
               >
                 {inviteLoading ? "Generating…" : "Invite Rep"}
               </button>
@@ -92,7 +92,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                   <input
                     readOnly
                     value={inviteUrl}
-                    style={{fontSize:'11px',padding:'6px 10px',borderRadius:'6px',border:'1px solid var(--border)',width:'220px',background:'#F8FAFC'}}
+                    style={{fontSize:'11px',padding:'6px 10px',borderRadius:'6px',border:'1px solid var(--border)',width:'220px',background:'#f6f5f0'}}
                   />
                   <button
                     type="button"
@@ -130,7 +130,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 </thead>
                 <tbody>
                   {reps.map((r) => (
-                    <tr key={r.id} className="border-b border-[var(--border)] last:border-0 even:bg-[#F8FAFC]">
+                    <tr key={r.id} className="border-b border-[var(--border)] last:border-0 even:bg-[#f6f5f0]">
                       <td className="py-3 pr-4 font-medium text-[var(--ink)] text-[13px]">{r.name}</td>
                       <td className="py-3 pr-4 text-[var(--ink-muted)] text-[13px]">{r.cesThisMonth}</td>
                       <td className="py-3 pr-4 text-[var(--ink-muted)] text-[13px]">{r.professionalsInNetwork}</td>

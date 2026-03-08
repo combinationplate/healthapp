@@ -17,6 +17,49 @@ type RepInfo = {
   company: string;
 };
 
+/* ── Design tokens (same as DashboardShell.ts) ───────────────── */
+const ds = {
+  ink: "#0b1222",
+  inkSoft: "#3b4963",
+  inkMuted: "#7a8ba8",
+  white: "#ffffff",
+  cream: "#f6f5f0",
+  blue: "#2455ff",
+  blueDark: "#1a3fcc",
+  blueGlow: "rgba(36,85,255,0.10)",
+  teal: "#0d9488",
+  tealGlow: "rgba(13,148,136,0.10)",
+  coral: "#e8604c",
+  border: "rgba(11,18,34,0.08)",
+  r: "10px",
+  rLg: "16px",
+  fontBody: "'DM Sans', system-ui, sans-serif",
+  fontDisplay: "'Fraunces', Georgia, serif",
+  shadow: "0 4px 24px rgba(0,0,0,0.06)",
+} as const;
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 14px",
+  borderRadius: ds.r,
+  border: `1.5px solid ${ds.border}`,
+  fontSize: "14px",
+  fontFamily: ds.fontBody,
+  boxSizing: "border-box",
+  color: ds.ink,
+  background: ds.white,
+  transition: "border-color 0.15s, box-shadow 0.15s",
+};
+
+const labelStyle: React.CSSProperties = {
+  display: "block",
+  fontSize: "12px",
+  fontWeight: 600,
+  color: ds.inkMuted,
+  marginBottom: "6px",
+  letterSpacing: "0.02em",
+};
+
 export default function CELandingPage() {
   const params = useParams();
   const repId = params.repId as string;
@@ -78,83 +121,185 @@ export default function CELandingPage() {
     setSuccess(true);
   }
 
+  /* ── Loading state ─────────────────────────────────────────── */
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC" }}>
-        <p style={{ color: "#64748B" }}>Loading…</p>
-      </div>
-    );
-  }
-
-  if (success) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F8FAFC" }}>
-        <div style={{ textAlign: "center", padding: "40px", maxWidth: "400px" }}>
-          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🎉</div>
-          <h1 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>Check your email!</h1>
-          <p style={{ color: "#64748B", fontSize: "15px" }}>Your free CE course is on its way. Check your inbox for the coupon code and access link.</p>
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: ds.cream,
+        fontFamily: ds.fontBody,
+      }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{
+            width: "36px", height: "36px", borderRadius: "10px",
+            background: `linear-gradient(135deg, ${ds.blue}, ${ds.teal})`,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            color: "white", fontWeight: 900, fontSize: "18px", marginBottom: "16px",
+          }}>P</div>
+          <p style={{ color: ds.inkMuted, fontSize: "14px" }}>Loading…</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ minHeight: "100vh", background: "#F8FAFC", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-      <div style={{ width: "100%", maxWidth: "440px", background: "white", borderRadius: "16px", padding: "40px", border: "1px solid #E2E8F0", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
-        <div style={{ marginBottom: "32px", textAlign: "center" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>📚</div>
-          <h1 style={{ fontSize: "24px", fontWeight: 800, marginBottom: "8px" }}>Get a Free CE Course</h1>
+  /* ── Success state ─────────────────────────────────────────── */
+  if (success) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: ds.cream,
+        fontFamily: ds.fontBody,
+      }}>
+        <div style={{ textAlign: "center", padding: "40px", maxWidth: "420px" }}>
+          {/* Animated check circle */}
+          <div style={{
+            width: "72px", height: "72px", borderRadius: "50%",
+            background: ds.tealGlow, border: `2px solid ${ds.teal}`,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            fontSize: "32px", marginBottom: "20px",
+          }}>✓</div>
+          <h1 style={{
+            fontFamily: ds.fontDisplay,
+            fontSize: "28px",
+            fontWeight: 800,
+            color: ds.ink,
+            marginBottom: "10px",
+            letterSpacing: "-0.01em",
+          }}>Check your email!</h1>
+          <p style={{ color: ds.inkMuted, fontSize: "15px", lineHeight: 1.6 }}>
+            Your free CE course is on its way. Check your inbox for the access link and coupon code.
+          </p>
           {repInfo && (
-            <p style={{ color: "#64748B", fontSize: "14px" }}>
-              Compliments of <strong>{repInfo.name}</strong>{repInfo.company ? ` · ${repInfo.company}` : ""}
+            <p style={{ color: ds.inkMuted, fontSize: "13px", marginTop: "20px" }}>
+              Sent by {repInfo.name}{repInfo.company ? ` · ${repInfo.company}` : ""}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Main form ─────────────────────────────────────────────── */
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: ds.cream,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px",
+      fontFamily: ds.fontBody,
+      position: "relative",
+    }}>
+      {/* Subtle radial glow behind card — matches landing hero */}
+      <div style={{
+        position: "fixed", top: "-20%", left: "-10%",
+        width: "60%", height: "80%",
+        background: `radial-gradient(circle, ${ds.blueGlow}, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+      <div style={{
+        position: "fixed", bottom: "-20%", right: "-10%",
+        width: "50%", height: "70%",
+        background: `radial-gradient(circle, ${ds.tealGlow}, transparent 70%)`,
+        pointerEvents: "none",
+      }} />
+
+      <div style={{
+        width: "100%",
+        maxWidth: "440px",
+        background: ds.white,
+        borderRadius: ds.rLg,
+        padding: "40px",
+        border: `1px solid ${ds.border}`,
+        boxShadow: ds.shadow,
+        position: "relative",
+        zIndex: 1,
+      }}>
+        {/* Top accent bar */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+          background: `linear-gradient(90deg, ${ds.blue}, ${ds.teal})`,
+          borderRadius: `${ds.rLg} ${ds.rLg} 0 0`,
+        }} />
+
+        {/* Header */}
+        <div style={{ marginBottom: "32px", textAlign: "center" }}>
+          {/* Pulse logo mark */}
+          <div style={{
+            width: "44px", height: "44px", borderRadius: "12px",
+            background: `linear-gradient(135deg, ${ds.blue}, ${ds.teal})`,
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            color: "white", fontWeight: 900, fontSize: "22px", marginBottom: "16px",
+          }}>P</div>
+          <h1 style={{
+            fontFamily: ds.fontDisplay,
+            fontSize: "26px",
+            fontWeight: 800,
+            color: ds.ink,
+            marginBottom: "8px",
+            letterSpacing: "-0.01em",
+          }}>Get a Free CE Course</h1>
+          {repInfo && (
+            <p style={{ color: ds.inkMuted, fontSize: "14px", lineHeight: 1.5 }}>
+              Compliments of <strong style={{ color: ds.ink, fontWeight: 600 }}>{repInfo.name}</strong>
+              {repInfo.company ? ` · ${repInfo.company}` : ""}
             </p>
           )}
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: "16px" }}>
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: "18px" }}>
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Your Name</label>
+            <label style={labelStyle}>Your Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Jennifer Lopez, RN"
-              style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "14px", boxSizing: "border-box" }}
+              style={inputStyle}
             />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Email Address</label>
+            <label style={labelStyle}>Email Address</label>
             <input
               type="email"
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="jennifer@hospital.com"
-              style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "14px", boxSizing: "border-box" }}
+              style={inputStyle}
             />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Your Discipline</label>
+            <label style={labelStyle}>Your Discipline</label>
             <select
               required
               value={discipline}
               onChange={e => setDiscipline(e.target.value)}
-              style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "14px", boxSizing: "border-box" }}
+              style={{ ...inputStyle, appearance: "none" as const }}
             >
               <option value="">Select…</option>
               {DISCIPLINES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
+          {/* Multiple courses — show picker */}
           {courses.length > 1 && (
             <div>
-              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Select a Course</label>
+              <label style={labelStyle}>Select a Course</label>
               <select
                 required
                 value={selectedCourse}
                 onChange={e => setSelectedCourse(e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #E2E8F0", fontSize: "14px", boxSizing: "border-box" }}
+                style={{ ...inputStyle, appearance: "none" as const }}
               >
                 <option value="">Choose a course…</option>
                 {courses.map(c => (
@@ -164,23 +309,75 @@ export default function CELandingPage() {
             </div>
           )}
 
+          {/* Single course — show card */}
           {courses.length === 1 && (
-            <div style={{ padding: "12px", background: "#F0F9FF", borderRadius: "8px", border: "1px solid #BAE6FD" }}>
-              <div style={{ fontWeight: 600, fontSize: "14px" }}>{courses[0].name}</div>
-              <div style={{ fontSize: "12px", color: "#64748B", marginTop: "2px" }}>{courses[0].hours} hrs · {courses[0].topic}</div>
+            <div style={{
+              padding: "14px 16px",
+              background: ds.blueGlow,
+              borderRadius: ds.r,
+              border: `1px solid rgba(36,85,255,0.15)`,
+            }}>
+              <div style={{ fontWeight: 700, fontSize: "14px", color: ds.ink }}>{courses[0].name}</div>
+              <div style={{ fontSize: "12px", color: ds.inkMuted, marginTop: "3px" }}>
+                {courses[0].hours} hrs{courses[0].topic ? ` · ${courses[0].topic}` : ""} · Complimentary
+              </div>
             </div>
           )}
 
-          {error && <p style={{ fontSize: "13px", color: "#EF4444" }}>{error}</p>}
+          {/* Error message */}
+          {error && (
+            <div style={{
+              padding: "12px 14px",
+              background: "rgba(232,96,76,0.08)",
+              borderRadius: ds.r,
+              border: "1px solid rgba(232,96,76,0.2)",
+            }}>
+              <p style={{ fontSize: "13px", color: ds.coral, margin: 0 }}>{error}</p>
+            </div>
+          )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={submitting}
-            style={{ padding: "14px", borderRadius: "8px", border: "none", background: "#2D5BFF", color: "white", fontSize: "15px", fontWeight: 700, cursor: "pointer", opacity: submitting ? 0.6 : 1 }}
+            style={{
+              padding: "14px",
+              borderRadius: ds.r,
+              border: "none",
+              background: ds.blue,
+              color: ds.white,
+              fontSize: "15px",
+              fontWeight: 700,
+              fontFamily: ds.fontBody,
+              cursor: submitting ? "not-allowed" : "pointer",
+              opacity: submitting ? 0.6 : 1,
+              boxShadow: "0 4px 16px rgba(36,85,255,0.25)",
+              transition: "background 0.2s, transform 0.15s, box-shadow 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!submitting) {
+                e.currentTarget.style.background = ds.blueDark;
+                e.currentTarget.style.transform = "translateY(-1px)";
+                e.currentTarget.style.boxShadow = "0 6px 20px rgba(36,85,255,0.3)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = ds.blue;
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(36,85,255,0.25)";
+            }}
           >
             {submitting ? "Sending…" : "Get My Free CE →"}
           </button>
-          <p style={{ fontSize: "11px", color: "#94A3B8", textAlign: "center" }}>No account required. Course delivered by email.</p>
+
+          <p style={{
+            fontSize: "11px",
+            color: ds.inkMuted,
+            textAlign: "center",
+            margin: 0,
+          }}>
+            No account required. Course delivered by email.
+          </p>
         </form>
       </div>
     </div>
