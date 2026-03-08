@@ -141,18 +141,23 @@ export async function POST(request: Request) {
 
     // Log CE send (link to auth user if they have a Pulse account so it appears in their dashboard)
     const redirectUrl = `${process.env.NEXT_PUBLIC_APP_URL}/r/${couponCode}`;
-    await admin.from("ce_sends").insert({
-      rep_id: repId,
-      professional_id: pro.id,
-      ...(existingUser ? { user_id: existingUser.id } : {}),
-      course_id: courseId,
-      course_name: course.name,
-      course_hours: course.hours,
-      product_id: course.product_id,
-      coupon_code: couponCode,
-      discount: "100%",
-      redirect_url: redirectUrl,
-    });
+    const { data: ceSendData, error: ceSendError } = await admin
+      .from("ce_sends")
+      .insert({
+        rep_id: repId,
+        professional_id: pro.id,
+        ...(existingUser ? { user_id: existingUser.id } : {}),
+        course_id: courseId,
+        course_name: course.name,
+        course_hours: course.hours,
+        product_id: course.product_id,
+        coupon_code: couponCode,
+        discount: "100%",
+        redirect_url: redirectUrl,
+      })
+      .select()
+      .single();
+    if (ceSendError) console.error("ce_sends insert error:", ceSendError);
 
     // Log touchpoint
     await admin.from("touchpoints").insert({
