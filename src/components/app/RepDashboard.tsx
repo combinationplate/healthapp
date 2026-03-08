@@ -412,10 +412,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
   }, [bulkTab, bulkRows, bulkSelectedPros, professionals, bulkCsvData]);
 
   const bulkEstimatedCost = useMemo(() => {
-    if (!bulkCourse || bulkDiscount === "100% Free") return 0;
-    const multiplier = bulkDiscount === "50% Off" ? 0.5 : 0.75;
-    return Math.round(bulkCourse.price * multiplier * bulkRecipients.length * 100) / 100;
-  }, [bulkCourse, bulkDiscount, bulkRecipients]);
+    if (!bulkCourse || !bulkCourse.price) return 0;
+    return Math.round(bulkCourse.price * bulkRecipients.length * 100) / 100;
+  }, [bulkCourse, bulkRecipients]);
 
   function parseBulkCsv(text: string) {
     const lines = text.trim().split(/\r?\n/);
@@ -1321,9 +1320,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           {bulkRecipients.length > 0 && bulkCourse && (
                             <div style={{ background: "#EFF6FF", borderRadius: "8px", padding: "12px", fontSize: "13px", color: "#1E40AF", marginBottom: "12px", lineHeight: 1.6 }}>
                               <div>Sending to <strong>{bulkRecipients.length}</strong> recipient{bulkRecipients.length !== 1 ? "s" : ""}</div>
-                              <div>Course: <strong>{bulkCourse.name}</strong> · ${bulkCourse.price?.toFixed(2) ?? "—"}</div>
+                              <div>Course: <strong>{bulkCourse.name}</strong> · ${bulkCourse.price?.toFixed(2) ?? "—"} per person</div>
                               <div>Discount: <strong>{bulkDiscount}</strong></div>
-                              <div>Estimated cost: <strong>${bulkEstimatedCost.toFixed(2)}</strong></div>
+                              <div>Total cost to you: <strong>${bulkEstimatedCost.toFixed(2)}</strong></div>
                             </div>
                           )}
 
