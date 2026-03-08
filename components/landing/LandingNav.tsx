@@ -52,7 +52,7 @@ export default function LandingNav() {
           <ul className="flex list-none items-center gap-7">
             <li>
               <Link
-                href="#how-it-works"
+                href="/how-it-works"
                 className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
               >
                 How It Works
