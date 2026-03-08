@@ -18,7 +18,17 @@ export async function GET() {
     .eq("id", user.id)
     .single();
 
-  return NextResponse.json({ profile });
+  let org_name: string | null = null;
+  if (profile?.org_id) {
+    const { data: org } = await admin
+      .from("orgs")
+      .select("name")
+      .eq("id", profile.org_id)
+      .single();
+    org_name = org?.name ?? null;
+  }
+
+  return NextResponse.json({ profile: profile ? { ...profile, org_name } : null });
 }
 
 export async function POST(request: Request) {

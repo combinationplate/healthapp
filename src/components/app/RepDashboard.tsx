@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import html2canvas from "html2canvas";
 import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 
@@ -262,6 +263,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
         if (data.profile && !data.profile.state) {
           setRepOnboarding(true);
         }
+        if (data.profile) {
+          setRepProfile({
+            full_name: data.profile.full_name ?? "",
+            org_name: data.profile.org_name ?? null,
+          });
+        }
       });
   }, []);
 
@@ -295,6 +302,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [touchpointSaving, setTouchpointSaving] = useState(false);
   const [touchpointError, setTouchpointError] = useState<string | null>(null);
   const [touchpointSuccess, setTouchpointSuccess] = useState(false);
+  const [repProfile, setRepProfile] = useState<{ full_name: string; org_name: string | null } | null>(null);
+  const [flyerSize, setFlyerSize] = useState<"print" | "social">("print");
+  const [flyerGenerating, setFlyerGenerating] = useState(false);
+  const flyerRef = useRef<HTMLDivElement>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrMode, setQrMode] = useState<"any" | "specific">("any");
   const [qrCourseId, setQrCourseId] = useState("");
@@ -364,6 +375,25 @@ export function RepDashboard({ repId }: { repId?: string }) {
       body: JSON.stringify({ repId, courseId: courseParam || null, cap }),
     });
     setQrCapSaving(false);
+  }
+
+  async function downloadFlyer(size: "print" | "social") {
+    if (!flyerRef.current) return;
+    setFlyerGenerating(true);
+    try {
+      const canvas = await html2canvas(flyerRef.current, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+      });
+      const link = document.createElement("a");
+      link.download = `pulse-flyer-${size}-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } finally {
+      setFlyerGenerating(false);
+    }
   }
 
   // Load courses when bulk modal opens (reuse availableCourses state)
@@ -1090,6 +1120,149 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <button type="button" className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "8px 12px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(qrUrl); }}>Copy</button>
                             </div>
                             <a href={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} style={{ display: "inline-block", textAlign: "center", padding: "10px 16px", fontSize: "13px", textDecoration: "none" }}>Download QR</a>
+
+                            {/* Flyer generator section */}
+                            <div>
+                              <div style={{ borderTop: "1px solid #E2E8F0", margin: "24px 0" }} />
+                              <div style={{ marginBottom: "12px" }}>
+                                <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>Download Flyer</div>
+                                <div style={{ fontSize: "12px", color: "#64748B", marginBottom: "12px" }}>
+                                  Print-ready or social media size. Perfect for leaving at facilities or posting on LinkedIn.
+                                </div>
+                                <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+                                  <button
+                                    onClick={() => setFlyerSize("print")}
+                                    style={{
+                                      padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                                      background: flyerSize === "print" ? "#2D5BFF" : "#F1F5F9",
+                                      color: flyerSize === "print" ? "white" : "#64748B",
+                                      border: "none"
+                                    }}
+                                  >🖨️ Print (8.5×11)</button>
+                                  <button
+                                    onClick={() => setFlyerSize("social")}
+                                    style={{
+                                      padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                                      background: flyerSize === "social" ? "#2D5BFF" : "#F1F5F9",
+                                      color: flyerSize === "social" ? "white" : "#64748B",
+                                      border: "none"
+                                    }}
+                                  >📱 Social (1080×1080)</button>
+                                </div>
+                                <button
+                                  onClick={() => downloadFlyer(flyerSize)}
+                                  disabled={flyerGenerating}
+                                  style={{
+                                    width: "100%", padding: "10px", borderRadius: "8px", border: "none",
+                                    background: "#10B981", color: "white", fontWeight: 700, fontSize: "14px",
+                                    cursor: flyerGenerating ? "not-allowed" : "pointer",
+                                    opacity: flyerGenerating ? 0.6 : 1
+                                  }}
+                                >
+                                  {flyerGenerating ? "Generating..." : "⬇️ Download Flyer"}
+                                </button>
+                              </div>
+
+                              {/* Hidden flyer template captured by html2canvas */}
+                              <div style={{ position: "fixed", left: "-9999px", top: 0 }}>
+                                <div
+                                  ref={flyerRef}
+                                  style={{
+                                    width: flyerSize === "print" ? "816px" : "1080px",
+                                    height: flyerSize === "print" ? "1056px" : "1080px",
+                                    background: "white",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "80px 60px",
+                                    fontFamily: "sans-serif",
+                                    position: "relative",
+                                    boxSizing: "border-box",
+                                  }}
+                                >
+                                  {/* Top accent bar */}
+                                  <div style={{
+                                    position: "absolute", top: 0, left: 0, right: 0, height: "8px",
+                                    background: "linear-gradient(90deg, #2D5BFF, #10B981)"
+                                  }} />
+
+                                  {/* Logo */}
+                                  <div style={{
+                                    width: "56px", height: "56px", borderRadius: "14px",
+                                    background: "linear-gradient(135deg, #2D5BFF, #10B981)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    color: "white", fontWeight: 900, fontSize: "28px", marginBottom: "16px"
+                                  }}>P</div>
+
+                                  {/* Headline */}
+                                  <h1 style={{
+                                    fontSize: flyerSize === "print" ? "52px" : "64px",
+                                    fontWeight: 900, textAlign: "center", lineHeight: 1.1,
+                                    color: "#0A1628", marginBottom: "16px", letterSpacing: "-1px"
+                                  }}>
+                                    Get a Free<br />CE Course
+                                  </h1>
+
+                                  {/* Subheadline */}
+                                  <p style={{
+                                    fontSize: "20px", color: "#64748B", textAlign: "center",
+                                    marginBottom: "48px", maxWidth: "500px", lineHeight: 1.5
+                                  }}>
+                                    Scan the QR code below to claim your complimentary continuing education course. No account required.
+                                  </p>
+
+                                  {/* QR Code */}
+                                  <div style={{
+                                    padding: "24px", background: "white", borderRadius: "16px",
+                                    border: "2px solid #E2E8F0", marginBottom: "48px",
+                                    boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
+                                  }}>
+                                    <img
+                                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}`}
+                                      width={220}
+                                      height={220}
+                                      alt="QR Code"
+                                      crossOrigin="anonymous"
+                                    />
+                                  </div>
+
+                                  {/* Course name if specific */}
+                                  {qrMode === "specific" && qrCourseId && qrCourses.length > 0 && (
+                                    <div style={{
+                                      background: "#F0F9FF", borderRadius: "12px", padding: "16px 32px",
+                                      marginBottom: "32px", textAlign: "center", border: "1px solid #BAE6FD"
+                                    }}>
+                                      <div style={{ fontSize: "13px", color: "#64748B", marginBottom: "4px" }}>Featured Course</div>
+                                      <div style={{ fontWeight: 700, fontSize: "18px", color: "#0A1628" }}>
+                                        {qrCourses.find(c => c.id === qrCourseId)?.name}
+                                      </div>
+                                      <div style={{ fontSize: "14px", color: "#64748B", marginTop: "2px" }}>
+                                        {qrCourses.find(c => c.id === qrCourseId)?.hours} credit hours · Complimentary
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Rep info */}
+                                  <div style={{ textAlign: "center", marginTop: "auto" }}>
+                                    <div style={{ fontSize: "15px", color: "#64748B", marginBottom: "4px" }}>
+                                      Compliments of <strong style={{ color: "#0A1628" }}>{repProfile?.full_name ?? ""}</strong>
+                                    </div>
+                                    {repProfile?.org_name && (
+                                      <div style={{ fontSize: "13px", color: "#94A3B8" }}>
+                                        Sponsored by {repProfile.org_name}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Bottom accent bar */}
+                                  <div style={{
+                                    position: "absolute", bottom: 0, left: 0, right: 0, height: "8px",
+                                    background: "linear-gradient(90deg, #2D5BFF, #10B981)"
+                                  }} />
+                                </div>
+                              </div>
+                            </div>
                           </>
                         ) : qrMode === "specific" && !qrCourseId ? (
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#94A3B8", fontSize: "13px", textAlign: "center", border: "2px dashed #E2E8F0", borderRadius: "12px" }}>
