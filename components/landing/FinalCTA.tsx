@@ -11,18 +11,19 @@ export default function FinalCTA() {
           Ready to Get Started?
         </h2>
         <p className="mx-auto mb-12 max-w-[560px] text-[18px] text-ink-soft">
-          Whether you&apos;re building referral relationships or looking for free
-          CEs, events, and career opportunities — Pulse is free to join.
+          Whether you need free CEs for your license or a better way to build
+          referral relationships — Pulse is free to join.
         </p>
         <div className="mx-auto grid max-w-[780px] gap-6 sm:grid-cols-2">
-          <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
+          <div id="sales-teams" className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
             <span className="mb-3 block text-[40px]">💼</span>
             <h3 className="text-[20px] font-extrabold">
-              Sales Teams &amp; Managers
+              Hospice, Home Health &amp; Rehab Sales Teams
             </h3>
             <p className="mb-6 text-[14px] leading-[1.6] text-ink-soft">
-              The complete marketing toolkit — CE distribution, QR field tools,
-              events, tracking, discovery, gamification, and analytics.
+              Distribute free CE courses to build referral relationships. QR
+              codes, branded flyers, bulk send, network management, professional
+              discovery, and manager dashboards.
             </p>
             <button
               type="button"
@@ -35,18 +36,19 @@ export default function FinalCTA() {
           <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
             <span className="mb-3 block text-[40px]">🧑‍⚕️</span>
             <h3 className="text-[20px] font-extrabold">
-              Healthcare Professionals
+              Nurses, Social Workers &amp; Therapists
             </h3>
             <p className="mb-6 text-[14px] leading-[1.6] text-ink-soft">
-              Free CE courses, local event notifications, career opportunities,
-              and connections with reps in your area.
+              Free, nationally accredited CE courses in ethics, palliative care,
+              mental health, and more. Matched to your discipline and state. No
+              cost, ever.
             </p>
             <button
               type="button"
               onClick={() => showModal("hcp")}
               className="w-full justify-center rounded-[var(--r)] bg-teal px-9 py-4 text-base font-bold text-white"
             >
-              Register Free
+              Get Free CEs
             </button>
           </div>
         </div>

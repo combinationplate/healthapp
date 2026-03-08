@@ -39,8 +39,9 @@ export default function Footer() {
               Pulse
             </div>
             <p className="text-[14px] leading-[1.7] text-white/45">
-              The marketing toolkit for hospice, home health, and rehab sales
-              teams — and the healthcare professionals they serve.
+              Free, nationally accredited CE courses for healthcare
+              professionals. Referral-building distribution tools for hospice,
+              home health, and rehab sales teams.
             </p>
           </div>
           <div>
@@ -49,18 +50,18 @@ export default function Footer() {
             </h4>
             <ul className="list-none">
               <li className="mb-2">
-                <Link href="#toolkit" className="text-[14px] text-white/65 hover:text-white">
-                  Toolkit
-                </Link>
-              </li>
-              <li className="mb-2">
-                <Link href="#distribution" className="text-[14px] text-white/65 hover:text-white">
-                  Distribution
+                <Link href="#how-it-works" className="text-[14px] text-white/65 hover:text-white">
+                  How It Works
                 </Link>
               </li>
               <li className="mb-2">
                 <Link href="#professionals" className="text-[14px] text-white/65 hover:text-white">
-                  For Professionals
+                  Free CEs
+                </Link>
+              </li>
+              <li className="mb-2">
+                <Link href="#sales-teams" className="text-[14px] text-white/65 hover:text-white">
+                  For Sales Teams
                 </Link>
               </li>
             </ul>

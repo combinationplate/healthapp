@@ -158,8 +158,8 @@ export default function LandingModals() {
             Register for Free
           </h3>
           <p className="mb-6 mt-1.5 text-[14px] text-ink-muted">
-            Get free CE courses, event invites, career opportunities, and local
-            rep connections.
+            Get free, nationally accredited CE courses matched to your discipline
+            and state.
           </p>
           <form
             onSubmit={(e) => {
