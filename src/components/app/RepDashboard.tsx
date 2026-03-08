@@ -15,8 +15,8 @@ const TABS = [
 
 const CE_DISCOUNTS = ["100% Free"] as const;
 
-const BTN_PRIMARY = "rounded-lg bg-[var(--blue)] px-5 py-2 text-sm font-semibold text-white hover:bg-[var(--blue-dark)] transition-colors shadow-sm";
-const BTN_SECONDARY = "rounded-lg border border-[var(--border)] bg-white px-5 py-2 text-sm font-semibold text-[var(--ink-soft)] hover:bg-[#F8FAFC] transition-colors";
+const BTN_PRIMARY = "rounded-xl bg-[var(--blue)] px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-[var(--blue-dark)] active:scale-[0.98] transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed";
+const BTN_SECONDARY = "rounded-xl border border-[var(--border)] bg-white px-5 py-2.5 text-[13px] font-semibold text-[var(--ink-soft)] hover:bg-[var(--cream)] active:scale-[0.98] transition-all disabled:opacity-50";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
@@ -800,11 +800,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
     <PageShell>
       <div className="space-y-6 pb-20 pt-6">
         <div>
-          <h1 className="font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">Your Dashboard</h1>
-          <p className="mt-1 text-[13px] text-[var(--ink-muted)]">Manage your network and send CE courses</p>
+          <h1 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '26px', fontWeight: 800, color: '#0b1222', letterSpacing: '-0.01em', margin: 0 }}>Your Dashboard</h1>
+          <p style={{ marginTop: '4px', fontSize: '13px', color: '#7a8ba8' }}>Manage your network and send CE courses</p>
         </div>
 
-        <div className="rounded-xl bg-white border border-[var(--border)] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+        <div style={{ borderRadius: '16px', background: '#ffffff', border: '1px solid rgba(11,18,34,0.08)', padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
         <StatsGrid>
   <StatCard label="Touchpoints This Week" value={repStats.touchpointsThisWeek} note="Calls, visits, CEs & events" noteClass="text-[var(--blue)]" />
   <StatCard label="CEs Sent" value={repStats.cesSentThisMonth} note={`All time: ${repStats.cesSentAllTime}`} noteClass="text-[var(--green)]" />
@@ -818,7 +818,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         {tab === "discover" && (
           <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Professionals Seeking CEs</h2>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Professionals Seeking CEs</h2>
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals in your area looking for CE courses</p>
             </div>
             {discoverCities.length > 0 && (
@@ -828,7 +828,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     key={city}
                     type="button"
                     onClick={() => setDiscoverCityFilter(city)}
-                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${discoverCityFilter === city ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}
+                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${discoverCityFilter === city ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#f6f5f0]"}`}
                   >
                     {city}
                   </button>
@@ -898,7 +898,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 {tab === "requests" && (
   <SectionCard>
     <div className="border-b border-[var(--border)] pb-3 mb-4">
-      <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE Requests</h2>
+      <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>CE Requests</h2>
       <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals requesting CE courses</p>
     </div>
     {repRequests.length === 0 ? (
@@ -966,13 +966,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="space-y-6">
             <SectionCard>
               <div className="border-b border-[var(--border)] pb-3 mb-4">
-                <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">Distribution Tools</h2>
+                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Distribution Tools</h2>
               </div>
               <p className="text-xs text-[var(--ink-soft)] mb-4">QR codes, flyers, and bulk send.</p>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <button
                   type="button"
-                  className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  className="rounded-xl border border-[var(--border)] bg-[#f6f5f0] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                   onClick={() => setQrOpen(true)}
                 >
                   <span className="text-2xl block mb-2">📱</span>
@@ -981,7 +981,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </button>
                 <button
                   type="button"
-                  className="rounded-xl border border-[var(--border)] bg-[#F8FAFC] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                  className="rounded-xl border border-[var(--border)] bg-[#f6f5f0] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
                   onClick={() => setBulkOpen(true)}
                 >
                   <span className="text-2xl block mb-2">📨</span>
@@ -992,15 +992,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </SectionCard>
 
             {qrOpen && repId && (
-              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => setQrOpen(false)}>
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => setQrOpen(false)}>
                 <div style={{ width: "100%", maxWidth: "800px", background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "90vh" }} onClick={e => e.stopPropagation()}>
                   {/* Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
                     <div>
                       <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Generate a QR Code</h3>
-                      <p style={{ fontSize: "13px", color: "#64748B", margin: "6px 0 0", lineHeight: 1.45 }}>Print this or show it on your phone during visits. When a nurse or social worker scans it, they enter their email and instantly receive a free CE course — no app required.</p>
+                      <p style={{ fontSize: "13px", color: "#7a8ba8", margin: "6px 0 0", lineHeight: 1.45 }}>Print this or show it on your phone during visits. When a nurse or social worker scans it, they enter their email and instantly receive a free CE course — no app required.</p>
                     </div>
-                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B", flexShrink: 0, marginLeft: "12px" }} onClick={() => setQrOpen(false)} aria-label="Close">×</button>
+                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#7a8ba8", flexShrink: 0, marginLeft: "12px" }} onClick={() => setQrOpen(false)} aria-label="Close">×</button>
                   </div>
 
                   {/* Two-column body on wide screens, single on mobile */}
@@ -1019,8 +1019,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             <span style={{ fontSize: "14px" }}>Specific Course</span>
                           </label>
                         </div>
-                        {qrMode === "any" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>The professional picks from your full course catalog. Best for general visits.</p>}
-                        {qrMode === "specific" && <p style={{ fontSize: "12px", color: "#64748B", margin: 0, lineHeight: 1.4 }}>You pick one course upfront. Best for targeting a specific need like Ethics or Palliative Care.</p>}
+                        {qrMode === "any" && <p style={{ fontSize: "12px", color: "#7a8ba8", margin: 0, lineHeight: 1.4 }}>The professional picks from your full course catalog. Best for general visits.</p>}
+                        {qrMode === "specific" && <p style={{ fontSize: "12px", color: "#7a8ba8", margin: 0, lineHeight: 1.4 }}>You pick one course upfront. Best for targeting a specific need like Ethics or Palliative Care.</p>}
                       </div>
 
                       {/* Course selector + filters */}
@@ -1028,7 +1028,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <div style={{ marginBottom: "16px" }}>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discipline</label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px" }}>Discipline</label>
                               <select
                                 value={qrDisciplineFilter}
                                 onChange={e => setQrDisciplineFilter(e.target.value)}
@@ -1040,7 +1040,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               </select>
                             </div>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>State</label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px" }}>State</label>
                               <select
                                 value={qrStateFilter}
                                 onChange={e => setQrStateFilter(e.target.value)}
@@ -1053,7 +1053,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               </select>
                             </div>
                           </div>
-                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
+                          <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px" }}>Course</label>
                           <select
                             value={qrCourseId}
                             onChange={e => setQrCourseId(e.target.value)}
@@ -1066,8 +1066,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       )}
 
                       {/* Scan limit */}
-                      <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45, marginBottom: "12px" }}>
-                        <div style={{ fontWeight: 600, color: "#374151", marginBottom: "4px" }}>Scan Limit</div>
+                      <div style={{ background: "#f0efeb", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.45, marginBottom: "12px" }}>
+                        <div style={{ fontWeight: 600, color: "#3b4963", marginBottom: "4px" }}>Scan Limit</div>
                         <div style={{ marginBottom: "10px", lineHeight: 1.4 }}>How many times can this QR code be used? Each scan sends one free course and counts toward your billing.</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                           {([10, 25, 50, 100] as const).map((n) => (
@@ -1078,9 +1078,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 checked={qrCap === n}
                                 onChange={() => { setQrCap(n); saveQrCap(n); }}
                               />
-                              <span style={{ fontSize: "13px", color: "#374151" }}>{n} scans</span>
+                              <span style={{ fontSize: "13px", color: "#3b4963" }}>{n} scans</span>
                               {n === 25 && (
-                                <span style={{ fontSize: "11px", fontWeight: 600, background: "#D1FAE5", color: "#065F46", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
+                                <span style={{ fontSize: "11px", fontWeight: 600, background: "rgba(13,148,136,0.15)", color: "#0f766e", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
                               )}
                             </label>
                           ))}
@@ -1092,22 +1092,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               onChange={() => { setQrCap(null); saveQrCap(null); }}
                               style={{ marginTop: "2px" }}
                             />
-                            <span style={{ fontSize: "13px", color: "#374151" }}>
+                            <span style={{ fontSize: "13px", color: "#3b4963" }}>
                               Unlimited
-                              <span style={{ display: "block", fontSize: "11px", color: "#92400E", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
+                              <span style={{ display: "block", fontSize: "11px", color: "#92670A", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
                             </span>
                           </label>
                         </div>
                         {qrScanCount !== null && (
-                          <div style={{ marginTop: "10px", fontSize: "12px", color: "#64748B" }}>
+                          <div style={{ marginTop: "10px", fontSize: "12px", color: "#7a8ba8" }}>
                             🔍 {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
-                            {qrCapSaving && <span style={{ marginLeft: "8px", color: "#94A3B8" }}>Saving…</span>}
+                            {qrCapSaving && <span style={{ marginLeft: "8px", color: "#7a8ba8" }}>Saving…</span>}
                           </div>
                         )}
                       </div>
 
                       {/* Billing note */}
-                      <div style={{ background: "#F1F5F9", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#64748B", lineHeight: 1.45 }}>
+                      <div style={{ background: "#f0efeb", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.45 }}>
                         💳 Billing: Each course sent via QR is charged at the standard course rate. You will see all QR sends in your CE History tab.
                       </div>
                     </div>
@@ -1123,17 +1123,17 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <img src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} alt="QR Code" style={{ display: "block", margin: "0 auto", maxWidth: "250px", width: "100%" }} />
                             </div>
                             <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
-                              <input readOnly value={qrUrl} style={{ flex: 1, fontSize: "12px", padding: "8px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "#F8FAFC" }} />
+                              <input readOnly value={qrUrl} style={{ flex: 1, fontSize: "12px", padding: "8px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "#f6f5f0" }} />
                               <button type="button" className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "8px 12px", whiteSpace: "nowrap" }} onClick={() => { navigator.clipboard.writeText(qrUrl); }}>Copy</button>
                             </div>
                             <a href={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrUrl)}`} target="_blank" rel="noopener noreferrer" className={BTN_PRIMARY} style={{ display: "inline-block", textAlign: "center", padding: "10px 16px", fontSize: "13px", textDecoration: "none" }}>Download QR</a>
 
                             {/* Flyer generator section */}
                             <div>
-                              <div style={{ borderTop: "1px solid #E2E8F0", margin: "24px 0" }} />
+                              <div style={{ borderTop: "1px solid rgba(11,18,34,0.08)", margin: "24px 0" }} />
                               <div style={{ marginBottom: "12px" }}>
                                 <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>Download Flyer</div>
-                                <div style={{ fontSize: "12px", color: "#64748B", marginBottom: "12px" }}>
+                                <div style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "12px" }}>
                                   Print-ready or social media size. Perfect for leaving at facilities or posting on LinkedIn.
                                 </div>
                                 <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
@@ -1141,8 +1141,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     onClick={() => setFlyerSize("print")}
                                     style={{
                                       padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                                      background: flyerSize === "print" ? "#2D5BFF" : "#F1F5F9",
-                                      color: flyerSize === "print" ? "white" : "#64748B",
+                                      background: flyerSize === "print" ? "#2455ff" : "#f0efeb",
+                                      color: flyerSize === "print" ? "white" : "#7a8ba8",
                                       border: "none"
                                     }}
                                   >🖨️ Print (8.5×11)</button>
@@ -1150,8 +1150,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     onClick={() => setFlyerSize("social")}
                                     style={{
                                       padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                                      background: flyerSize === "social" ? "#2D5BFF" : "#F1F5F9",
-                                      color: flyerSize === "social" ? "white" : "#64748B",
+                                      background: flyerSize === "social" ? "#2455ff" : "#f0efeb",
+                                      color: flyerSize === "social" ? "white" : "#7a8ba8",
                                       border: "none"
                                     }}
                                   >📱 Social (1080×1080)</button>
@@ -1183,7 +1183,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     padding: "80px 60px",
-                                    fontFamily: "sans-serif",
+                                    fontFamily: "'DM Sans', sans-serif",
                                     position: "relative",
                                     boxSizing: "border-box",
                                   }}
@@ -1191,13 +1191,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   {/* Top accent bar */}
                                   <div style={{
                                     position: "absolute", top: 0, left: 0, right: 0, height: "8px",
-                                    background: "linear-gradient(90deg, #2D5BFF, #10B981)"
+                                    background: "linear-gradient(90deg, #2455ff, #10B981)"
                                   }} />
 
                                   {/* Logo */}
                                   <div style={{
                                     width: "56px", height: "56px", borderRadius: "14px",
-                                    background: "linear-gradient(135deg, #2D5BFF, #10B981)",
+                                    background: "linear-gradient(135deg, #2455ff, #10B981)",
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     color: "white", fontWeight: 900, fontSize: "28px", marginBottom: "16px"
                                   }}>P</div>
@@ -1206,14 +1206,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   <h1 style={{
                                     fontSize: flyerSize === "print" ? "52px" : "64px",
                                     fontWeight: 900, textAlign: "center", lineHeight: 1.1,
-                                    color: "#0A1628", marginBottom: "16px", letterSpacing: "-1px"
+                                    color: "#0b1222", marginBottom: "16px", letterSpacing: "-1px"
                                   }}>
                                     Get a Free<br />CE Course
                                   </h1>
 
                                   {/* Subheadline */}
                                   <p style={{
-                                    fontSize: "20px", color: "#64748B", textAlign: "center",
+                                    fontSize: "20px", color: "#7a8ba8", textAlign: "center",
                                     marginBottom: "48px", maxWidth: "500px", lineHeight: 1.5
                                   }}>
                                     Scan the QR code below to claim your complimentary continuing education course. No account required.
@@ -1222,7 +1222,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   {/* QR Code */}
                                   <div style={{
                                     padding: "24px", background: "white", borderRadius: "16px",
-                                    border: "2px solid #E2E8F0", marginBottom: "48px",
+                                    border: "2px solid rgba(11,18,34,0.08)", marginBottom: "48px",
                                     boxShadow: "0 4px 24px rgba(0,0,0,0.08)"
                                   }}>
                                     <img
@@ -1237,14 +1237,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   {/* Course name if specific */}
                                   {qrMode === "specific" && qrCourseId && qrCourses.length > 0 && (
                                     <div style={{
-                                      background: "#F0F9FF", borderRadius: "12px", padding: "16px 32px",
-                                      marginBottom: "32px", textAlign: "center", border: "1px solid #BAE6FD"
+                                      background: "rgba(36,85,255,0.06)", borderRadius: "12px", padding: "16px 32px",
+                                      marginBottom: "32px", textAlign: "center", border: "1px solid rgba(36,85,255,0.20)"
                                     }}>
-                                      <div style={{ fontSize: "13px", color: "#64748B", marginBottom: "4px" }}>Featured Course</div>
-                                      <div style={{ fontWeight: 700, fontSize: "18px", color: "#0A1628" }}>
+                                      <div style={{ fontSize: "13px", color: "#7a8ba8", marginBottom: "4px" }}>Featured Course</div>
+                                      <div style={{ fontWeight: 700, fontSize: "18px", color: "#0b1222" }}>
                                         {qrCourses.find(c => c.id === qrCourseId)?.name}
                                       </div>
-                                      <div style={{ fontSize: "14px", color: "#64748B", marginTop: "2px" }}>
+                                      <div style={{ fontSize: "14px", color: "#7a8ba8", marginTop: "2px" }}>
                                         {qrCourses.find(c => c.id === qrCourseId)?.hours} credit hours · Complimentary
                                       </div>
                                     </div>
@@ -1252,11 +1252,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
                                   {/* Rep info */}
                                   <div style={{ textAlign: "center", marginTop: "auto" }}>
-                                    <div style={{ fontSize: "15px", color: "#64748B", marginBottom: "4px" }}>
-                                      Compliments of <strong style={{ color: "#0A1628" }}>{repProfile?.full_name ?? ""}</strong>
+                                    <div style={{ fontSize: "15px", color: "#7a8ba8", marginBottom: "4px" }}>
+                                      Compliments of <strong style={{ color: "#0b1222" }}>{repProfile?.full_name ?? ""}</strong>
                                     </div>
                                     {repProfile?.org_name && (
-                                      <div style={{ fontSize: "13px", color: "#94A3B8" }}>
+                                      <div style={{ fontSize: "13px", color: "#7a8ba8" }}>
                                         Sponsored by {repProfile.org_name}
                                       </div>
                                     )}
@@ -1265,14 +1265,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   {/* Bottom accent bar */}
                                   <div style={{
                                     position: "absolute", bottom: 0, left: 0, right: 0, height: "8px",
-                                    background: "linear-gradient(90deg, #2D5BFF, #10B981)"
+                                    background: "linear-gradient(90deg, #2455ff, #10B981)"
                                   }} />
                                 </div>
                               </div>
                             </div>
                           </>
                         ) : qrMode === "specific" && !qrCourseId ? (
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#94A3B8", fontSize: "13px", textAlign: "center", border: "2px dashed #E2E8F0", borderRadius: "12px" }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "200px", color: "#7a8ba8", fontSize: "13px", textAlign: "center", border: "2px dashed rgba(11,18,34,0.08)", borderRadius: "12px" }}>
                             Select a course to preview the QR code.
                           </div>
                         ) : null;
@@ -1284,15 +1284,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
             )}
             {/* Bulk Send Modal */}
             {bulkOpen && (
-              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={resetBulkModal}>
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={resetBulkModal}>
                 <div style={{ width: "100%", maxWidth: "760px", background: "white", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "92vh", display: "flex", flexDirection: "column" }} onClick={e => e.stopPropagation()}>
                   {/* Header */}
                   <div style={{ padding: "20px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
                       <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Bulk Send CE</h3>
-                      <p style={{ fontSize: "13px", color: "#64748B", margin: "4px 0 0" }}>Send free CE courses to multiple people at once.</p>
+                      <p style={{ fontSize: "13px", color: "#7a8ba8", margin: "4px 0 0" }}>Send free CE courses to multiple people at once.</p>
                     </div>
-                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#64748B" }} onClick={resetBulkModal} aria-label="Close">×</button>
+                    <button type="button" style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer", color: "#7a8ba8" }} onClick={resetBulkModal} aria-label="Close">×</button>
                   </div>
 
                   {bulkResults ? (
@@ -1305,26 +1305,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <h4 style={{ fontSize: "16px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Send Complete</h4>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                        <div style={{ background: "#F0FDF4", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-                          <div style={{ fontSize: "22px", fontWeight: 700, color: "#16A34A" }}>{bulkResults.succeeded}</div>
-                          <div style={{ fontSize: "12px", color: "#64748B" }}>Sent</div>
+                        <div style={{ background: "rgba(13,148,136,0.08)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                          <div style={{ fontSize: "22px", fontWeight: 700, color: "#0d9488" }}>{bulkResults.succeeded}</div>
+                          <div style={{ fontSize: "12px", color: "#7a8ba8" }}>Sent</div>
                         </div>
-                        <div style={{ background: "#FFF7ED", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                        <div style={{ background: "rgba(217,119,6,0.08)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
                           <div style={{ fontSize: "22px", fontWeight: 700, color: "#D97706" }}>{bulkResults.skipped}</div>
-                          <div style={{ fontSize: "12px", color: "#64748B" }}>Skipped</div>
+                          <div style={{ fontSize: "12px", color: "#7a8ba8" }}>Skipped</div>
                         </div>
-                        <div style={{ background: bulkResults.failed > 0 ? "#FEF2F2" : "#F8FAFC", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-                          <div style={{ fontSize: "22px", fontWeight: 700, color: bulkResults.failed > 0 ? "#DC2626" : "#94A3B8" }}>{bulkResults.failed}</div>
-                          <div style={{ fontSize: "12px", color: "#64748B" }}>Failed</div>
+                        <div style={{ background: bulkResults.failed > 0 ? "rgba(232,96,76,0.08)" : "#f6f5f0", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
+                          <div style={{ fontSize: "22px", fontWeight: 700, color: bulkResults.failed > 0 ? "#DC2626" : "#7a8ba8" }}>{bulkResults.failed}</div>
+                          <div style={{ fontSize: "12px", color: "#7a8ba8" }}>Failed</div>
                         </div>
                       </div>
                       {bulkResults.skipped > 0 && (
-                        <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "8px" }}>⏭️ {bulkResults.skipped} recipient{bulkResults.skipped !== 1 ? "s" : ""} skipped — they already received this course.</p>
+                        <p style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "8px" }}>⏭️ {bulkResults.skipped} recipient{bulkResults.skipped !== 1 ? "s" : ""} skipped — they already received this course.</p>
                       )}
                       {bulkResults.failed > 0 && (
                         <div style={{ marginBottom: "12px" }}>
                           <p style={{ fontSize: "12px", fontWeight: 600, color: "#DC2626", marginBottom: "6px" }}>❌ Failed sends:</p>
-                          <div style={{ background: "#FEF2F2", borderRadius: "8px", padding: "10px", fontSize: "12px", color: "#7F1D1D", maxHeight: "120px", overflowY: "auto" }}>
+                          <div style={{ background: "rgba(232,96,76,0.08)", borderRadius: "8px", padding: "10px", fontSize: "12px", color: "#7F1D1D", maxHeight: "120px", overflowY: "auto" }}>
                             {bulkResults.results.filter(r => !r.success && r.error !== "already_sent").map((r, i) => (
                               <div key={i}>{r.name} ({r.email}) — {r.error}</div>
                             ))}
@@ -1340,7 +1340,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         {(["manual", "network", "csv"] as const).map((t) => {
                           const labels: Record<string, string> = { manual: "Manual Entry", network: "From Network", csv: "Upload CSV" };
                           return (
-                            <button key={t} type="button" onClick={() => setBulkTab(t)} style={{ padding: "8px 14px", fontSize: "13px", fontWeight: bulkTab === t ? 700 : 400, borderBottom: `2px solid ${bulkTab === t ? "var(--blue)" : "transparent"}`, background: "none", border: "none", borderBottomWidth: "2px", borderBottomStyle: "solid", borderBottomColor: bulkTab === t ? "var(--blue)" : "transparent", color: bulkTab === t ? "var(--blue)" : "#64748B", cursor: "pointer", marginBottom: "-1px" }}>{labels[t]}</button>
+                            <button key={t} type="button" onClick={() => setBulkTab(t)} style={{ padding: "8px 14px", fontSize: "13px", fontWeight: bulkTab === t ? 700 : 400, borderBottom: `2px solid ${bulkTab === t ? "var(--blue)" : "transparent"}`, background: "none", border: "none", borderBottomWidth: "2px", borderBottomStyle: "solid", borderBottomColor: bulkTab === t ? "var(--blue)" : "transparent", color: bulkTab === t ? "var(--blue)" : "#7a8ba8", cursor: "pointer", marginBottom: "-1px" }}>{labels[t]}</button>
                           );
                         })}
                       </div>
@@ -1353,9 +1353,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
                                 <thead>
                                   <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Name</th>
-                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Email</th>
-                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#64748B", fontWeight: 600, fontSize: "11px" }}>Discipline</th>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Name</th>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Email</th>
+                                    <th style={{ textAlign: "left", padding: "6px 8px", color: "#7a8ba8", fontWeight: 600, fontSize: "11px" }}>Discipline</th>
                                     <th style={{ width: "32px" }}></th>
                                   </tr>
                                 </thead>
@@ -1375,14 +1375,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         </select>
                                       </td>
                                       <td style={{ padding: "4px", textAlign: "center" }}>
-                                        <button type="button" onClick={() => setBulkRows(bulkRows.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer", fontSize: "16px", lineHeight: 1 }}>×</button>
+                                        <button type="button" onClick={() => setBulkRows(bulkRows.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#7a8ba8", cursor: "pointer", fontSize: "16px", lineHeight: 1 }}>×</button>
                                       </td>
                                     </tr>
                                   ))}
                                 </tbody>
                               </table>
                             </div>
-                            <button type="button" onClick={() => { if (bulkRows.length < 100) setBulkRows([...bulkRows, { name: "", email: "", discipline: "" }]); }} disabled={bulkRows.length >= 100} style={{ marginTop: "10px", fontSize: "12px", color: "var(--blue)", background: "none", border: "1px dashed #CBD5E1", borderRadius: "6px", padding: "6px 14px", cursor: bulkRows.length >= 100 ? "not-allowed" : "pointer", opacity: bulkRows.length >= 100 ? 0.5 : 1 }}>+ Add Row</button>
+                            <button type="button" onClick={() => { if (bulkRows.length < 100) setBulkRows([...bulkRows, { name: "", email: "", discipline: "" }]); }} disabled={bulkRows.length >= 100} style={{ marginTop: "10px", fontSize: "12px", color: "var(--blue)", background: "none", border: "1px dashed rgba(11,18,34,0.12)", borderRadius: "6px", padding: "6px 14px", cursor: bulkRows.length >= 100 ? "not-allowed" : "pointer", opacity: bulkRows.length >= 100 ? 0.5 : 1 }}>+ Add Row</button>
                           </div>
                         )}
 
@@ -1395,7 +1395,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <button type="button" onClick={() => setBulkSelectedPros([])} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Deselect All</button>
                             </div>
                             {professionals.length === 0 ? (
-                              <p style={{ color: "#94A3B8", fontSize: "13px", textAlign: "center", padding: "24px 0" }}>No professionals in your network yet.</p>
+                              <p style={{ color: "#7a8ba8", fontSize: "13px", textAlign: "center", padding: "24px 0" }}>No professionals in your network yet.</p>
                             ) : (
                               <div style={{ maxHeight: "260px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "8px" }}>
                                 {professionals
@@ -1404,13 +1404,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     return !q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || (p.facility ?? "").toLowerCase().includes(q);
                                   })
                                   .map(p => (
-                                    <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderBottom: "1px solid var(--border)", cursor: "pointer", background: bulkSelectedPros.includes(p.id) ? "#EFF6FF" : "white" }}>
+                                    <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", borderBottom: "1px solid var(--border)", cursor: "pointer", background: bulkSelectedPros.includes(p.id) ? "rgba(36,85,255,0.08)" : "white" }}>
                                       <input type="checkbox" checked={bulkSelectedPros.includes(p.id)} onChange={e => { if (e.target.checked) setBulkSelectedPros([...bulkSelectedPros, p.id]); else setBulkSelectedPros(bulkSelectedPros.filter(id => id !== p.id)); }} />
                                       <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 600, fontSize: "13px", color: "var(--ink)" }}>{p.name}</div>
-                                        <div style={{ fontSize: "11px", color: "#64748B" }}>{[p.discipline, p.facility].filter(Boolean).join(" · ")}</div>
+                                        <div style={{ fontSize: "11px", color: "#7a8ba8" }}>{[p.discipline, p.facility].filter(Boolean).join(" · ")}</div>
                                       </div>
-                                      <div style={{ fontSize: "11px", color: "#94A3B8", flexShrink: 0 }}>{p.email}</div>
+                                      <div style={{ fontSize: "11px", color: "#7a8ba8", flexShrink: 0 }}>{p.email}</div>
                                     </label>
                                   ))}
                               </div>
@@ -1423,10 +1423,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           <div>
                             <div style={{ display: "flex", gap: "8px", marginBottom: "12px", alignItems: "center" }}>
                               <a href={`data:text/csv;charset=utf-8,${encodeURIComponent("Name,Email,Discipline\nJennifer Smith,jennifer@hospital.com,Nursing")}`} download="pulse-bulk-template.csv" style={{ fontSize: "12px", color: "var(--blue)", textDecoration: "underline" }}>Download template</a>
-                              <span style={{ color: "#CBD5E1" }}>·</span>
-                              <span style={{ fontSize: "12px", color: "#64748B" }}>Columns: Name, Email, Discipline</span>
+                              <span style={{ color: "rgba(11,18,34,0.12)" }}>·</span>
+                              <span style={{ fontSize: "12px", color: "#7a8ba8" }}>Columns: Name, Email, Discipline</span>
                             </div>
-                            <label style={{ display: "block", border: "2px dashed #CBD5E1", borderRadius: "10px", padding: "28px", textAlign: "center", cursor: "pointer", marginBottom: "16px" }}>
+                            <label style={{ display: "block", border: "2px dashed rgba(11,18,34,0.12)", borderRadius: "10px", padding: "28px", textAlign: "center", cursor: "pointer", marginBottom: "16px" }}>
                               <input type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={e => {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
@@ -1438,17 +1438,17 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 reader.readAsText(file);
                               }} />
                               <div style={{ fontSize: "24px", marginBottom: "6px" }}>📁</div>
-                              <div style={{ fontSize: "13px", color: "#64748B" }}>Click to upload a CSV file</div>
+                              <div style={{ fontSize: "13px", color: "#7a8ba8" }}>Click to upload a CSV file</div>
                             </label>
                             {bulkCsvData.length > 0 && (
                               <div>
-                                <p style={{ fontSize: "12px", color: "#64748B", marginBottom: "8px" }}>{bulkCsvData.length} recipients loaded</p>
+                                <p style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "8px" }}>{bulkCsvData.length} recipients loaded</p>
                                 <div style={{ maxHeight: "180px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "8px" }}>
                                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
-                                    <thead><tr style={{ borderBottom: "1px solid var(--border)", background: "#F8FAFC" }}>
-                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Name</th>
-                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Email</th>
-                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#64748B" }}>Discipline</th>
+                                    <thead><tr style={{ borderBottom: "1px solid var(--border)", background: "#f6f5f0" }}>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#7a8ba8" }}>Name</th>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#7a8ba8" }}>Email</th>
+                                      <th style={{ textAlign: "left", padding: "6px 10px", color: "#7a8ba8" }}>Discipline</th>
                                     </tr></thead>
                                     <tbody>
                                       {bulkCsvData.map((r, i) => (
@@ -1470,14 +1470,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <div style={{ marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Course</label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px" }}>Course</label>
                               <select value={bulkCourseId} onChange={e => setBulkCourseId(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px" }}>
                                 <option value="">Select a course…</option>
                                 {availableCoursesLoading ? <option disabled>Loading…</option> : bulkCourseOptions.map(c => <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>)}
                               </select>
                             </div>
                             <div>
-                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#64748B", marginBottom: "6px" }}>Discount</label>
+                              <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px" }}>Discount</label>
                               <select value={bulkDiscount} onChange={e => setBulkDiscount(e.target.value)} style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "14px" }}>
                                 <option>100% Free</option>
                                 <option>50% Off</option>
@@ -1488,7 +1488,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
                           {/* Cost summary */}
                           {bulkRecipients.length > 0 && bulkCourse && (
-                            <div style={{ background: "#EFF6FF", borderRadius: "8px", padding: "12px", fontSize: "13px", color: "#1E40AF", marginBottom: "12px", lineHeight: 1.6 }}>
+                            <div style={{ background: "rgba(36,85,255,0.08)", borderRadius: "8px", padding: "12px", fontSize: "13px", color: "#1a3fcc", marginBottom: "12px", lineHeight: 1.6 }}>
                               <div>Sending to <strong>{bulkRecipients.length}</strong> recipient{bulkRecipients.length !== 1 ? "s" : ""}</div>
                               <div>Course: <strong>{bulkCourse.name}</strong> · ${bulkCourse.price?.toFixed(2) ?? "—"} per person</div>
                               <div>Discount: <strong>{bulkDiscount}</strong></div>
@@ -1518,7 +1518,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         {tab === "network" && (
           <SectionCard>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">My Network</h2>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My Network</h2>
               <div className="flex gap-2 flex-wrap">
                 <button type="button" className={BTN_SECONDARY}>Import CSV</button>
                 <button type="button" className={BTN_PRIMARY} onClick={() => setAddOpen(true)}>+ Add Professional</button>
@@ -1526,7 +1526,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </div>
             <div className="flex gap-2 flex-wrap mb-4">
               {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
-                <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#F8FAFC]"}`}>
+                <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#f6f5f0]"}`}>
                   {f} {f === "All" ? `(${professionals.length})` : ""}
                 </button>
               ))}
@@ -1619,9 +1619,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
           const sourceBadge = (source: string | null) => {
             const s = source ?? "manual";
-            if (s === "qr") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#DBEAFE", color: "#1D4ED8" }}>QR</span>;
+            if (s === "qr") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(36,85,255,0.14)", color: "#2455ff" }}>QR</span>;
             if (s === "bulk") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#EDE9FE", color: "#6D28D9" }}>Bulk</span>;
-            return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#F1F5F9", color: "#475569" }}>Manual</span>;
+            return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f0efeb", color: "#3b4963" }}>Manual</span>;
           };
 
           return (
@@ -1641,13 +1641,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
 
               {/* Source breakdown */}
-              <div style={{ fontSize: "12px", color: "#64748B", paddingLeft: "2px" }}>
+              <div style={{ fontSize: "12px", color: "#7a8ba8", paddingLeft: "2px" }}>
                 {manualCount} manual · {qrCount} QR · {bulkCount} bulk
               </div>
 
               <SectionCard>
                 <div className="border-b border-[var(--border)] pb-3 mb-4">
-                  <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
+                  <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>CE History</h2>
                 </div>
 
                 {/* Filter pills */}
@@ -1659,8 +1659,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       onClick={() => setCeHistoryFilter(f)}
                       style={{
                         padding: "4px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "none",
-                        background: ceHistoryFilter === f ? "var(--ink)" : "#F1F5F9",
-                        color: ceHistoryFilter === f ? "white" : "#64748B",
+                        background: ceHistoryFilter === f ? "var(--ink)" : "#f0efeb",
+                        color: ceHistoryFilter === f ? "white" : "#7a8ba8",
                       }}
                     >
                       {f === "all" ? "All" : f === "qr" ? "QR" : f.charAt(0).toUpperCase() + f.slice(1)}
@@ -1692,7 +1692,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       </thead>
                       <tbody>
                         {filtered.map((row) => (
-                          <tr key={row.id} style={{ borderBottom: "1px solid var(--border)" }} className="hover:bg-[#F8FAFC]/60">
+                          <tr key={row.id} style={{ borderBottom: "1px solid var(--border)" }} className="hover:bg-[#f6f5f0]/60">
                             <td style={{ padding: "10px 10px" }}>
                               <div style={{ fontWeight: 600, color: "var(--ink)" }}>{row.professional_name}</div>
                               {row.recipient_email && row.professional_name !== row.recipient_email && (
@@ -1709,9 +1709,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             <td style={{ padding: "10px 10px" }}>{sourceBadge(row.source)}</td>
                             <td style={{ padding: "10px 10px" }}>
                               {row.clicked_at ? (
-                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#DCFCE7", color: "#15803D" }}>Accessed ✓</span>
+                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(13,148,136,0.12)", color: "#0d9488" }}>Accessed ✓</span>
                               ) : (
-                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#F1F5F9", color: "#64748B" }}>Sent</span>
+                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f0efeb", color: "#7a8ba8" }}>Sent</span>
                               )}
                             </td>
                           </tr>
@@ -1796,7 +1796,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-colors ${
                                   courseTopicFilter === pill
                                     ? "bg-[var(--blue)] text-white border-[var(--blue)]"
-                                    : "bg-white text-[var(--ink-soft)] border-[var(--border)] hover:bg-[#F8FAFC]"
+                                    : "bg-white text-[var(--ink-soft)] border-[var(--border)] hover:bg-[#f6f5f0]"
                                 }`}
                               >
                                 {pill}
@@ -1821,7 +1821,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                     padding: '12px',
                                     borderRadius: '8px',
                                     border: sendCeCourse === course.id ? '2px solid var(--blue)' : '1px solid var(--border)',
-                                    background: sendCeCourse === course.id ? '#DBEAFE' : 'white',
+                                    background: sendCeCourse === course.id ? 'rgba(36,85,255,0.14)' : 'white',
                                   }}
                                 >
                                   <div className="min-w-0">
@@ -1983,7 +1983,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           padding:'10px 12px',
                           borderRadius:'10px',
                           border: touchpointType === t.id ? '2px solid var(--blue)' : '1px solid var(--border)',
-                          background: touchpointType === t.id ? '#DBEAFE' : 'white',
+                          background: touchpointType === t.id ? 'rgba(36,85,255,0.14)' : 'white',
                           cursor:'pointer',
                           fontSize:'13px',
                           fontWeight:600,
@@ -2023,7 +2023,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     </PageShell>
 
     {repOnboarding && (
-      <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.6)", backdropFilter: "blur(4px)" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)" }}>
         <div style={{ width: "92%", maxWidth: "480px", background: "white", borderRadius: "16px", padding: "32px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
           <h3 style={{ fontSize: "20px", fontWeight: 700, color: "var(--ink)", marginBottom: "6px" }}>Welcome to Pulse</h3>
           <p style={{ fontSize: "13px", color: "var(--ink-muted)", marginBottom: "24px" }}>Tell us where you work so we can show you professionals in your area.</p>
