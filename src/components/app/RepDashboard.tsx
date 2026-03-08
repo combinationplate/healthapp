@@ -193,6 +193,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [courseTopicFilter, setCourseTopicFilter] = useState("All");
+  const [courseSearch, setCourseSearch] = useState("");
   const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
   const [ceHistoryFilter, setCeHistoryFilter] = useState<"all" | "manual" | "qr" | "bulk">("all");
@@ -749,6 +750,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setAvailableCourses([]);
     setProfessionApproval({});
     setCourseTopicFilter("All");
+    setCourseSearch("");
     setSendCeOpen(true);
 
     setAvailableCoursesLoading(true);
@@ -2248,89 +2250,188 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     </p>
                   )}
 
-                  {/* Course card list */}
+                  {/* Course selection */}
                   <div>
-                    <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-2">Select Course</label>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#3b4963', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Select Course</label>
                     {availableCoursesLoading ? (
-                      <div className="flex items-center justify-center py-8 text-sm text-[var(--ink-muted)]">
-                        <svg className="animate-spin mr-2 h-4 w-4 text-[var(--blue)]" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0', fontSize: '14px', color: '#7a8ba8' }}>
                         Loading courses…
                       </div>
                     ) : filteredCourses.length === 0 ? (
-                      <p className="py-4 text-center text-sm text-[var(--ink-muted)]">No courses available.</p>
+                      <p style={{ padding: '16px 0', textAlign: 'center', fontSize: '14px', color: '#7a8ba8' }}>No courses available for this discipline.</p>
                     ) : (() => {
                       const TOPIC_PILLS = ["All", "Ethics", "Palliative Care", "Mental Health", "Care Transitions", "Rehabilitation", "General"];
-                      const topicFiltered = courseTopicFilter === "All"
+                      const topicFiltered = (courseTopicFilter === "All"
                         ? filteredCourses
                         : filteredCourses.filter(({ course }) =>
                             course.topic?.toLowerCase().includes(courseTopicFilter.toLowerCase())
-                          );
+                          )
+                      ).filter(({ course }) => {
+                        if (!courseSearch.trim()) return true;
+                        const q = courseSearch.toLowerCase();
+                        return course.name.toLowerCase().includes(q) || (course.topic ?? "").toLowerCase().includes(q);
+                      });
                       const disciplineLabel = sendCePro?.discipline ?? "all disciplines";
+                      const cleanCourseName = (name: string) => name.replace(/^\*NEW\*\s*/i, "").replace(/^\*[^*]+\*\s*/i, "");
+
                       return (
                         <>
-                          {/* Topic filter pills */}
-                          <div className="flex flex-wrap gap-1.5 mb-2">
-                            {TOPIC_PILLS.map((pill) => (
-                              <button
-                                key={pill}
-                                type="button"
-                                tabIndex={-1}
-                                onClick={() => setCourseTopicFilter(pill)}
-                                className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold border transition-colors ${
-                                  courseTopicFilter === pill
-                                    ? "bg-[var(--blue)] text-white border-[var(--blue)]"
-                                    : "bg-white text-[var(--ink-soft)] border-[var(--border)] hover:bg-[#f6f5f0]"
-                                }`}
-                              >
-                                {pill}
-                              </button>
-                            ))}
+                          {/* Search bar */}
+                          <div style={{ position: 'relative', marginBottom: '10px' }}>
+                            <input
+                              type="text"
+                              value={courseSearch}
+                              onChange={(e) => setCourseSearch(e.target.value)}
+                              placeholder="Search courses…"
+                              style={{
+                                width: '100%',
+                                padding: '10px 12px 10px 36px',
+                                borderRadius: '10px',
+                                border: '1px solid rgba(11,18,34,0.08)',
+                                fontSize: '13px',
+                                fontFamily: "'DM Sans', system-ui, sans-serif",
+                                background: '#f6f5f0',
+                                boxSizing: 'border-box' as const,
+                                outline: 'none',
+                              }}
+                            />
+                            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', color: '#7a8ba8', pointerEvents: 'none' }}>🔍</span>
                           </div>
-                          {/* Count */}
-                          <p className="text-[11px] text-[var(--ink-muted)] mb-2">
-                            Showing {topicFiltered.length} course{topicFiltered.length !== 1 ? "s" : ""} for {disciplineLabel}
-                          </p>
-                          {/* Scrollable course list */}
-                          <div className="max-h-[260px] overflow-y-auto rounded-lg border border-[var(--border)] p-2">
-                            {topicFiltered.length === 0 ? (
-                              <p className="py-4 text-center text-sm text-[var(--ink-muted)]">No courses match this topic.</p>
-                            ) : (
-                              topicFiltered.map(({ course, profession }) => (
-                                <div
-                                  key={course.id}
-                                  onClick={() => setSendCeCourse(course.id)}
-                                  className="rounded-lg mb-2 last:mb-0 cursor-pointer transition-colors grid grid-cols-[1fr_auto] gap-2 items-center"
+
+                          {/* Topic filter pills */}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '10px' }}>
+                            {TOPIC_PILLS.map((pill) => {
+                              const isActive = courseTopicFilter === pill;
+                              return (
+                                <button
+                                  key={pill}
+                                  type="button"
+                                  tabIndex={-1}
+                                  onClick={() => setCourseTopicFilter(pill)}
                                   style={{
-                                    padding: '12px',
-                                    borderRadius: '8px',
-                                    border: sendCeCourse === course.id ? '2px solid var(--blue)' : '1px solid var(--border)',
-                                    background: sendCeCourse === course.id ? 'rgba(36,85,255,0.14)' : 'white',
+                                    padding: '5px 14px',
+                                    borderRadius: '999px',
+                                    fontSize: '12px',
+                                    fontWeight: isActive ? 700 : 500,
+                                    border: isActive ? '1.5px solid #2455ff' : '1px solid rgba(11,18,34,0.08)',
+                                    background: isActive ? 'rgba(36,85,255,0.08)' : '#ffffff',
+                                    color: isActive ? '#2455ff' : '#3b4963',
+                                    cursor: 'pointer',
+                                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                                    transition: 'all 0.15s',
                                   }}
                                 >
-                                  <div className="min-w-0">
-                                    <div className="font-semibold text-[13px] text-[var(--ink)] leading-snug">{course.name}</div>
-                                    <div className="text-[11px] text-[var(--ink-muted)] mt-0.5">
-                                      {course.hours} hr{course.hours !== 1 ? "s" : ""}
-                                      {course.price != null ? ` · $${course.price}` : ""}
-                                      {course.topic ? ` · ${course.topic}` : ""}
+                                  {pill}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Count */}
+                          <div style={{ fontSize: '12px', color: '#7a8ba8', marginBottom: '8px' }}>
+                            {topicFiltered.length} course{topicFiltered.length !== 1 ? "s" : ""} for {disciplineLabel}
+                            {courseSearch.trim() ? ` matching "${courseSearch.trim()}"` : ""}
+                          </div>
+
+                          {/* Scrollable course list */}
+                          <div style={{
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            borderRadius: '12px',
+                            border: '1px solid rgba(11,18,34,0.08)',
+                            background: '#f6f5f0',
+                            padding: '6px',
+                          }}>
+                            {topicFiltered.length === 0 ? (
+                              <p style={{ padding: '24px 0', textAlign: 'center', fontSize: '13px', color: '#7a8ba8' }}>
+                                {courseSearch.trim() ? "No courses match your search." : "No courses match this topic."}
+                              </p>
+                            ) : (
+                              topicFiltered.map(({ course, profession }) => {
+                                const isSelected = sendCeCourse === course.id;
+                                const displayName = cleanCourseName(course.name);
+                                const isNew = /^\*NEW\*/i.test(course.name);
+                                return (
+                                  <div
+                                    key={course.id}
+                                    onClick={() => setSendCeCourse(course.id)}
+                                    style={{
+                                      padding: '14px 16px',
+                                      borderRadius: '10px',
+                                      border: isSelected ? '2px solid #2455ff' : '1px solid transparent',
+                                      background: isSelected ? 'rgba(36,85,255,0.06)' : '#ffffff',
+                                      cursor: 'pointer',
+                                      marginBottom: '4px',
+                                      transition: 'all 0.15s',
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr auto',
+                                      gap: '12px',
+                                      alignItems: 'center',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!isSelected) e.currentTarget.style.background = '#fafaf7';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!isSelected) e.currentTarget.style.background = '#ffffff';
+                                    }}
+                                  >
+                                    <div style={{ minWidth: 0 }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                        <span style={{ fontWeight: 600, fontSize: '14px', color: '#0b1222', lineHeight: 1.3 }}>
+                                          {displayName}
+                                        </span>
+                                        {isNew && (
+                                          <span style={{
+                                            fontSize: '10px', fontWeight: 700,
+                                            background: 'rgba(13,148,136,0.10)', color: '#0d9488',
+                                            padding: '2px 7px', borderRadius: '4px',
+                                            flexShrink: 0,
+                                          }}>NEW</span>
+                                        )}
+                                      </div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                                        <span style={{
+                                          display: 'inline-flex', alignItems: 'center',
+                                          background: '#f6f5f0', borderRadius: '6px',
+                                          padding: '2px 8px', fontSize: '11px', fontWeight: 600, color: '#3b4963',
+                                        }}>
+                                          {course.hours} hr{course.hours !== 1 ? "s" : ""}
+                                        </span>
+                                        {course.price != null && (
+                                          <span style={{
+                                            display: 'inline-flex', alignItems: 'center',
+                                            background: '#f6f5f0', borderRadius: '6px',
+                                            padding: '2px 8px', fontSize: '11px', fontWeight: 600, color: '#3b4963',
+                                          }}>
+                                            ${course.price}
+                                          </span>
+                                        )}
+                                        {course.topic && (
+                                          <span style={{ fontSize: '11px', color: '#7a8ba8' }}>
+                                            {course.topic}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                                      <ApprovalBadge
+                                        profession={profession}
+                                        proState={sendCePro?.state ? (STATE_NAMES[sendCePro.state] ?? sendCePro.state) : null}
+                                        course={course}
+                                        approvalMap={professionApproval}
+                                      />
+                                      {isSelected && (
+                                        <div style={{
+                                          width: '22px', height: '22px', borderRadius: '50%',
+                                          background: '#2455ff', color: 'white',
+                                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                          fontSize: '12px', fontWeight: 700,
+                                        }}>✓</div>
+                                      )}
                                     </div>
                                   </div>
-                                  <div className="shrink-0 flex items-center gap-1.5">
-                                    <ApprovalBadge
-                                      profession={profession}
-                                      proState={sendCePro?.state ? (STATE_NAMES[sendCePro.state] ?? sendCePro.state) : null}
-                                      course={course}
-                                      approvalMap={professionApproval}
-                                    />
-                                    {sendCeCourse === course.id && (
-                                      <div className="w-5 h-5 rounded-full bg-[var(--blue)] text-white flex items-center justify-center text-[11px] font-bold">✓</div>
-                                    )}
-                                  </div>
-                                </div>
-                              ))
+                                );
+                              })
                             )}
                           </div>
                         </>
