@@ -377,14 +377,29 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setQrCapSaving(false);
   }
 
-  async function downloadFlyer(size: "print" | "social") {
+  async function downloadFlyer(size: "print" | "social", qrUrl: string) {
     if (!flyerRef.current) return;
     setFlyerGenerating(true);
     try {
+      // Fetch QR image as a blob and convert to data URL to avoid CORS issues
+      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(qrUrl)}`;
+      const response = await fetch(qrImageUrl);
+      const blob = await response.blob();
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+
+      // Swap the img src to the local data URL before capturing
+      const qrImg = flyerRef.current.querySelector("img");
+      if (qrImg) qrImg.src = dataUrl;
+
+      // Brief pause to let the image render
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       const canvas = await html2canvas(flyerRef.current, {
         scale: 3,
-        useCORS: true,
-        allowTaint: true,
         backgroundColor: "#ffffff",
       });
       const link = document.createElement("a");
@@ -1150,7 +1165,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                   >📱 Social (1080×1080)</button>
                                 </div>
                                 <button
-                                  onClick={() => downloadFlyer(flyerSize)}
+                                  onClick={() => downloadFlyer(flyerSize, qrUrl)}
                                   disabled={flyerGenerating}
                                   style={{
                                     width: "100%", padding: "10px", borderRadius: "8px", border: "none",
