@@ -1194,7 +1194,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         ? "40px 56px 36px"
                                         : "48px 64px 44px",
                                       display: "flex",
-                                      alignItems: "center",
+                                      alignItems: "flex-start",
                                       justifyContent: "space-between",
                                     }}
                                   >
@@ -1245,6 +1245,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         fontWeight: 700,
                                         color: "#ffffff",
                                         whiteSpace: "nowrap" as const,
+                                        marginTop: flyerSize === "print" ? "18px" : "22px",
+                                        flexShrink: 0,
                                       }}
                                     >
                                       100% FREE
@@ -1488,14 +1490,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                                 key={step.n}
                                                 style={{
                                                   display: "flex",
-                                                  alignItems: "center",
+                                                  alignItems: "flex-start",
                                                   gap: flyerSize === "print" ? "12px" : "14px",
                                                 }}
                                               >
                                                 <div
                                                   style={{
                                                     width: flyerSize === "print" ? "32px" : "36px",
-                                                    height: flyerSize === "print" ? "32px" : "36px",
+                                                    minHeight: flyerSize === "print" ? "32px" : "36px",
                                                     borderRadius: flyerSize === "print" ? "8px" : "10px",
                                                     flexShrink: 0,
                                                     background: step.bg,
@@ -1505,16 +1507,18 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                                     justifyContent: "center",
                                                     fontSize: flyerSize === "print" ? "14px" : "16px",
                                                     fontWeight: 800,
+                                                    marginTop: "1px",
                                                   }}
                                                 >
                                                   {step.n}
                                                 </div>
-                                                <div>
+                                                <div style={{ paddingTop: flyerSize === "print" ? "2px" : "3px" }}>
                                                   <div
                                                     style={{
                                                       fontSize: flyerSize === "print" ? "14px" : "16px",
                                                       fontWeight: 700,
                                                       color: "#0b1222",
+                                                      lineHeight: 1.2,
                                                     }}
                                                   >
                                                     {step.title}
@@ -1523,6 +1527,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                                     style={{
                                                       fontSize: flyerSize === "print" ? "11px" : "13px",
                                                       color: "#7a8ba8",
+                                                      lineHeight: 1.3,
+                                                      marginTop: "1px",
                                                     }}
                                                   >
                                                     {step.sub}
@@ -1582,7 +1588,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         </div>
 
                                         {/* Accreditation */}
-                                        <div style={{ display: "flex", alignItems: "center", gap: flyerSize === "print" ? "8px" : "10px" }}>
+                                        <div style={{ display: "flex", alignItems: "flex-start", gap: flyerSize === "print" ? "8px" : "10px" }}>
                                           <div
                                             style={{
                                               width: flyerSize === "print" ? "22px" : "24px",
@@ -1596,6 +1602,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                               fontSize: flyerSize === "print" ? "11px" : "12px",
                                               fontWeight: 800,
                                               flexShrink: 0,
+                                              marginTop: "1px",
                                             }}
                                           >
                                             ✓
