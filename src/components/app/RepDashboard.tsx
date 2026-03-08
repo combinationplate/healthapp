@@ -94,13 +94,15 @@ export type ProfessionalRow = {
 
 type CeHistoryRow = {
   id: string;
-  professional_id: string;
+  professional_id: string | null;
   professional_name: string;
+  recipient_email: string | null;
   course_name: string;
   course_hours: number;
-  discount: string;
+  coupon_code: string | null;
+  source: string | null;
   created_at: string;
-  redeemed_at: string | null;
+  clicked_at: string | null;
 };
 
 function initials(name: string): string {
@@ -193,7 +195,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [courseTopicFilter, setCourseTopicFilter] = useState("All");
   const [ceHistory, setCeHistory] = useState<CeHistoryRow[]>([]);
   const [ceHistoryLoading, setCeHistoryLoading] = useState(false);
-  const [ceHistoryExpanded, setCeHistoryExpanded] = useState(false);
+  const [ceHistoryFilter, setCeHistoryFilter] = useState<"all" | "manual" | "qr" | "bulk">("all");
   const [reminderSending, setReminderSending] = useState<string | null>(null);
   const [availableCourses, setAvailableCourses] = useState<NormalizedCourseProfessionRow[]>([]);
   const [availableCoursesLoading, setAvailableCoursesLoading] = useState(false);
@@ -559,20 +561,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("ce_sends")
-      .select("id, professional_id, course_name, course_hours, discount, created_at, redeemed_at, professionals(name)")
+      .select("id, professional_id, course_name, course_hours, coupon_code, source, created_at, clicked_at, recipient_email, professionals(name)")
       .eq("rep_id", repId)
       .order("created_at", { ascending: false });
     setCeHistoryLoading(false);
     if (!error && data) {
       setCeHistory(data.map((r: Record<string, unknown>) => ({
         id: r.id as string,
-        professional_id: r.professional_id as string,
-        professional_name: (r.professionals as { name?: string } | null)?.name ?? "—",
+        professional_id: r.professional_id as string | null,
+        professional_name: (r.professionals as { name?: string } | null)?.name ?? (r.recipient_email as string | null) ?? "—",
+        recipient_email: r.recipient_email as string | null,
         course_name: r.course_name as string,
         course_hours: r.course_hours as number,
-        discount: r.discount as string,
+        coupon_code: r.coupon_code as string | null,
+        source: r.source as string | null,
         created_at: r.created_at as string,
-        redeemed_at: r.redeemed_at as string | null,
+        clicked_at: r.clicked_at as string | null,
       })));
     }
   }, [repId]);
@@ -1599,77 +1603,127 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </SectionCard>
         )}
 
-        {tab === "ce-history" && (
-          <SectionCard>
-            <div className="border-b border-[var(--border)] pb-3 mb-4">
-              <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
-              <p className="text-[11px] text-[var(--ink-muted)] mt-1">All CE courses you&apos;ve sent to your network</p>
-            </div>
-            {ceHistoryLoading ? (
-              <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
-            ) : ceHistory.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-sm text-[var(--ink-muted)]">No CE sends yet.</p>
-                <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Use the Network tab to send a course to a professional.</p>
-                <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>Go to Network</button>
+        {tab === "ce-history" && (() => {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+          const totalSent = ceHistory.length;
+          const totalAccessed = ceHistory.filter((r) => r.clicked_at).length;
+          const thisMonth = ceHistory.filter((r) => r.created_at >= monthStart).length;
+          const manualCount = ceHistory.filter((r) => (r.source ?? "manual") === "manual").length;
+          const qrCount = ceHistory.filter((r) => r.source === "qr").length;
+          const bulkCount = ceHistory.filter((r) => r.source === "bulk").length;
+
+          const filtered = ceHistoryFilter === "all"
+            ? ceHistory
+            : ceHistory.filter((r) => (ceHistoryFilter === "manual" ? (r.source ?? "manual") === "manual" : r.source === ceHistoryFilter));
+
+          const sourceBadge = (source: string | null) => {
+            const s = source ?? "manual";
+            if (s === "qr") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#DBEAFE", color: "#1D4ED8" }}>QR</span>;
+            if (s === "bulk") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#EDE9FE", color: "#6D28D9" }}>Bulk</span>;
+            return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#F1F5F9", color: "#475569" }}>Manual</span>;
+          };
+
+          return (
+            <div className="space-y-4">
+              {/* Summary stat cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" }}>
+                {[
+                  { label: "Total Sent", value: totalSent },
+                  { label: "Accessed", value: totalAccessed },
+                  { label: "This Month", value: thisMonth },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ background: "white", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", textAlign: "center" }}>
+                    <div style={{ fontSize: "28px", fontWeight: 800, color: "var(--ink)", lineHeight: 1 }}>{value}</div>
+                    <div style={{ fontSize: "12px", color: "var(--ink-muted)", marginTop: "4px" }}>{label}</div>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <>
-                <div className="space-y-0">
-                  {(ceHistoryExpanded ? ceHistory : ceHistory.slice(0, 3)).map((row) => (
-                    <div key={row.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto_auto_auto] gap-2 sm:gap-4 py-3 px-2 rounded-lg border-b border-[var(--border)] last:border-0 items-center hover:bg-[#F8FAFC]/50">
-                      <div>
-                        <div className="font-semibold text-[13px] text-[var(--ink)]">{row.professional_name}</div>
-                        <div className="text-[11px] text-[var(--ink-muted)]">{row.course_name} ({row.course_hours} hrs) · {row.discount}</div>
-                      </div>
-                      <div className="text-[11px] text-[var(--ink-muted)]">
-                        Sent {new Date(row.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                      </div>
-                      <div>
-                        {row.redeemed_at ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[var(--green)]">Redeemed</span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--gold-glow)] px-2.5 py-0.5 text-[10px] font-bold text-[#B8860B]">Pending</span>
-                        )}
-                      </div>
-                      <div>
-                        <button
-                          type="button"
-                          disabled={reminderSending === row.id}
-                          onClick={async () => {
-                            setReminderSending(row.id);
-                            try {
-                              const res = await fetch("/api/ce/send-reminder", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                credentials: "include",
-                                body: JSON.stringify({ ceSendId: row.id }),
-                              });
-                              const data = await res.json().catch(() => ({}));
-                              if (!res.ok) alert(data.error ?? "Failed to send reminder");
-                            } finally {
-                              setReminderSending(null);
-                            }
-                          }}
-                          className={`${BTN_SECONDARY} disabled:opacity-50`}
-                        >
-                          {reminderSending === row.id ? "Sending…" : "Send Reminder"}
-                        </button>
-                      </div>
-                    </div>
+
+              {/* Source breakdown */}
+              <div style={{ fontSize: "12px", color: "#64748B", paddingLeft: "2px" }}>
+                {manualCount} manual · {qrCount} QR · {bulkCount} bulk
+              </div>
+
+              <SectionCard>
+                <div className="border-b border-[var(--border)] pb-3 mb-4">
+                  <h2 className="font-[family-name:var(--font-fraunces)] text-base font-bold text-[var(--ink)]">CE History</h2>
+                </div>
+
+                {/* Filter pills */}
+                <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
+                  {(["all", "manual", "qr", "bulk"] as const).map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setCeHistoryFilter(f)}
+                      style={{
+                        padding: "4px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 600, cursor: "pointer", border: "none",
+                        background: ceHistoryFilter === f ? "var(--ink)" : "#F1F5F9",
+                        color: ceHistoryFilter === f ? "white" : "#64748B",
+                      }}
+                    >
+                      {f === "all" ? "All" : f === "qr" ? "QR" : f.charAt(0).toUpperCase() + f.slice(1)}
+                    </button>
                   ))}
                 </div>
-                {ceHistory.length > 3 && !ceHistoryExpanded && (
-                  <div className="mt-4 pt-3 border-t border-[var(--border)]">
-                    <button type="button" onClick={() => setCeHistoryExpanded(true)} className={BTN_SECONDARY}>
-                      Show more ({ceHistory.length - 3} more)
-                    </button>
+
+                {ceHistoryLoading ? (
+                  <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
+                ) : filtered.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-[var(--ink-muted)]">{ceHistory.length === 0 ? "No CE sends yet." : "No sends match this filter."}</p>
+                    {ceHistory.length === 0 && (
+                      <>
+                        <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Use the Network tab to send a course to a professional.</p>
+                        <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>Go to Network</button>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                          {["Professional", "Course", "Hrs", "Sent Date", "Source", "Status"].map((h) => (
+                            <th key={h} style={{ textAlign: "left", padding: "6px 10px", fontSize: "11px", fontWeight: 700, color: "var(--ink-muted)", whiteSpace: "nowrap" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filtered.map((row) => (
+                          <tr key={row.id} style={{ borderBottom: "1px solid var(--border)" }} className="hover:bg-[#F8FAFC]/60">
+                            <td style={{ padding: "10px 10px" }}>
+                              <div style={{ fontWeight: 600, color: "var(--ink)" }}>{row.professional_name}</div>
+                              {row.recipient_email && row.professional_name !== row.recipient_email && (
+                                <div style={{ fontSize: "11px", color: "var(--ink-muted)" }}>{row.recipient_email}</div>
+                              )}
+                            </td>
+                            <td style={{ padding: "10px 10px", color: "var(--ink)", maxWidth: "200px" }}>
+                              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.course_name}</div>
+                            </td>
+                            <td style={{ padding: "10px 10px", color: "var(--ink-muted)", whiteSpace: "nowrap" }}>{row.course_hours}</td>
+                            <td style={{ padding: "10px 10px", color: "var(--ink-muted)", whiteSpace: "nowrap" }}>
+                              {new Date(row.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </td>
+                            <td style={{ padding: "10px 10px" }}>{sourceBadge(row.source)}</td>
+                            <td style={{ padding: "10px 10px" }}>
+                              {row.clicked_at ? (
+                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#DCFCE7", color: "#15803D" }}>Accessed ✓</span>
+                              ) : (
+                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#F1F5F9", color: "#64748B" }}>Sent</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
-              </>
-            )}
-          </SectionCard>
-        )}
+              </SectionCard>
+            </div>
+          );
+        })()}
 
         {/* Send CE modal */}
         {sendCeOpen && (
