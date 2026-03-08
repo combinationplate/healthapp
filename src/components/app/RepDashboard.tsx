@@ -538,6 +538,29 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setImportSaving(false);
   }
 
+  function exportNetworkCsv() {
+    if (professionals.length === 0) return;
+    const headers = ["Name", "Email", "Phone", "Facility", "City", "State", "Discipline", "Added"];
+    const rows = professionals.map((p) => [
+      p.name,
+      p.email,
+      p.phone ?? "",
+      p.facility ?? "",
+      p.city ?? "",
+      p.state ?? "",
+      p.discipline ?? "",
+      new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `pulse-network-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function handleBulkSend() {
     if (!repId || !bulkRecipients.length || !bulkCourseId) return;
     setBulkSending(true);
@@ -1993,6 +2016,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
               <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My Network</h2>
               <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  className={BTN_SECONDARY}
+                  onClick={exportNetworkCsv}
+                  disabled={professionals.length === 0}
+                  style={{ opacity: professionals.length === 0 ? 0.5 : 1 }}
+                >
+                  ↓ Export
+                </button>
                 <button type="button" className={BTN_SECONDARY} onClick={() => setImportOpen(true)}>Import CSV</button>
                 <button type="button" className={BTN_PRIMARY} onClick={() => setAddOpen(true)}>+ Add Professional</button>
               </div>
@@ -2033,14 +2065,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         borderRadius: '12px',
                         border: '1px solid rgba(11,18,34,0.08)',
                         background: 'white',
-                        padding: '16px',
+                        padding: '18px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                         display: 'grid',
-                        gridTemplateColumns: '40px 1fr auto',
+                        gridTemplateColumns: '40px 1fr',
                         gap: '14px',
-                        alignItems: 'center',
+                        alignItems: 'start',
                       }}
                     >
+                      {/* Avatar */}
                       <div
                         style={{
                           width: '40px',
@@ -2054,35 +2087,75 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           fontWeight: 700,
                           fontSize: '14px',
                           flexShrink: 0,
+                          marginTop: '2px',
                         }}
                       >
                         {initials(pro.name)}
                       </div>
+
+                      {/* Content */}
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#0b1222' }}>{pro.name}</div>
-                        <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '2px' }}>
-                          {[
-                            pro.discipline,
-                            pro.facility,
-                            pro.city && pro.state ? `${pro.city}, ${pro.state}` : (pro.city || pro.state),
-                          ].filter(Boolean).join(' · ')}
+                        {/* Top row: name + badges */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '15px', color: '#0b1222' }}>{pro.name}</span>
+                          {pro.discipline && (
+                            <span style={{
+                              fontSize: '10px', fontWeight: 600,
+                              background: 'rgba(36,85,255,0.08)', color: '#2455ff',
+                              padding: '2px 8px', borderRadius: '4px',
+                            }}>{pro.discipline}</span>
+                          )}
                         </div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                        <button
-                          type="button"
-                          className={BTN_PRIMARY}
-                          onClick={() => openSendCeModal(pro)}
-                        >
-                          Send CE
-                        </button>
-                        <button
-                          type="button"
-                          className={BTN_SECONDARY}
-                          onClick={() => openTouchpointModal(pro)}
-                        >
-                          Log Touch
-                        </button>
+
+                        {/* Info row: facility + location */}
+                        {(pro.facility || pro.city || pro.state) && (
+                          <div style={{ fontSize: '12px', color: '#7a8ba8', marginBottom: '6px' }}>
+                            {[
+                              pro.facility,
+                              pro.city && pro.state ? `${pro.city}, ${pro.state}` : (pro.city || pro.state),
+                            ].filter(Boolean).join(' · ')}
+                          </div>
+                        )}
+
+                        {/* Contact row: email + phone */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '12px' }}>
+                          <a
+                            href={`mailto:${pro.email}`}
+                            style={{ fontSize: '13px', color: '#2455ff', textDecoration: 'none', fontWeight: 500 }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {pro.email}
+                          </a>
+                          {pro.phone && (
+                            <a
+                              href={`tel:${pro.phone}`}
+                              style={{ fontSize: '13px', color: '#3b4963', textDecoration: 'none', fontWeight: 500 }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              📞 {pro.phone}
+                            </a>
+                          )}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            type="button"
+                            className={BTN_PRIMARY}
+                            style={{ fontSize: '12px', padding: '7px 16px' }}
+                            onClick={() => openSendCeModal(pro)}
+                          >
+                            Send CE
+                          </button>
+                          <button
+                            type="button"
+                            className={BTN_SECONDARY}
+                            style={{ fontSize: '12px', padding: '7px 16px' }}
+                            onClick={() => openTouchpointModal(pro)}
+                          >
+                            Log Touchpoint
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -2439,15 +2512,29 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     })()}
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Discount</label>
-                    <div className="flex flex-wrap gap-2">
-                      {CE_DISCOUNTS.map((d) => (
-                        <label key={d} className="flex items-center gap-1.5 cursor-pointer">
-                          <input type="radio" name="discount" value={d} checked={sendCeDiscount === d} onChange={() => setSendCeDiscount(d)} className="rounded-full" />
-                          <span className="text-sm">{d}</span>
-                        </label>
-                      ))}
+                  <div style={{
+                    background: '#f6f5f0',
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    border: '1px solid rgba(11,18,34,0.06)',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>Free to professional</div>
+                        <div style={{ fontSize: '11px', color: '#7a8ba8', marginTop: '2px' }}>
+                          {sendCeCourse && filteredCourses.find(({ course }) => course.id === sendCeCourse)?.course.price
+                            ? `Your company covers $${filteredCourses.find(({ course }) => course.id === sendCeCourse)!.course.price} per send`
+                            : "Course cost billed to your company"}
+                        </div>
+                      </div>
+                      <span style={{
+                        background: 'rgba(13,148,136,0.10)',
+                        color: '#0d9488',
+                        padding: '4px 12px',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                      }}>Complimentary</span>
                     </div>
                   </div>
                   <div>
