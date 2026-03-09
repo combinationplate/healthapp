@@ -16,14 +16,24 @@ export async function GET(
 
     const { data: ceSend } = await admin
       .from("ce_sends")
-      .select("id, coupon_code, product_id, course_id, clicked_at")
+      .select("id, coupon_code, product_id, course_id, clicked_at, redeemed_at")
       .eq("coupon_code", couponCode)
       .single();
 
+    const now = new Date().toISOString();
     if (ceSend && !ceSend.clicked_at) {
       await admin
         .from("ce_sends")
-        .update({ clicked_at: new Date().toISOString() })
+        .update({ 
+          clicked_at: now,
+          redeemed_at: now,
+        })
+        .eq("id", ceSend.id);
+    } else if (ceSend && !ceSend.redeemed_at) {
+      // Already clicked before, but redeemed_at wasn't set (backfill)
+      await admin
+        .from("ce_sends")
+        .update({ redeemed_at: now })
         .eq("id", ceSend.id);
     }
 

@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "app/api"
+		},
+		{
+			"path": "src/components/landing"
 		}
 	]
 }
