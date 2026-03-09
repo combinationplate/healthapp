@@ -36,6 +36,10 @@ export async function GET(request: Request) {
         p_state: state,
         p_city: city,
       });
+      await admin
+        .from("profiles")
+        .update({ email: data.user.email ?? "" })
+        .eq("id", data.user.id);
       await supabase.from("users").upsert(
         { id: data.user.id, email: data.user.email ?? "", role, name: fullName },
         { onConflict: "id" }

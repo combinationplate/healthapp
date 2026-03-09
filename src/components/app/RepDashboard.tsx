@@ -964,24 +964,48 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <div style={{display:'grid',gap:'12px'}}>
                 {discoverPros
                   .filter((pro) => discoverCityFilter === "All" || pro.city === discoverCityFilter)
-                  .map((pro) => (
-                  <div key={pro.id} style={{padding:'16px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'8px'}}>
-                      <div>
-                        <div style={{fontWeight:600,fontSize:'14px',color:'var(--ink)'}}>{pro.name}</div>
-                        <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>
-                          {[pro.discipline, pro.facility, pro.city && pro.state ? `${pro.city}, ${pro.state}` : pro.state].filter(Boolean).join(' · ')}
+                  .map((pro) => {
+                    const inNetwork = professionals.some((p) => p.email?.toLowerCase() === (pro as any).email?.toLowerCase()) ||
+                                      professionals.some((p) => p.name === pro.name && p.facility === pro.facility);
+                    return (
+                  <div key={pro.id} style={{
+                    padding:'18px',
+                    borderRadius:'12px',
+                    border: inNetwork ? '1px solid rgba(13,148,136,0.15)' : '1px solid rgba(11,18,34,0.08)',
+                    background: inNetwork ? 'rgba(13,148,136,0.03)' : 'white',
+                    transition: 'box-shadow 0.2s',
+                  }}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',gap:'12px',marginBottom:'8px'}}>
+                      <div style={{minWidth:0,flex:1}}>
+                        <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+                          <span style={{fontWeight:700,fontSize:'15px',color:'#0b1222'}}>{pro.name}</span>
+                          {pro.discipline && (
+                            <span style={{
+                              fontSize:'10px',fontWeight:600,
+                              background:'rgba(13,148,136,0.08)',color:'#0d9488',
+                              padding:'2px 8px',borderRadius:'4px',
+                            }}>{pro.discipline}</span>
+                          )}
+                          {inNetwork && (
+                            <span style={{
+                              fontSize:'10px',fontWeight:700,
+                              background:'rgba(13,148,136,0.10)',color:'#0d9488',
+                              padding:'2px 8px',borderRadius:'4px',
+                              display:'inline-flex',alignItems:'center',gap:'3px',
+                            }}>✓ In Network</span>
+                          )}
+                        </div>
+                        <div style={{fontSize:'12px',color:'#7a8ba8',marginTop:'3px'}}>
+                          {[pro.facility, pro.city && pro.state ? `${pro.city}, ${pro.state}` : pro.state].filter(Boolean).join(' · ')}
                         </div>
                       </div>
                       <button
                         type="button"
-                        className={BTN_PRIMARY}
-                        style={{fontSize:'12px',padding:'6px 14px'}}
                         onClick={() => {
                           const tempPro = {
                             id: pro.id,
                             name: pro.name,
-                            email: pro.email ?? "",
+                            email: (pro as any).email ?? "",
                             phone: null,
                             facility: pro.facility,
                             city: pro.city,
@@ -993,21 +1017,35 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           setSendCeAddToNetwork(true);
                           openSendCeModal(tempPro);
                         }}
+                        style={{
+                          flexShrink:0,
+                          fontSize:'12px',
+                          padding:'7px 16px',
+                          borderRadius:'10px',
+                          border: inNetwork ? '1.5px solid #0d9488' : '1.5px solid #2455ff',
+                          background:'white',
+                          color: inNetwork ? '#0d9488' : '#2455ff',
+                          fontWeight:600,
+                          cursor:'pointer',
+                          fontFamily:"'DM Sans', system-ui, sans-serif",
+                          transition:'all 0.15s',
+                        }}
                       >
-                        Send CE
+                        {inNetwork ? 'Send Another CE' : 'Send CE'}
                       </button>
                     </div>
                     {pro.requests.length > 0 && (
                       <div style={{marginTop:'8px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
                         {pro.requests.map((r, i) => (
-                          <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'var(--gold-glow)',color:'#B8860B'}}>
+                          <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'rgba(217,119,6,0.08)',color:'#92670A'}}>
                             Needs: {r.topic} · {r.hours} hrs
                           </span>
                         ))}
                       </div>
                     )}
                   </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </SectionCard>

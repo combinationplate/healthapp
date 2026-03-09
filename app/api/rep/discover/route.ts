@@ -22,7 +22,7 @@ export async function GET() {
   // Get professionals seeking CE, optionally filtered by state
   let query = admin
     .from("profiles")
-    .select("id, full_name, discipline, city, state, facility")
+    .select("id, full_name, discipline, city, state, facility, email")
     .eq("seeking_ce", true)
     .eq("role", "professional")
     .neq("id", user.id);
@@ -46,13 +46,6 @@ export async function GET() {
     requests = data ?? [];
   }
 
-  // Look up emails for discovered professionals
-  const emailMap = new Map<string, string>();
-  for (const p of professionals ?? []) {
-    const { data: authUser } = await admin.auth.admin.getUserById(p.id);
-    if (authUser?.user?.email) emailMap.set(p.id, authUser.user.email);
-  }
-
   const result = (professionals ?? []).map((p: {
     id: string;
     full_name: string | null;
@@ -60,10 +53,11 @@ export async function GET() {
     city: string | null;
     state: string | null;
     facility: string | null;
+    email: string | null;
   }) => ({
     id: p.id,
     name: p.full_name ?? "Unknown",
-    email: emailMap.get(p.id) ?? null,
+    email: p.email ?? null,
     discipline: p.discipline,
     city: p.city,
     state: p.state,
