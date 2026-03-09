@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   // Get rep info
   const { data: repProfile } = await admin
     .from("profiles")
-    .select("id, full_name, org_id")
+    .select("id, full_name, org_id, email")
     .eq("id", repId)
     .single();
 
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     rep: {
-      name: repProfile?.full_name ?? "Your Rep",
+      name: repProfile?.full_name ?? repProfile?.email?.split("@")[0] ?? "Your Rep",
       company: orgName,
     },
     courses,
@@ -228,7 +228,7 @@ export async function POST(request: Request) {
       couponCode,
       accessUrl: redirectUrl,
       discount: "100% Free",
-      repName: repProfile?.full_name ?? "Your Rep",
+      repName: repProfile?.full_name ?? repAuthUser?.user?.user_metadata?.full_name ?? repEmail.split("@")[0] || "Your Rep",
       repEmail,
       repOrgName: orgName,
     };

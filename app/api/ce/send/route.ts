@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     );
 
     const { data: rep } = await supabase.from("users").select("name").eq("id", repId).single();
-    const repName = (rep?.name ?? user.user_metadata?.full_name ?? "Rep").trim() || "Rep";
+    const repName = (rep?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Rep").trim() || "Rep";
     const repEmail = user.email ?? "";
 
     // Fetch org/company name from profiles table
