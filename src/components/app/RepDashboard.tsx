@@ -188,6 +188,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeCourse, setSendCeCourse] = useState<string>("");
   const [sendCeDiscount, setSendCeDiscount] = useState<string>(CE_DISCOUNTS[0]);
   const [sendCeMessage, setSendCeMessage] = useState("");
+  const [sendCeAddToNetwork, setSendCeAddToNetwork] = useState(true);
   const [sendCeSaving, setSendCeSaving] = useState(false);
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
@@ -853,6 +854,23 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setTouchpointOpen(true);
   }
 
+  async function handleSendReminder(ceSendId: string) {
+    setReminderSending(ceSendId);
+    try {
+      const res = await fetch("/api/ce/remind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ ceSendId }),
+      });
+      if (res.ok) {
+        fetchCeHistory();
+      }
+    } finally {
+      setReminderSending(null);
+    }
+  }
+
   async function handleSaveTouchpoint(e: React.FormEvent) {
     e.preventDefault();
     if (!repId || !touchpointPro) return;
@@ -963,6 +981,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             rep_id: repId ?? "",
                             created_at: new Date().toISOString(),
                           };
+                          setSendCeAddToNetwork(true);
                           openSendCeModal(tempPro);
                         }}
                       >
@@ -2079,8 +2098,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           width: '40px',
                           height: '40px',
                           borderRadius: '50%',
-                          background: 'rgba(36,85,255,0.10)',
-                          color: '#2455ff',
+                          background: 'rgba(11,18,34,0.06)',
+                          color: '#3b4963',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -2101,7 +2120,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           {pro.discipline && (
                             <span style={{
                               fontSize: '10px', fontWeight: 600,
-                              background: 'rgba(36,85,255,0.08)', color: '#2455ff',
+                              background: 'rgba(13,148,136,0.08)', color: '#0d9488',
                               padding: '2px 8px', borderRadius: '4px',
                             }}>{pro.discipline}</span>
                           )}
@@ -2141,9 +2160,25 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
                             type="button"
-                            className={BTN_PRIMARY}
-                            style={{ fontSize: '12px', padding: '7px 16px' }}
                             onClick={() => openSendCeModal(pro)}
+                            style={{
+                              fontSize: '12px',
+                              padding: '7px 16px',
+                              borderRadius: '10px',
+                              border: '1.5px solid #2455ff',
+                              background: 'white',
+                              color: '#2455ff',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              fontFamily: "'DM Sans', system-ui, sans-serif",
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(36,85,255,0.06)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'white';
+                            }}
                           >
                             Send CE
                           </button>
@@ -2272,7 +2307,28 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               {row.clicked_at ? (
                                 <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(13,148,136,0.12)", color: "#0d9488" }}>Accessed ✓</span>
                               ) : (
-                                <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f0efeb", color: "#7a8ba8" }}>Sent</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f6f5f0", color: "#7a8ba8" }}>Sent</span>
+                                  <button
+                                    type="button"
+                                    disabled={reminderSending === row.id}
+                                    onClick={() => handleSendReminder(row.id)}
+                                    style={{
+                                      fontSize: "11px",
+                                      fontWeight: 600,
+                                      color: reminderSending === row.id ? "#7a8ba8" : "#2455ff",
+                                      background: "none",
+                                      border: "none",
+                                      cursor: reminderSending === row.id ? "not-allowed" : "pointer",
+                                      padding: "2px 0",
+                                      textDecoration: "underline",
+                                      textUnderlineOffset: "2px",
+                                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                                    }}
+                                  >
+                                    {reminderSending === row.id ? "Sending…" : "Remind"}
+                                  </button>
+                                </div>
                               )}
                             </td>
                           </tr>
@@ -2541,6 +2597,40 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Personal message (optional)</label>
                     <textarea value={sendCeMessage} onChange={(e) => setSendCeMessage(e.target.value)} placeholder="Add a note for the professional…" rows={3} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm resize-none" />
                   </div>
+
+                  {/* Add to network checkbox — shown when sending to someone not already in network */}
+                  {sendCePro && !professionals.some((p) => p.id === sendCePro.id) && (
+                    <div
+                      onClick={() => setSendCeAddToNetwork(!sendCeAddToNetwork)}
+                      style={{
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(11,18,34,0.08)',
+                        background: sendCeAddToNetwork ? 'rgba(13,148,136,0.04)' : '#f6f5f0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: '10px',
+                        transition: 'background 0.15s',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={sendCeAddToNetwork}
+                        onChange={() => {}}
+                        style={{ width: '16px', height: '16px', marginTop: '1px', accentColor: '#0d9488' }}
+                      />
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>
+                          Add to my network
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#7a8ba8', marginTop: '2px', lineHeight: 1.4 }}>
+                          Save this professional to your network when the CE is sent. You&apos;ll be able to see their email, send more courses, and log touchpoints.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
                   <div className="flex gap-2 justify-end pt-1">
                     <button type="button" className={BTN_SECONDARY} onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
