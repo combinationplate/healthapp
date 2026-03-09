@@ -43,12 +43,13 @@ function generateCouponCode(repName: string): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { professionalId, repId, courseId, discount, personalMessage } = body as {
+    const { professionalId, repId, courseId, discount, personalMessage, recipientEmail } = body as {
       professionalId: string;
       repId: string;
       courseId: string;
       discount: string;
       personalMessage?: string;
+      recipientEmail?: string;
     };
 
     if (!professionalId || !repId || !courseId || !discount) {
@@ -103,44 +104,46 @@ export async function POST(request: Request) {
     let ceSendProId: string = professionalId;
 
     if (!pro) {
+      // Try profiles table + auth email lookup
       const { data: profile } = await admin
         .from("profiles")
         .select("id, full_name, discipline, city, state, facility")
         .eq("id", professionalId)
         .single();
 
+      // Get email: try auth lookup, then fall back to recipientEmail from frontend
+      let proEmail: string | null = null;
       if (profile) {
         const { data: authUser } = await admin.auth.admin.getUserById(professionalId);
-        const email = authUser?.user?.email ?? null;
-        if (email) {
-          const name = profile.full_name ?? "Professional";
+        proEmail = authUser?.user?.email ?? null;
+      }
+      if (!proEmail && recipientEmail) {
+        proEmail = recipientEmail.trim().toLowerCase();
+      }
 
-          // Use upsert to avoid conflicts — match on rep_id + email
-          const { data: upsertedPro, error: upsertError } = await admin
-            .from("professionals")
-            .upsert({
-              rep_id: repId,
-              name,
-              email,
-              discipline: profile.discipline ?? null,
-              city: profile.city ?? null,
-              state: profile.state ?? null,
-              facility: profile.facility ?? null,
-            }, { onConflict: "rep_id,email" })
-            .select("id")
-            .single();
+      const proName = profile?.full_name ?? "Professional";
 
-          if (upsertError) {
-            console.error("Professional upsert failed:", upsertError.message);
-          }
+      if (proEmail) {
+        const { data: upsertedPro, error: upsertError } = await admin
+          .from("professionals")
+          .upsert({
+            rep_id: repId,
+            name: proName,
+            email: proEmail,
+            discipline: profile?.discipline ?? null,
+            city: profile?.city ?? null,
+            state: profile?.state ?? null,
+            facility: profile?.facility ?? null,
+          }, { onConflict: "rep_id,email" })
+          .select("id")
+          .single();
 
-          ceSendProId = upsertedPro?.id ?? professionalId;
-          pro = { id: ceSendProId, name, email };
-        } else {
-          console.error("No email found for profile:", professionalId);
+        if (upsertError) {
+          console.error("Professional upsert failed:", upsertError.message);
         }
-      } else {
-        console.error("No profile found for id:", professionalId);
+
+        ceSendProId = upsertedPro?.id ?? professionalId;
+        pro = { id: ceSendProId, name: proName, email: proEmail };
       }
     }
 

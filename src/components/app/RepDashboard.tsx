@@ -825,6 +825,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
           courseId: sendCeCourse,
           discount: sendCeDiscount,
           personalMessage: sendCeMessage.trim() || undefined,
+          recipientEmail: pro.email || undefined,
         }),
       });
       const data = await res.json().catch(() => ({}));
