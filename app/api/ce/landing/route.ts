@@ -48,6 +48,28 @@ export async function GET(request: Request) {
     courses = data ?? [];
   }
 
+  // Check if QR cap is reached
+  let capReached = false;
+  if (repId) {
+    const { data: qrCode } = await admin
+      .from("qr_codes")
+      .select("cap")
+      .eq("rep_id", repId)
+      .eq("course_id", courseId ?? null)
+      .maybeSingle();
+
+    if (qrCode?.cap !== null && qrCode?.cap !== undefined) {
+      const { count } = await admin
+        .from("ce_sends")
+        .select("*", { count: "exact", head: true })
+        .eq("rep_id", repId)
+        .eq("source", "qr")
+        .eq("course_id", courseId ?? null);
+
+      capReached = (count ?? 0) >= qrCode.cap;
+    }
+  }
+
   return NextResponse.json({
     rep: {
       name: repProfile?.full_name ?? repProfile?.email?.split("@")[0] ?? "Your Rep",
@@ -55,6 +77,7 @@ export async function GET(request: Request) {
     },
     courses,
     preselectedCourse: courseId ?? null,
+    capReached,
   });
 }
 

@@ -75,6 +75,7 @@ export default function CELandingPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [capReached, setCapReached] = useState(false);
 
   useEffect(() => {
     fetch(`/api/ce/landing?repId=${repId}${courseId ? `&courseId=${courseId}` : ""}`)
@@ -83,6 +84,7 @@ export default function CELandingPage() {
         setRepInfo(data.rep);
         setCourses(data.courses ?? []);
         if (data.preselectedCourse) setSelectedCourse(data.preselectedCourse);
+        if (data.capReached) setCapReached(true);
         setLoading(false);
       });
   }, [repId, courseId]);
@@ -191,6 +193,60 @@ export default function CELandingPage() {
               Sent by {repInfo.name}{repInfo.company ? ` · ${repInfo.company}` : ""}
             </p>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Cap reached state ─────────────────────────────────────── */
+  if (capReached) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: ds.cream,
+        fontFamily: ds.fontBody,
+        padding: "24px",
+      }}>
+        <div style={{
+          textAlign: "center",
+          padding: "48px 32px",
+          maxWidth: "420px",
+          background: ds.white,
+          borderRadius: ds.rLg,
+          border: `1px solid ${ds.border}`,
+          boxShadow: ds.shadow,
+        }}>
+          <div style={{ fontSize: "48px", marginBottom: "16px" }}>📋</div>
+          <h1 style={{
+            fontFamily: ds.fontDisplay,
+            fontSize: "24px",
+            fontWeight: 800,
+            color: ds.ink,
+            marginBottom: "10px",
+          }}>This QR Code Has Reached Its Limit</h1>
+          <p style={{ color: ds.inkMuted, fontSize: "15px", lineHeight: 1.6, marginBottom: "24px" }}>
+            The maximum number of courses have been claimed through this link.
+            {repInfo?.name ? ` Contact ${repInfo.name}${repInfo.company ? ` at ${repInfo.company}` : ""} directly to request a free CE course.` : " Contact your representative directly to request a free CE course."}
+          </p>
+          <a
+            href="/"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              background: ds.teal,
+              color: ds.white,
+              fontWeight: 700,
+              padding: "14px 28px",
+              borderRadius: ds.r,
+              fontSize: "15px",
+              textDecoration: "none",
+            }}
+          >
+            Learn More About Pulse
+          </a>
         </div>
       </div>
     );

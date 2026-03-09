@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { state, city } = body;
+    const { state, city, orgName } = body;
     const cityNormalized = typeof city === "string" ? city.trim().replace(/\b\w/g, (c) => c.toUpperCase()) : city;
 
     const admin = createServiceClient(
@@ -46,9 +46,12 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
+    const updatePayload: Record<string, unknown> = { state, city: cityNormalized, updated_at: new Date().toISOString() };
+    if (orgName) updatePayload.org_name = orgName.trim();
+
     await admin
       .from("profiles")
-      .update({ state, city: cityNormalized, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq("id", user.id);
 
     return NextResponse.json({ success: true });

@@ -210,8 +210,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
     requests: 0,
   });
   const [repOnboarding, setRepOnboarding] = useState(false);
-  const [repOnboardingForm, setRepOnboardingForm] = useState({ state: "", city: "" });
+  const [repOnboardingForm, setRepOnboardingForm] = useState({ state: "", city: "", orgName: "" });
   const [repOnboardingSaving, setRepOnboardingSaving] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [repRequests, setRepRequests] = useState<{
     id: string;
     topic: string;
@@ -312,6 +313,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [flyerGenerating, setFlyerGenerating] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [hasOpenedQr, setHasOpenedQr] = useState(false);
   const [qrMode, setQrMode] = useState<"any" | "specific">("any");
   const [qrCourseId, setQrCourseId] = useState("");
   const [qrCourses, setQrCourses] = useState<{ id: string; name: string; hours: number }[]>([]);
@@ -930,6 +932,101 @@ export function RepDashboard({ repId }: { repId?: string }) {
 </StatsGrid>
         </div>
 
+        {/* Onboarding checklist — shown for new reps */}
+        {(() => {
+          const onboardingSteps = [
+            { id: "network", label: "Add your first professional", done: professionals.length > 0, action: () => { setTab("network"); setAddOpen(true); } },
+            { id: "send", label: "Send your first CE", done: repStats.cesSentAllTime > 0, action: () => { if (professionals.length > 0) openSendCeModal(null); else { setTab("network"); setAddOpen(true); } } },
+            { id: "qr", label: "Generate a QR code", done: hasOpenedQr, action: () => { setTab("distribute"); setQrOpen(true); setHasOpenedQr(true); } },
+          ];
+          const onboardingComplete = onboardingSteps.filter(s => s.done).length;
+          const showOnboarding = !onboardingDismissed && onboardingComplete < 3 && !repOnboarding;
+          if (!showOnboarding) return null;
+          return (
+          <div style={{
+            borderRadius: '16px',
+            border: '1px solid rgba(13,148,136,0.15)',
+            background: 'linear-gradient(135deg, rgba(13,148,136,0.03), rgba(36,85,255,0.03))',
+            padding: '24px',
+            position: 'relative',
+            marginBottom: '4px',
+          }}>
+            <button
+              type="button"
+              onClick={() => setOnboardingDismissed(true)}
+              style={{
+                position: 'absolute', top: '12px', right: '12px',
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: '18px', color: '#7a8ba8', lineHeight: 1,
+              }}
+              aria-label="Dismiss"
+            >×</button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+              <span style={{ fontSize: '24px' }}>👋</span>
+              <h3 style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: '18px', fontWeight: 800, color: '#0b1222', margin: 0,
+              }}>Welcome to Pulse!</h3>
+            </div>
+            <p style={{ fontSize: '13px', color: '#7a8ba8', marginBottom: '20px', marginLeft: '36px' }}>
+              Get set up in 3 steps. You&apos;ll be sending free CE courses to professionals in minutes.
+            </p>
+
+            <div style={{
+              height: '4px', borderRadius: '2px',
+              background: 'rgba(11,18,34,0.06)',
+              marginBottom: '18px', marginLeft: '36px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${(onboardingComplete / 3) * 100}%`,
+                height: '100%', borderRadius: '2px',
+                background: 'linear-gradient(90deg, #2455ff, #0d9488)',
+                transition: 'width 0.5s ease',
+              }} />
+            </div>
+
+            <div style={{ display: 'grid', gap: '8px', marginLeft: '36px' }}>
+              {onboardingSteps.map((step, i) => (
+                <div
+                  key={step.id}
+                  onClick={step.done ? undefined : step.action}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '12px 14px', borderRadius: '10px',
+                    background: step.done ? 'rgba(13,148,136,0.04)' : 'white',
+                    border: `1px solid ${step.done ? 'rgba(13,148,136,0.12)' : 'rgba(11,18,34,0.08)'}`,
+                    cursor: step.done ? 'default' : 'pointer',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{
+                    width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '12px', fontWeight: 800,
+                    background: step.done ? '#0d9488' : '#0b1222',
+                    color: 'white',
+                  }}>
+                    {step.done ? '✓' : i + 1}
+                  </div>
+                  <span style={{
+                    fontSize: '14px', fontWeight: 600, flex: 1,
+                    color: step.done ? '#7a8ba8' : '#0b1222',
+                    textDecoration: step.done ? 'line-through' : 'none',
+                  }}>
+                    {step.label}
+                  </span>
+                  {!step.done && (
+                    <span style={{ color: '#2455ff', fontSize: '16px', fontWeight: 700 }}>→</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+          );
+        })()}
+
         <TabBar tabs={[...TABS]} active={tab} onChange={(id) => setTab(id as RepTab)} />
 
         {tab === "discover" && (
@@ -1129,7 +1226,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <button
                   type="button"
                   className="rounded-xl border border-[var(--border)] bg-[#f6f5f0] p-5 text-center transition-colors hover:border-[var(--border)] hover:shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
-                  onClick={() => setQrOpen(true)}
+                  onClick={() => { setQrOpen(true); setHasOpenedQr(true); }}
                 >
                   <span className="text-2xl block mb-2">📱</span>
                   <div className="font-bold text-[13px] text-[var(--ink)]">Generate QR Code &amp; Flyer</div>
@@ -2192,15 +2289,39 @@ export function RepDashboard({ repId }: { repId?: string }) {
             {loading ? (
               <p className="text-sm text-[var(--ink-muted)] py-2">Loading…</p>
             ) : professionals.length === 0 ? (
-              <div className="py-8 text-center">
-                <p className="text-sm text-[var(--ink-muted)]">No professionals in your network yet.</p>
-                <button
-                  type="button"
-                  className={`mt-4 ${BTN_PRIMARY}`}
-                  onClick={() => setAddOpen(true)}
-                >
-                  + Add Professional
-                </button>
+              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+                <h3 style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontSize: '20px', fontWeight: 800, color: '#0b1222', marginBottom: '8px',
+                }}>Build your referral network</h3>
+                <p style={{ fontSize: '14px', color: '#7a8ba8', maxWidth: '360px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+                  Add nurses, social workers, case managers, and therapists you work with. Once they&apos;re in your network, you can send them free CE courses.
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAddOpen(true)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      background: '#2455ff', color: 'white', fontWeight: 700,
+                      padding: '12px 24px', borderRadius: '10px', border: 'none',
+                      fontSize: '14px', cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(36,85,255,0.18)',
+                    }}
+                  >+ Add Professional</button>
+                  <button
+                    type="button"
+                    onClick={() => setImportOpen(true)}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      background: 'white', color: '#3b4963', fontWeight: 600,
+                      padding: '12px 24px', borderRadius: '10px',
+                      border: '1px solid rgba(11,18,34,0.08)',
+                      fontSize: '14px', cursor: 'pointer',
+                    }}
+                  >Import CSV</button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -2402,13 +2523,36 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 {ceHistoryLoading ? (
                   <p className="text-sm text-[var(--ink-muted)] py-4">Loading…</p>
                 ) : filtered.length === 0 ? (
-                  <div className="py-8 text-center">
-                    <p className="text-sm text-[var(--ink-muted)]">{ceHistory.length === 0 ? "No CE sends yet." : "No sends match this filter."}</p>
-                    {ceHistory.length === 0 && (
+                  <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+                    {ceHistory.length === 0 ? (
                       <>
-                        <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Use the Network tab to send a course to a professional.</p>
-                        <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>Go to Network</button>
+                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>📬</div>
+                        <h3 style={{
+                          fontFamily: "'Fraunces', Georgia, serif",
+                          fontSize: '20px', fontWeight: 800, color: '#0b1222', marginBottom: '8px',
+                        }}>No CE courses sent yet</h3>
+                        <p style={{ fontSize: '14px', color: '#7a8ba8', maxWidth: '360px', margin: '0 auto 24px', lineHeight: 1.6 }}>
+                          {professionals.length === 0
+                            ? "Start by adding a professional to your network, then send them a free CE course."
+                            : "You have professionals in your network — send one a free CE course to get started."}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (professionals.length === 0) { setTab("network"); setAddOpen(true); }
+                            else { setTab("network"); }
+                          }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            background: '#2455ff', color: 'white', fontWeight: 700,
+                            padding: '12px 24px', borderRadius: '10px', border: 'none',
+                            fontSize: '14px', cursor: 'pointer',
+                            boxShadow: '0 2px 10px rgba(36,85,255,0.18)',
+                          }}
+                        >{professionals.length === 0 ? "Add a Professional" : "Go to Network"}</button>
                       </>
+                    ) : (
+                      <p style={{ fontSize: '14px', color: '#7a8ba8' }}>No sends match this filter.</p>
                     )}
                   </div>
                 ) : (
@@ -3098,6 +3242,17 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-soft)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Company Name</label>
+              <input
+                type="text"
+                required
+                value={repOnboardingForm.orgName}
+                onChange={(e) => setRepOnboardingForm((f) => ({ ...f, orgName: e.target.value }))}
+                placeholder="e.g. Harmony Hospice"
+                style={{ width: "100%", borderRadius: "8px", border: "1px solid var(--border)", padding: "10px 12px", fontSize: "13px", fontFamily: "inherit", boxSizing: "border-box" }}
+              />
             </div>
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-soft)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>City</label>
