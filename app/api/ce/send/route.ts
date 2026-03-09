@@ -43,13 +43,13 @@ function generateCouponCode(repName: string): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { professionalId, repId, courseId, discount, personalMessage, recipientEmail } = body as {
+    const { professionalId, repId, courseId, discount, personalMessage, recipient } = body as {
       professionalId: string;
       repId: string;
       courseId: string;
       discount: string;
       personalMessage?: string;
-      recipientEmail?: string;
+      recipient?: { name: string; email: string; discipline?: string; city?: string; state?: string; facility?: string };
     };
 
     if (!professionalId || !repId || !courseId || !discount) {
@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     const { data: repProfile } = await supabase.from("profiles").select("org_name").eq("id", repId).single();
     const repOrgName = repProfile?.org_name ?? "";
 
+    // 1. Try existing professionals table
     const { data: proFromProfessionals } = await supabase
       .from("professionals")
       .select("id, name, email")
@@ -103,52 +104,63 @@ export async function POST(request: Request) {
     let pro: { id: string; name: string; email: string } | null = proFromProfessionals ?? null;
     let ceSendProId: string = professionalId;
 
+    // 2. If not found AND we have recipient data from frontend, upsert directly
+    if (!pro && recipient?.email) {
+      const email = recipient.email.trim().toLowerCase();
+      const { data: upsertedPro } = await admin
+        .from("professionals")
+        .upsert({
+          rep_id: repId,
+          name: recipient.name,
+          email,
+          discipline: recipient.discipline ?? null,
+          city: recipient.city ?? null,
+          state: recipient.state ?? null,
+          facility: recipient.facility ?? null,
+        }, { onConflict: "rep_id,email" })
+        .select("id")
+        .single();
+
+      if (upsertedPro) {
+        ceSendProId = upsertedPro.id;
+        pro = { id: upsertedPro.id, name: recipient.name, email };
+      }
+    }
+
+    // 3. Last resort — try profiles + auth lookup
     if (!pro) {
-      // Try profiles table + auth email lookup
       const { data: profile } = await admin
         .from("profiles")
         .select("id, full_name, discipline, city, state, facility")
         .eq("id", professionalId)
         .single();
 
-      // Get email: try auth lookup, then fall back to recipientEmail from frontend
-      let proEmail: string | null = null;
       if (profile) {
-        const { data: authUser } = await admin.auth.admin.getUserById(professionalId);
-        proEmail = authUser?.user?.email ?? null;
-      }
-      if (!proEmail && recipientEmail) {
-        proEmail = recipientEmail.trim().toLowerCase();
-      }
+        const { data: authData } = await admin.auth.admin.getUserById(professionalId);
+        const email = authData?.user?.email ?? null;
+        if (email) {
+          const { data: upsertedPro } = await admin
+            .from("professionals")
+            .upsert({
+              rep_id: repId,
+              name: profile.full_name ?? "Professional",
+              email,
+              discipline: profile.discipline ?? null,
+              city: profile.city ?? null,
+              state: profile.state ?? null,
+              facility: profile.facility ?? null,
+            }, { onConflict: "rep_id,email" })
+            .select("id")
+            .single();
 
-      const proName = profile?.full_name ?? "Professional";
-
-      if (proEmail) {
-        const { data: upsertedPro, error: upsertError } = await admin
-          .from("professionals")
-          .upsert({
-            rep_id: repId,
-            name: proName,
-            email: proEmail,
-            discipline: profile?.discipline ?? null,
-            city: profile?.city ?? null,
-            state: profile?.state ?? null,
-            facility: profile?.facility ?? null,
-          }, { onConflict: "rep_id,email" })
-          .select("id")
-          .single();
-
-        if (upsertError) {
-          console.error("Professional upsert failed:", upsertError.message);
+          ceSendProId = upsertedPro?.id ?? professionalId;
+          pro = { id: ceSendProId, name: profile.full_name ?? "Professional", email };
         }
-
-        ceSendProId = upsertedPro?.id ?? professionalId;
-        pro = { id: ceSendProId, name: proName, email: proEmail };
       }
     }
 
     if (!pro) {
-      return NextResponse.json({ error: "Professional not found or not in your network" }, { status: 404 });
+      return NextResponse.json({ error: "Could not find email for this professional. Try adding them to your network first." }, { status: 404 });
     }
 
     const couponCode = generateCouponCode(repName);
