@@ -228,7 +228,7 @@ export async function POST(request: Request) {
       couponCode,
       accessUrl: redirectUrl,
       discount: "100% Free",
-      repName: repProfile?.full_name ?? repAuthUser?.user?.user_metadata?.full_name ?? repEmail.split("@")[0] || "Your Rep",
+      repName: repProfile?.full_name ?? repAuthUser?.user?.user_metadata?.full_name ?? (repEmail.split("@")[0] || "Your Rep"),
       repEmail,
       repOrgName: orgName,
     };
