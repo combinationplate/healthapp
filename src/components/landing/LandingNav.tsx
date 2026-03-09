@@ -6,12 +6,6 @@ import { useState } from "react";
 export function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navLinks = [
-    { href: "/how-it-works", label: "How It Works" },
-    { href: "/#professionals", label: "Free CEs" },
-    { href: "/#cta", label: "For Sales Teams" },
-  ];
-
   return (
     <nav
       style={{
@@ -27,11 +21,10 @@ export function LandingNav() {
       <style>{`
         @media (max-width: 767px) {
           .lnav-desktop { display: none !important; }
-          .lnav-mobile-only { display: flex !important; }
         }
         @media (min-width: 768px) {
-          .lnav-mobile-only { display: none !important; }
           .lnav-hamburger { display: none !important; }
+          .lnav-mobile-menu { display: none !important; }
         }
       `}</style>
 
@@ -95,7 +88,7 @@ export function LandingNav() {
             </span>
           </Link>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav links — hidden below 768px */}
           <ul
             className="lnav-desktop"
             style={{
@@ -107,30 +100,30 @@ export function LandingNav() {
               padding: 0,
             }}
           >
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 500,
-                    color: "#3b4963",
-                    textDecoration: "none",
-                    transition: "color 0.15s",
-                  }}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
+            <li>
+              <Link href="/how-it-works" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+                How It Works
+              </Link>
+            </li>
+            <li>
+              <Link href="/#professionals" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+                Free CEs
+              </Link>
+            </li>
+            <li>
+              <Link href="/#cta" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+                For Sales Teams
+              </Link>
+            </li>
           </ul>
 
-          {/* Right side: buttons */}
+          {/* Right side */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Link
               href="/signup?type=hcp"
               className="lnav-desktop"
               style={{
+                display: "inline-block",
                 padding: "8px 20px",
                 borderRadius: "10px",
                 border: "1px solid rgba(11,18,34,0.08)",
@@ -139,7 +132,6 @@ export function LandingNav() {
                 fontWeight: 600,
                 color: "#3b4963",
                 textDecoration: "none",
-                transition: "border-color 0.15s, color 0.15s",
               }}
             >
               I&apos;m a Healthcare Pro
@@ -154,26 +146,26 @@ export function LandingNav() {
                 fontSize: "13px",
                 fontWeight: 600,
                 textDecoration: "none",
-                transition: "background 0.15s",
+                whiteSpace: "nowrap",
               }}
             >
               Request Demo
             </Link>
-
-            {/* Hamburger — mobile only */}
             <button
               type="button"
               className="lnav-hamburger"
               onClick={() => setMobileOpen((o) => !o)}
               aria-label="Toggle menu"
               style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 background: "none",
                 border: "none",
-                fontSize: "24px",
+                fontSize: "22px",
                 cursor: "pointer",
                 color: "#0b1222",
-                padding: "4px",
-                marginLeft: "4px",
+                padding: "4px 0 4px 8px",
               }}
             >
               {mobileOpen ? "✕" : "☰"}
@@ -181,18 +173,22 @@ export function LandingNav() {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile dropdown */}
         {mobileOpen && (
           <div
-            className="lnav-mobile-only"
+            className="lnav-mobile-menu"
             style={{
+              display: "flex",
               flexDirection: "column",
-              gap: "4px",
               borderTop: "1px solid rgba(11,18,34,0.08)",
-              padding: "12px 0 16px",
+              paddingBottom: "16px",
             }}
           >
-            {navLinks.map((link) => (
+            {[
+              { href: "/how-it-works", label: "How It Works" },
+              { href: "/#professionals", label: "Free CEs" },
+              { href: "/#cta", label: "For Sales Teams" },
+            ].map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
@@ -202,7 +198,7 @@ export function LandingNav() {
                   fontWeight: 600,
                   color: "#0b1222",
                   textDecoration: "none",
-                  padding: "12px 0",
+                  padding: "14px 0",
                   borderBottom: "1px solid rgba(11,18,34,0.04)",
                 }}
               >
@@ -217,10 +213,10 @@ export function LandingNav() {
                 fontWeight: 600,
                 color: "#0d9488",
                 textDecoration: "none",
-                padding: "12px 0",
+                padding: "14px 0",
               }}
             >
-              I&apos;m a Healthcare Pro
+              I&apos;m a Healthcare Pro →
             </Link>
           </div>
         )}
