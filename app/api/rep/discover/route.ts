@@ -33,17 +33,37 @@ export async function GET() {
 
   const { data: professionals } = await query.limit(50);
 
-  // Get their pending requests
   const proIds = (professionals ?? []).map((p: { id: string }) => p.id);
+
+  // Get their pending requests
   let requests: { professional_id: string; topic: string; hours: number; deadline: string }[] = [];
-  
+  // Get the set of professional IDs this rep has already sent a CE to (unlocks email)
+  let unlockedIds = new Set<string>();
+
+  // Fetch rep's network emails (always — needed to match against discovered pros)
+  const { data: networkPros } = await admin
+    .from("professionals")
+    .select("email")
+    .eq("rep_id", user.id);
+  const networkEmails = new Set(
+    (networkPros ?? []).map((n: { email: string }) => n.email?.toLowerCase()).filter(Boolean)
+  );
+
   if (proIds.length > 0) {
-    const { data } = await admin
-      .from("ce_requests")
-      .select("professional_id, topic, hours, deadline")
-      .in("professional_id", proIds)
-      .eq("status", "pending");
-    requests = data ?? [];
+    const [{ data: ceRequests }, { data: ceSends }] = await Promise.all([
+      admin
+        .from("ce_requests")
+        .select("professional_id, topic, hours, deadline")
+        .in("professional_id", proIds)
+        .eq("status", "pending"),
+      admin
+        .from("ce_sends")
+        .select("professional_id")
+        .eq("rep_id", user.id)
+        .in("professional_id", proIds),
+    ]);
+    requests = ceRequests ?? [];
+    unlockedIds = new Set((ceSends ?? []).map((s: { professional_id: string }) => s.professional_id));
   }
 
   const result = (professionals ?? []).map((p: {
@@ -57,7 +77,7 @@ export async function GET() {
   }) => ({
     id: p.id,
     name: p.full_name ?? "Unknown",
-    email: p.email ?? null,
+    email: (unlockedIds.has(p.id) || networkEmails.has(p.email?.toLowerCase() ?? "")) ? (p.email ?? null) : null,
     discipline: p.discipline,
     city: p.city,
     state: p.state,
