@@ -240,6 +240,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [discoverPros, setDiscoverPros] = useState<{
     id: string;
     name: string;
+    email: string | null;
     discipline: string | null;
     city: string | null;
     state: string | null;
@@ -972,7 +973,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           const tempPro = {
                             id: pro.id,
                             name: pro.name,
-                            email: "",
+                            email: pro.email ?? "",
                             phone: null,
                             facility: pro.facility,
                             city: pro.city,
