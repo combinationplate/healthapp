@@ -114,10 +114,11 @@ export async function POST(request: Request) {
         const email = authUser?.user?.email ?? null;
         if (email) {
           const name = profile.full_name ?? "Professional";
-          const { data: newPro, error: insertProError } = await admin
+
+          // Use upsert to avoid conflicts — match on rep_id + email
+          const { data: upsertedPro, error: upsertError } = await admin
             .from("professionals")
-            .insert({
-              id: professionalId,
+            .upsert({
               rep_id: repId,
               name,
               email,
@@ -125,18 +126,21 @@ export async function POST(request: Request) {
               city: profile.city ?? null,
               state: profile.state ?? null,
               facility: profile.facility ?? null,
-            })
+            }, { onConflict: "rep_id,email" })
             .select("id")
             .single();
 
-          if (insertProError) {
-            console.warn("Could not insert professional from profile:", insertProError.message);
-          } else if (newPro) {
-            ceSendProId = newPro.id;
+          if (upsertError) {
+            console.error("Professional upsert failed:", upsertError.message);
           }
 
+          ceSendProId = upsertedPro?.id ?? professionalId;
           pro = { id: ceSendProId, name, email };
+        } else {
+          console.error("No email found for profile:", professionalId);
         }
+      } else {
+        console.error("No profile found for id:", professionalId);
       }
     }
 
