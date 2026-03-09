@@ -1,20 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    function check() {
-      setIsMobile(window.innerWidth < 768);
-    }
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
 
   const navLinks = [
     { href: "/how-it-works", label: "How It Works" },
@@ -34,6 +24,17 @@ export function LandingNav() {
         borderBottom: "1px solid rgba(11,18,34,0.08)",
       }}
     >
+      <style>{`
+        @media (max-width: 767px) {
+          .lnav-desktop { display: none !important; }
+          .lnav-mobile-only { display: flex !important; }
+        }
+        @media (min-width: 768px) {
+          .lnav-mobile-only { display: none !important; }
+          .lnav-hamburger { display: none !important; }
+        }
+      `}</style>
+
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
         <div
           style={{
@@ -95,56 +96,54 @@ export function LandingNav() {
           </Link>
 
           {/* Desktop nav links */}
-          {!isMobile && (
-            <ul
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "28px",
-                listStyle: "none",
-                margin: 0,
-                padding: 0,
-              }}
-            >
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    style={{
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "#3b4963",
-                      textDecoration: "none",
-                      transition: "color 0.15s",
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul
+            className="lnav-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "28px",
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+            }}
+          >
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    color: "#3b4963",
+                    textDecoration: "none",
+                    transition: "color 0.15s",
+                  }}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
 
           {/* Right side: buttons */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {!isMobile && (
-              <Link
-                href="/signup?type=hcp"
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(11,18,34,0.08)",
-                  background: "transparent",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  color: "#3b4963",
-                  textDecoration: "none",
-                  transition: "border-color 0.15s, color 0.15s",
-                }}
-              >
-                I&apos;m a Healthcare Pro
-              </Link>
-            )}
+            <Link
+              href="/signup?type=hcp"
+              className="lnav-desktop"
+              style={{
+                padding: "8px 20px",
+                borderRadius: "10px",
+                border: "1px solid rgba(11,18,34,0.08)",
+                background: "transparent",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#3b4963",
+                textDecoration: "none",
+                transition: "border-color 0.15s, color 0.15s",
+              }}
+            >
+              I&apos;m a Healthcare Pro
+            </Link>
             <Link
               href="/signup?type=sales"
               style={{
@@ -158,36 +157,35 @@ export function LandingNav() {
                 transition: "background 0.15s",
               }}
             >
-              {isMobile ? "Get Started" : "Request Demo"}
+              Request Demo
             </Link>
 
             {/* Hamburger — mobile only */}
-            {isMobile && (
-              <button
-                type="button"
-                onClick={() => setMobileOpen((o) => !o)}
-                aria-label="Toggle menu"
-                style={{
-                  background: "none",
-                  border: "none",
-                  fontSize: "24px",
-                  cursor: "pointer",
-                  color: "#0b1222",
-                  padding: "4px",
-                  marginLeft: "4px",
-                }}
-              >
-                {mobileOpen ? "✕" : "☰"}
-              </button>
-            )}
+            <button
+              type="button"
+              className="lnav-hamburger"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label="Toggle menu"
+              style={{
+                background: "none",
+                border: "none",
+                fontSize: "24px",
+                cursor: "pointer",
+                color: "#0b1222",
+                padding: "4px",
+                marginLeft: "4px",
+              }}
+            >
+              {mobileOpen ? "✕" : "☰"}
+            </button>
           </div>
         </div>
 
         {/* Mobile menu */}
-        {isMobile && mobileOpen && (
+        {mobileOpen && (
           <div
+            className="lnav-mobile-only"
             style={{
-              display: "flex",
               flexDirection: "column",
               gap: "4px",
               borderTop: "1px solid rgba(11,18,34,0.08)",
