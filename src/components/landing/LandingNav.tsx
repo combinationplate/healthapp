@@ -63,7 +63,7 @@ export function LandingNav() {
           <div className="flex items-center gap-2.5">
             <Link
               href="/signup?type=hcp"
-              className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-5 py-2 text-[13px] font-semibold text-[var(--ink-soft)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)] hidden sm:inline-block"
+              className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-5 py-2 text-[13px] font-semibold text-[var(--ink-soft)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)] hidden md:inline-block"
             >
               I&apos;m a Healthcare Pro
             </Link>

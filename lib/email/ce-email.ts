@@ -111,7 +111,7 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
         <td width="28" valign="top" style="padding-bottom:10px;">
           <div style="width:24px;height:24px;border-radius:6px;background:#0b1222;color:#ffffff;font-size:12px;font-weight:800;text-align:center;line-height:24px;">2</div>
         </td>
-        <td style="padding:2px 0 10px 10px;font-size:14px;color:#3b4963;">You'll be taken to hiscornerstone.com with your discount applied</td>
+        <td style="padding:2px 0 10px 10px;font-size:14px;color:#3b4963;">You'll be taken to HISCornerstone.com with your discount applied</td>
       </tr>
       <tr>
         <td width="28" valign="top">
@@ -143,7 +143,7 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
   <!-- Footer -->
   <tr><td style="padding:20px 40px 28px;">
     <div style="font-size:11px;color:#7a8ba8;text-align:center;">
-      Powered by <strong>Pulse</strong> · <a href="https://hiscornerstone.com" style="color:#7a8ba8;">hiscornerstone.com</a>
+      Powered by <strong>Pulse</strong> · <a href="https://hiscornerstone.com" style="color:#7a8ba8;">HISCornerstone.com</a>
     </div>
   </td></tr>
 
@@ -170,11 +170,11 @@ export function buildCeEmailText(p: CeEmailParams): string {
     ``,
     `How to access:`,
     `1. Click the link above`,
-    `2. You'll be taken to hiscornerstone.com with your discount applied`,
+    `2. You'll be taken to HISCornerstone.com with your discount applied`,
     `3. Complete your course online — self-paced, any device`,
     ``,
     `Questions? Contact ${p.repName}${p.repEmail ? ` at ${p.repEmail}` : ""}${p.repOrgName ? ` · ${p.repOrgName}` : ""}`,
     ``,
-    `— Powered by Pulse · hiscornerstone.com`,
+    `— Powered by Pulse · HISCornerstone.com`,
   ].join("\n");
 }

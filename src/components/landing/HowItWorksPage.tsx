@@ -628,7 +628,7 @@ export default function HowItWorksPage() {
             <h2 style={sectionTitle}>Simple Pricing. No Surprises.</h2>
             <p style={{ fontSize: "16px", color: ds.inkSoft, marginTop: "12px" }}>
               Get started free. CE courses are priced per course, per send — the same rates you&apos;d
-              pay on hiscornerstone.com. Professionals never pay a thing.
+              pay on HISCornerstone.com. Professionals never pay a thing.
             </p>
           </div>
 
@@ -730,7 +730,7 @@ export default function HowItWorksPage() {
                   rel="noopener noreferrer"
                   style={{ color: ds.blue, textDecoration: "none", fontWeight: 600 }}
                 >
-                  hiscornerstone.com
+                  HISCornerstone.com
                 </a>
                 . Your company is invoiced monthly based on usage. Professionals always receive
                 courses at no cost to them.
@@ -794,7 +794,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="Are the courses nationally accredited?"
-              a="Yes. All CE courses on Pulse are nationally accredited and approved across all 50 states. Courses are provided through Hiscornerstone.com, an established CE provider."
+              a="Yes. All CE courses on Pulse are nationally accredited and approved across all 50 states. Courses are provided through HISCornerstone.com, an established CE provider."
             />
             <FaqItem
               q="Do I need to create an account?"
@@ -802,7 +802,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="How do sales teams pay?"
-              a="The platform is free to get started — no per-seat fees. CE courses are priced per send based on credit hours, the same rates as hiscornerstone.com. Your company receives a monthly invoice based on usage. During early access, we're offering complimentary CE sends to help you get started."
+              a="The platform is free to get started — no per-seat fees. CE courses are priced per send based on credit hours, the same rates as HISCornerstone.com. Your company receives a monthly invoice based on usage. During early access, we're offering complimentary CE sends to help you get started."
             />
             <FaqItem
               q="Can I use this for my whole team?"

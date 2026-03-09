@@ -1148,8 +1148,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </SectionCard>
 
             {qrOpen && repId && (
-              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => setQrOpen(false)}>
-                <div style={{ width: "100%", maxWidth: "800px", background: "white", borderRadius: "16px", padding: "24px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "90vh" }} onClick={e => e.stopPropagation()}>
+              <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(6px)", padding: "12px" }} onClick={() => setQrOpen(false)}>
+                <div style={{ width: "100%", maxWidth: "800px", background: "white", borderRadius: "16px", padding: "20px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", overflowY: "auto", maxHeight: "92vh" }} onClick={e => e.stopPropagation()}>
                   {/* Header */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
                     <div>
@@ -1160,7 +1160,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   </div>
 
                   {/* Two-column body on wide screens, single on mobile */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "32px", alignItems: "start" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px", alignItems: "start" }}>
                     {/* LEFT: controls */}
                     <div>
                       {/* Mode toggle */}
@@ -1222,49 +1222,124 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       )}
 
                       {/* Scan limit */}
-                      <div style={{ background: "#f0efeb", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.45, marginBottom: "12px" }}>
-                        <div style={{ fontWeight: 600, color: "#3b4963", marginBottom: "4px" }}>Scan Limit</div>
-                        <div style={{ marginBottom: "10px", lineHeight: 1.4 }}>How many times can this QR code be used? Each scan sends one free course and counts toward your billing.</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                          {([10, 25, 50, 100] as const).map((n) => (
-                            <label key={n} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-                              <input
-                                type="radio"
-                                name="qrCap"
-                                checked={qrCap === n}
-                                onChange={() => { setQrCap(n); saveQrCap(n); }}
-                              />
-                              <span style={{ fontSize: "13px", color: "#3b4963" }}>{n} scans</span>
-                              {n === 25 && (
-                                <span style={{ fontSize: "11px", fontWeight: 600, background: "rgba(13,148,136,0.15)", color: "#0f766e", borderRadius: "4px", padding: "1px 6px" }}>Recommended</span>
-                              )}
-                            </label>
-                          ))}
-                          <label style={{ display: "flex", alignItems: "flex-start", gap: "8px", cursor: "pointer" }}>
+                      <div style={{ background: "#f6f5f0", borderRadius: "12px", padding: "16px", fontSize: "13px", color: "#3b4963", lineHeight: 1.5, marginBottom: "12px" }}>
+                        <div style={{ fontWeight: 700, color: "#0b1222", marginBottom: "4px", fontSize: "14px" }}>Scan Limit</div>
+                        <div style={{ marginBottom: "14px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.5 }}>
+                          How many professionals can use this QR code? Once the limit is reached, the code will stop accepting new scans.
+                        </div>
+
+                        {/* Two options: Unlimited or Custom */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <label
+                            onClick={() => { setQrCap(null); saveQrCap(null); }}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              padding: "12px 14px", borderRadius: "10px", cursor: "pointer",
+                              border: qrCap === null ? "1.5px solid #0d9488" : "1px solid rgba(11,18,34,0.08)",
+                              background: qrCap === null ? "rgba(13,148,136,0.04)" : "white",
+                              transition: "all 0.15s",
+                            }}
+                          >
                             <input
                               type="radio"
                               name="qrCap"
                               checked={qrCap === null}
-                              onChange={() => { setQrCap(null); saveQrCap(null); }}
-                              style={{ marginTop: "2px" }}
+                              onChange={() => {}}
+                              style={{ accentColor: "#0d9488" }}
                             />
-                            <span style={{ fontSize: "13px", color: "#3b4963" }}>
-                              Unlimited
-                              <span style={{ display: "block", fontSize: "11px", color: "#92670A", marginTop: "2px" }}>⚠️ Anyone with this link can claim a free course</span>
-                            </span>
+                            <div>
+                              <div style={{ fontWeight: 600, color: "#0b1222", fontSize: "13px" }}>Unlimited</div>
+                              <div style={{ fontSize: "11px", color: "#7a8ba8", marginTop: "1px" }}>No scan limit — best for high-traffic locations</div>
+                            </div>
+                          </label>
+
+                          <label
+                            onClick={() => { if (qrCap === null) { setQrCap(25); saveQrCap(25); } }}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "10px",
+                              padding: "12px 14px", borderRadius: "10px", cursor: "pointer",
+                              border: qrCap !== null ? "1.5px solid #2455ff" : "1px solid rgba(11,18,34,0.08)",
+                              background: qrCap !== null ? "rgba(36,85,255,0.04)" : "white",
+                              transition: "all 0.15s",
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="qrCap"
+                              checked={qrCap !== null}
+                              onChange={() => {}}
+                              style={{ accentColor: "#2455ff" }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 600, color: "#0b1222", fontSize: "13px" }}>Set a limit</div>
+                              <div style={{ fontSize: "11px", color: "#7a8ba8", marginTop: "1px" }}>QR code stops working after this many scans</div>
+                            </div>
+                            {qrCap !== null && (
+                              <input
+                                type="number"
+                                min="1"
+                                max="10000"
+                                value={qrCap}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value) || 1;
+                                  setQrCap(val);
+                                }}
+                                onBlur={() => saveQrCap(qrCap)}
+                                style={{
+                                  width: "72px",
+                                  padding: "6px 10px",
+                                  borderRadius: "8px",
+                                  border: "1px solid rgba(11,18,34,0.12)",
+                                  fontSize: "14px",
+                                  fontWeight: 700,
+                                  color: "#0b1222",
+                                  textAlign: "center",
+                                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                                }}
+                              />
+                            )}
                           </label>
                         </div>
+
+                        {/* Usage counter */}
                         {qrScanCount !== null && (
-                          <div style={{ marginTop: "10px", fontSize: "12px", color: "#7a8ba8" }}>
-                            🔍 {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
-                            {qrCapSaving && <span style={{ marginLeft: "8px", color: "#7a8ba8" }}>Saving…</span>}
+                          <div style={{
+                            marginTop: "14px",
+                            paddingTop: "12px",
+                            borderTop: "1px solid rgba(11,18,34,0.06)",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            fontSize: "12px",
+                          }}>
+                            <span style={{ color: "#7a8ba8" }}>
+                              {qrScanCount} {qrScanCount === 1 ? "scan" : "scans"} used{qrCap !== null ? ` of ${qrCap}` : ""}
+                              {qrCapSaving && <span style={{ marginLeft: "8px", color: "#7a8ba8", fontStyle: "italic" }}>Saving…</span>}
+                            </span>
+                            {qrCap !== null && qrScanCount > 0 && (
+                              <div style={{
+                                width: "80px", height: "6px",
+                                borderRadius: "3px",
+                                background: "rgba(11,18,34,0.06)",
+                                overflow: "hidden",
+                              }}>
+                                <div style={{
+                                  width: `${Math.min((qrScanCount / qrCap) * 100, 100)}%`,
+                                  height: "100%",
+                                  borderRadius: "3px",
+                                  background: qrScanCount >= qrCap ? "#e8604c" : "#0d9488",
+                                  transition: "width 0.3s",
+                                }} />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
 
                       {/* Billing note */}
-                      <div style={{ background: "#f0efeb", borderRadius: "8px", padding: "12px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.45 }}>
-                        💳 Billing: Each course sent via QR is charged at the standard course rate. You will see all QR sends in your CE History tab.
+                      <div style={{ background: "#f6f5f0", borderRadius: "12px", padding: "14px 16px", fontSize: "12px", color: "#7a8ba8", lineHeight: 1.5 }}>
+                        <span style={{ fontWeight: 600, color: "#3b4963" }}>How billing works:</span> Scanning a QR code does not incur a charge. You are only charged when a professional uses the coupon code to access their course. All QR sends appear in your CE History tab.
                       </div>
                     </div>
 
@@ -2079,9 +2154,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
         {tab === "network" && (
           <SectionCard>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px', borderBottom: '1px solid rgba(11,18,34,0.08)', paddingBottom: '14px', marginBottom: '16px' }}>
               <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My Network</h2>
-              <div className="flex gap-2 flex-wrap">
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className={BTN_SECONDARY}
@@ -2095,9 +2170,21 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <button type="button" className={BTN_PRIMARY} onClick={() => setAddOpen(true)}>+ Add Professional</button>
               </div>
             </div>
-            <div className="flex gap-2 flex-wrap mb-4">
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' }}>
               {["All", "Nursing", "Social Work", "Case Mgmt", "PT/OT/SLP"].map((f) => (
-                <button key={f} type="button" onClick={() => setFilter(f)} className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${filter === f ? "bg-[var(--blue)] text-white border-[var(--blue)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#f6f5f0]"}`}>
+                <button key={f} type="button" onClick={() => setFilter(f)} style={{
+                  flexShrink: 0,
+                  borderRadius: '8px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  border: filter === f ? '1.5px solid #2455ff' : '1px solid rgba(11,18,34,0.08)',
+                  background: filter === f ? 'rgba(36,85,255,0.08)' : '#ffffff',
+                  color: filter === f ? '#2455ff' : '#3b4963',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}>
                   {f} {f === "All" ? `(${professionals.length})` : ""}
                 </button>
               ))}
@@ -2204,7 +2291,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         </div>
 
                         {/* Action buttons */}
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                           <button
                             type="button"
                             onClick={() => openSendCeModal(pro)}
@@ -2219,6 +2306,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               cursor: 'pointer',
                               fontFamily: "'DM Sans', system-ui, sans-serif",
                               transition: 'all 0.15s',
+                              whiteSpace: 'nowrap',
                             }}
                             onMouseEnter={(e) => {
                               e.currentTarget.style.background = 'rgba(36,85,255,0.06)';
@@ -2232,7 +2320,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           <button
                             type="button"
                             className={BTN_SECONDARY}
-                            style={{ fontSize: '12px', padding: '7px 16px' }}
+                            style={{ fontSize: '12px', padding: '7px 16px', whiteSpace: 'nowrap' }}
                             onClick={() => openTouchpointModal(pro)}
                           >
                             Log Touchpoint
