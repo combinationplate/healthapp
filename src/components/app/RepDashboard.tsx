@@ -11,6 +11,7 @@ const TABS = [
   { id: "network", label: "Network" },
   { id: "requests", label: "Requests" },
   { id: "ce-history", label: "CE History" },
+  { id: "billing", label: "Billing" },
 ] as const;
 
 const CE_DISCOUNTS = ["100% Free"] as const;
@@ -185,6 +186,18 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [addError, setAddError] = useState<string | null>(null);
   const [sendCeOpen, setSendCeOpen] = useState(false);
   const [sendCePro, setSendCePro] = useState<ProfessionalRow | null>(null);
+
+  // Billing state
+  const [billingUsage, setBillingUsage] = useState<any>(null);
+  const [billingUsageLoading, setBillingUsageLoading] = useState(false);
+  const [billingInvoices, setBillingInvoices] = useState<any[]>([]);
+  const [billingSettings, setBillingSettings] = useState<any>(null);
+  const [billingSetupForm, setBillingSetupForm] = useState<{ billingType: "org" | "rep"; billingEmail: string; orgName: string }>({
+    billingType: "rep",
+    billingEmail: "",
+    orgName: "",
+  });
+  const [billingSetupSaving, setBillingSetupSaving] = useState(false);
   const [sendCeCourse, setSendCeCourse] = useState<string>("");
   const [sendCeDiscount, setSendCeDiscount] = useState<string>(CE_DISCOUNTS[0]);
   const [sendCeMessage, setSendCeMessage] = useState("");
@@ -714,6 +727,27 @@ export function RepDashboard({ repId }: { repId?: string }) {
     computeApprovals();
     return () => { cancelled = true; };
   }, [sendCeOpen, sendCePro, availableCourses]);
+
+  useEffect(() => {
+    if (tab !== "billing") return;
+    setBillingUsageLoading(true);
+    Promise.all([
+      fetch("/api/billing/current-usage", { credentials: "include" }).then(r => r.json()),
+      fetch("/api/billing/invoices", { credentials: "include" }).then(r => r.json()),
+      fetch("/api/billing/setup", { credentials: "include" }).then(r => r.json()),
+    ]).then(([usage, invoices, settings]) => {
+      setBillingUsage(usage);
+      setBillingInvoices(invoices.invoices ?? []);
+      setBillingSettings(settings.settings);
+      if (settings.settings?.billing_email) {
+        setBillingSetupForm(f => ({ ...f, billingEmail: settings.settings.billing_email }));
+      }
+      if (settings.orgName) {
+        setBillingSetupForm(f => ({ ...f, orgName: settings.orgName }));
+      }
+      setBillingUsageLoading(false);
+    });
+  }, [tab]);
 
   // Deduplicated courses filtered to the selected professional's discipline
   const filteredCourses = useMemo(() => {
@@ -2620,6 +2654,194 @@ export function RepDashboard({ repId }: { repId?: string }) {
             </div>
           );
         })()}
+
+        {/* Billing tab */}
+        {tab === "billing" && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Current Period */}
+            <SectionCard>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div>
+                  <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>
+                    {billingUsage ? new Date(billingUsage.periodStart).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Current Period"}
+                  </h2>
+                  <p style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '3px' }}>
+                    {billingUsage ? `${billingUsage.periodStart} — ${billingUsage.periodEnd}` : ""}
+                  </p>
+                </div>
+                <span style={{
+                  background: 'rgba(36,85,255,0.08)', color: '#2455ff',
+                  padding: '5px 12px', borderRadius: '8px',
+                  fontSize: '11px', fontWeight: 700,
+                }}>🚀 Early Access</span>
+              </div>
+
+              {billingUsageLoading ? (
+                <p style={{ color: '#7a8ba8', fontSize: '14px' }}>Loading…</p>
+              ) : billingUsage ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                    <div style={{ background: '#f6f5f0', borderRadius: '12px', padding: '18px', textAlign: 'center' }}>
+                      <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '32px', fontWeight: 900, color: '#0b1222' }}>
+                        {billingUsage.ceCount}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '3px' }}>CEs redeemed</div>
+                    </div>
+                    <div style={{ background: '#f6f5f0', borderRadius: '12px', padding: '18px', textAlign: 'center' }}>
+                      <div style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '32px', fontWeight: 900, color: '#0b1222' }}>
+                        ${(billingUsage.totalCents / 100).toFixed(2)}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '3px' }}>Estimated cost</div>
+                    </div>
+                  </div>
+                  <div style={{
+                    padding: '12px 14px', borderRadius: '10px',
+                    background: 'rgba(36,85,255,0.04)', border: '1px solid rgba(36,85,255,0.08)',
+                    fontSize: '12px', color: '#3b4963',
+                  }}>
+                    🚀 <strong>Early access</strong> — no charges during launch. Usage is tracked so you can see the value.
+                  </div>
+                </>
+              ) : null}
+            </SectionCard>
+
+            {/* Usage Breakdown */}
+            {billingUsage && billingUsage.lineItems.length > 0 && (
+              <SectionCard>
+                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: '0 0 14px' }}>
+                  Usage This Month
+                </h2>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid rgba(11,18,34,0.08)' }}>
+                        {["Date", "Professional", "Course", "Hrs", "Cost"].map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: '#7a8ba8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingUsage.lineItems.map((li: any) => (
+                        <tr key={li.id} style={{ borderBottom: '1px solid rgba(11,18,34,0.04)' }}>
+                          <td style={{ padding: '10px', color: '#7a8ba8', whiteSpace: 'nowrap' }}>
+                            {new Date(li.redeemedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </td>
+                          <td style={{ padding: '10px', color: '#0b1222', fontWeight: 600 }}>{li.professionalName}</td>
+                          <td style={{ padding: '10px', color: '#3b4963', maxWidth: '180px' }}>
+                            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{li.courseName}</div>
+                          </td>
+                          <td style={{ padding: '10px', color: '#7a8ba8', textAlign: 'center' }}>{li.courseHours}</td>
+                          <td style={{ padding: '10px', fontWeight: 600, color: '#0b1222' }}>${(li.priceCents / 100).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </SectionCard>
+            )}
+
+            {/* Past Invoices */}
+            <SectionCard>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: '0 0 14px' }}>
+                Invoices
+              </h2>
+              {billingInvoices.length === 0 ? (
+                <p style={{ color: '#7a8ba8', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
+                  No invoices yet. Usage is tracked during early access — invoices appear here once billing is active.
+                </p>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid rgba(11,18,34,0.08)' }}>
+                        {["Period", "CEs", "Amount", "Status", ""].map(h => (
+                          <th key={h} style={{ textAlign: 'left', padding: '8px 10px', fontSize: '11px', fontWeight: 700, color: '#7a8ba8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingInvoices.map((inv: any) => (
+                        <tr key={inv.id} style={{ borderBottom: '1px solid rgba(11,18,34,0.04)' }}>
+                          <td style={{ padding: '10px', fontWeight: 600, color: '#0b1222' }}>
+                            {new Date(inv.period_start).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                          </td>
+                          <td style={{ padding: '10px', color: '#3b4963' }}>{inv.ce_count}</td>
+                          <td style={{ padding: '10px', fontWeight: 600, color: '#0b1222' }}>${(inv.total_cents / 100).toFixed(2)}</td>
+                          <td style={{ padding: '10px' }}>
+                            <span style={{
+                              padding: '3px 10px', borderRadius: '999px', fontSize: '11px', fontWeight: 700,
+                              background: inv.status === 'paid' ? 'rgba(13,148,136,0.10)' : inv.status === 'overdue' ? 'rgba(232,96,76,0.10)' : '#f6f5f0',
+                              color: inv.status === 'paid' ? '#0d9488' : inv.status === 'overdue' ? '#e8604c' : '#7a8ba8',
+                            }}>{inv.status === 'paid' ? '✓ Paid' : inv.status.charAt(0).toUpperCase() + inv.status.slice(1)}</span>
+                          </td>
+                          <td style={{ padding: '10px' }}>
+                            {inv.stripe_hosted_url && (
+                              <a href={inv.stripe_hosted_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: '#2455ff', fontWeight: 600, textDecoration: 'none' }}>View →</a>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Billing Settings */}
+            <SectionCard>
+              <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: '0 0 14px' }}>
+                Billing Settings
+              </h2>
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                setBillingSetupSaving(true);
+                const res = await fetch("/api/billing/setup", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify(billingSetupForm),
+                });
+                const data = await res.json();
+                setBillingSetupSaving(false);
+                if (res.ok) {
+                  setBillingSettings(data);
+                } else {
+                  alert(data.error || "Failed to save");
+                }
+              }} style={{ display: 'grid', gap: '14px', maxWidth: '420px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#7a8ba8', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Billing Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={billingSetupForm.billingEmail}
+                    onChange={e => setBillingSetupForm(f => ({ ...f, billingEmail: e.target.value }))}
+                    placeholder="your@email.com"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid rgba(11,18,34,0.08)', fontSize: '14px', fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: 'border-box' }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={billingSetupSaving}
+                  style={{
+                    padding: '10px 20px', borderRadius: '10px', border: 'none',
+                    background: '#2455ff', color: 'white', fontSize: '13px', fontWeight: 700,
+                    cursor: billingSetupSaving ? 'not-allowed' : 'pointer',
+                    opacity: billingSetupSaving ? 0.6 : 1,
+                    boxShadow: '0 2px 10px rgba(36,85,255,0.18)',
+                    fontFamily: "'DM Sans', system-ui, sans-serif",
+                    width: 'fit-content',
+                  }}
+                >{billingSetupSaving ? "Saving…" : billingSettings ? "Update" : "Set Up Billing"}</button>
+                {billingSettings && (
+                  <div style={{ fontSize: '12px', color: '#7a8ba8' }}>
+                    Currently: {billingSettings.billing_type === "org" ? "Company billing" : "Individual billing"} · {billingSettings.billing_email}
+                  </div>
+                )}
+              </form>
+            </SectionCard>
+          </div>
+        )}
 
         {/* Send CE modal */}
         {sendCeOpen && (

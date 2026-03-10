@@ -51,10 +51,8 @@ export async function POST(request: Request) {
     let repId: string | null = null;
 
     if (billingType === "org") {
-      // Verify user is a manager
-      if (profile.role !== "manager" && profile.role !== "admin") {
-        return NextResponse.json({ error: "Only managers can set up org billing" }, { status: 403 });
-      }
+      // For now, allow any authenticated user to set up org billing
+      // TODO: restrict to managers once roles are fully implemented
 
       // Create or get org
       if (profile.org_id) {

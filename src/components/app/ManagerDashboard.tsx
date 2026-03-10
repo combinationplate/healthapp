@@ -115,6 +115,8 @@ export function ManagerDashboard({ userName, managerId }: Props) {
       // Refresh billing data
       setShowBilling(false);
       setTimeout(() => setShowBilling(true), 100);
+    } else {
+      alert(data.error || "Failed to save billing settings");
     }
   }
 
