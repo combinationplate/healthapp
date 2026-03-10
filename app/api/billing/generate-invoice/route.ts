@@ -152,7 +152,7 @@ export async function POST(request: Request) {
 
     for (const [key, group] of billingGroups) {
       try {
-        // Find billing settings for this entity
+        // Find billing settings — try org first, then fall back to individual rep
         let billingSettings = null;
 
         if (group.orgId) {
@@ -163,7 +163,51 @@ export async function POST(request: Request) {
             .eq("is_active", true)
             .maybeSingle();
           billingSettings = data;
-        } else if (group.repId) {
+        }
+
+        // If no org billing, try individual rep billing for each rep in the group
+        // In this case, generate separate invoices per rep
+        if (!billingSettings && group.orgId) {
+          // Group sends by rep within this org
+          const repSendMap = new Map<string, any[]>();
+          for (const send of group.sends) {
+            if (!repSendMap.has(send.rep_id)) repSendMap.set(send.rep_id, []);
+            repSendMap.get(send.rep_id)!.push(send);
+          }
+
+          let allHandled = true;
+          for (const [repId, repSends] of repSendMap) {
+            const { data: repBilling } = await admin
+              .from("billing_settings")
+              .select("*")
+              .eq("rep_id", repId)
+              .eq("is_active", true)
+              .maybeSingle();
+
+            if (repBilling) {
+              // Override group to process this rep individually
+              billingSettings = repBilling;
+              group.sends = repSends;
+              group.repId = repId;
+              group.orgId = null;
+              break; // Process first found, rest will be caught next run
+            } else {
+              allHandled = false;
+            }
+          }
+
+          if (!allHandled && !billingSettings) {
+            results.push({
+              billingKey: key,
+              status: "skipped",
+              reason: "No billing settings configured (checked org and individual reps)",
+              ceCount: group.sends.length,
+            });
+            continue;
+          }
+        }
+
+        if (!billingSettings && group.repId) {
           const { data } = await admin
             .from("billing_settings")
             .select("*")
