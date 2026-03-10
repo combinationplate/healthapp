@@ -2658,6 +2658,23 @@ export function RepDashboard({ repId }: { repId?: string }) {
         {/* Billing tab */}
         {tab === "billing" && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* If rep is in an org, show simplified view */}
+            {billingUsage?.viewScope === "rep" && billingSettings?.billing_type === "org" && (
+              <div style={{
+                borderRadius: '12px', padding: '20px',
+                background: 'rgba(36,85,255,0.04)',
+                border: '1px solid rgba(36,85,255,0.08)',
+                textAlign: 'center',
+              }}>
+                <p style={{ fontSize: '14px', color: '#3b4963', margin: '0 0 4px' }}>
+                  <strong>Your company manages billing.</strong>
+                </p>
+                <p style={{ fontSize: '13px', color: '#7a8ba8', margin: 0 }}>
+                  Below is your personal CE usage this month. Invoices are sent to your company admin.
+                </p>
+              </div>
+            )}
+
             {/* Current Period */}
             <SectionCard>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>

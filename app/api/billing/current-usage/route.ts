@@ -20,21 +20,24 @@ export async function GET() {
       .eq("id", user.id)
       .single();
 
-    // Determine which reps to include
+    // Determine scope based on role
+    const isManager = profile?.role === "manager" || profile?.role === "admin";
     let repIds: string[] = [user.id];
+    let viewScope: "org" | "rep" = "rep";
 
-    if (profile?.org_id) {
-      // Get all reps in this org
+    if (profile?.org_id && isManager) {
+      // Managers see all reps in their org
       const { data: orgMembers } = await admin
         .from("profiles")
         .select("id")
-        .eq("org_id", profile.org_id)
-        .in("role", ["rep", "manager", "admin"]);
+        .eq("org_id", profile.org_id);
 
       if (orgMembers && orgMembers.length > 0) {
         repIds = orgMembers.map((m: { id: string }) => m.id);
       }
+      viewScope = "org";
     }
+    // Reps always see only their own usage, even if in an org
 
     // Current billing period
     const now = new Date();
@@ -92,6 +95,7 @@ export async function GET() {
       ceCount: lineItems.length,
       totalCents,
       lineItems,
+      viewScope,
     });
   } catch (e) {
     console.error("Usage error:", e);

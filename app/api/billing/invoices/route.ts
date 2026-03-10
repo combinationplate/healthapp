@@ -15,14 +15,17 @@ export async function GET() {
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("org_id")
+      .select("org_id, role")
       .eq("id", user.id)
       .single();
 
     // Fetch invoices scoped to org or rep
     let invoices = [];
 
-    if (profile?.org_id) {
+    const isManager = profile?.role === "manager" || profile?.role === "admin";
+
+    if (profile?.org_id && isManager) {
+      // Managers see org-level invoices
       const { data } = await admin
         .from("invoices")
         .select("*, invoice_line_items(*)")
@@ -30,6 +33,9 @@ export async function GET() {
         .order("period_start", { ascending: false })
         .limit(24);
       invoices = data ?? [];
+    } else if (profile?.org_id && !isManager) {
+      // Reps in an org see a "your company handles billing" message
+      invoices = [];
     } else {
       const { data } = await admin
         .from("invoices")
