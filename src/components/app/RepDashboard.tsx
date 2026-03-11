@@ -10,6 +10,7 @@ const TABS = [
   { id: "discover", label: "Discover" },
   { id: "network", label: "Network" },
   { id: "requests", label: "Requests" },
+  { id: "events", label: "Events" },
   { id: "ce-history", label: "CE History" },
   { id: "billing", label: "Billing" },
 ] as const;
@@ -186,6 +187,23 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [addError, setAddError] = useState<string | null>(null);
   const [sendCeOpen, setSendCeOpen] = useState(false);
   const [sendCePro, setSendCePro] = useState<ProfessionalRow | null>(null);
+
+  // ── Events ──
+  const [events, setEvents] = useState<any[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [eventForm, setEventForm] = useState({
+    title: "", description: "", eventType: "lunch_and_learn",
+    externalUrl: "", locationName: "", address: "", city: "", state: "",
+    startsAt: "", startsAtTime: "12:00", durationMinutes: "60",
+    maxCapacity: "", visibility: "network",
+  });
+  const [eventSaving, setEventSaving] = useState(false);
+  const [inviteModalEvent, setInviteModalEvent] = useState<any>(null);
+  const [inviteSelectedPros, setInviteSelectedPros] = useState<string[]>([]);
+  const [inviteGuestRows, setInviteGuestRows] = useState([{ name: "", email: "" }]);
+  const [inviteSending, setInviteSending] = useState(false);
+  const [inviteResults, setInviteResults] = useState<any>(null);
 
   // Billing state
   const [billingUsage, setBillingUsage] = useState<any>(null);
@@ -727,6 +745,91 @@ export function RepDashboard({ repId }: { repId?: string }) {
     computeApprovals();
     return () => { cancelled = true; };
   }, [sendCeOpen, sendCePro, availableCourses]);
+
+  // ── Events ──
+  const refreshEvents = useCallback(() => {
+    setEventsLoading(true);
+    fetch("/api/events", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { setEvents(data.events ?? []); setEventsLoading(false); });
+  }, []);
+
+  useEffect(() => {
+    if (tab === "events") refreshEvents();
+  }, [tab, refreshEvents]);
+
+  async function handleCreateEvent(e: React.FormEvent) {
+    e.preventDefault();
+    setEventSaving(true);
+    const startsAt = new Date(
+      `${eventForm.startsAt}T${eventForm.startsAtTime}`
+    ).toISOString();
+    const res = await fetch("/api/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        title: eventForm.title, description: eventForm.description,
+        eventType: eventForm.eventType, externalUrl: eventForm.externalUrl,
+        locationName: eventForm.locationName, address: eventForm.address,
+        city: eventForm.city, state: eventForm.state, startsAt,
+        durationMinutes: eventForm.durationMinutes,
+        maxCapacity: eventForm.maxCapacity || null,
+        visibility: eventForm.visibility,
+      }),
+    });
+    setEventSaving(false);
+    if (res.ok) {
+      setCreateEventOpen(false);
+      setEventForm({
+        title: "", description: "", eventType: "lunch_and_learn",
+        externalUrl: "", locationName: "", address: "", city: "", state: "",
+        startsAt: "", startsAtTime: "12:00", durationMinutes: "60",
+        maxCapacity: "", visibility: "network",
+      });
+      refreshEvents();
+    }
+  }
+
+  async function handleCancelEvent(eventId: string) {
+    if (!confirm("Cancel this event? Invitees won't be notified automatically.")) return;
+    await fetch(`/api/events/${eventId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ status: "cancelled" }),
+    });
+    refreshEvents();
+  }
+
+  async function handleSendInvites() {
+    if (!inviteModalEvent) return;
+    setInviteSending(true);
+    const guestEmails = inviteGuestRows
+      .filter((r) => r.email.trim())
+      .map((r) => ({ name: r.name.trim(), email: r.email.trim() }));
+    const networkEmails = professionals
+      .filter((p) => inviteSelectedPros.includes(p.id))
+      .map((p) => ({ name: p.name, email: p.email }));
+    const allEmails = [...networkEmails, ...guestEmails];
+    if (allEmails.length === 0) { setInviteSending(false); return; }
+    const res = await fetch("/api/events/invite", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ eventId: inviteModalEvent.id, emails: allEmails }),
+    });
+    const data = await res.json();
+    setInviteSending(false);
+    setInviteResults(data);
+  }
+
+  function closeInviteModal() {
+    setInviteModalEvent(null);
+    setInviteSelectedPros([]);
+    setInviteGuestRows([{ name: "", email: "" }]);
+    setInviteResults(null);
+  }
 
   useEffect(() => {
     if (tab !== "billing") return;
@@ -2489,6 +2592,104 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </SectionCard>
         )}
 
+        {tab === "events" && (
+          <div className="space-y-6">
+            <SectionCard>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px solid rgba(11,18,34,0.08)", paddingBottom: "14px", marginBottom: "16px" }}>
+                <div>
+                  <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "16px", fontWeight: 800, color: "#0b1222", margin: 0 }}>Events</h2>
+                  <p style={{ marginTop: "3px", fontSize: "11px", color: "#7a8ba8" }}>Create and manage lunch & learns, dinners, and workshops</p>
+                </div>
+                <button type="button" onClick={() => setCreateEventOpen(true)} style={{ borderRadius: "10px", background: "#2455ff", padding: "10px 20px", fontSize: "13px", fontWeight: 700, color: "white", border: "none", cursor: "pointer", boxShadow: "0 2px 10px rgba(36,85,255,0.18)", fontFamily: "'DM Sans', system-ui, sans-serif" }}>+ Create Event</button>
+              </div>
+
+              {eventsLoading ? (
+                <p style={{ fontSize: "14px", color: "#7a8ba8", padding: "16px 0" }}>Loading…</p>
+              ) : events.filter((e) => e.status !== "cancelled").length === 0 ? (
+                <div style={{ padding: "48px 0", textAlign: "center" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "16px" }}>📅</div>
+                  <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "20px", fontWeight: 800, color: "#0b1222", marginBottom: "8px" }}>No events yet</h3>
+                  <p style={{ fontSize: "14px", color: "#7a8ba8", maxWidth: "360px", margin: "0 auto 24px", lineHeight: 1.6 }}>Create a lunch & learn or networking dinner to bring professionals together. They can RSVP right from their dashboard.</p>
+                  <button type="button" onClick={() => setCreateEventOpen(true)} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#2455ff", color: "white", fontWeight: 700, padding: "12px 24px", borderRadius: "10px", border: "none", fontSize: "14px", cursor: "pointer", boxShadow: "0 2px 10px rgba(36,85,255,0.18)" }}>+ Create Event</button>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: "16px" }}>
+                  {events.filter((e) => e.status !== "cancelled").map((evt) => {
+                    const isPast = new Date(evt.starts_at) < new Date();
+                    const c = evt.counts ?? {};
+                    const typeEmoji: Record<string, string> = { lunch_and_learn: "🍽️", networking_dinner: "🥂", workshop: "📋", in_service: "🏥", other: "📅" };
+                    const typeLabel: Record<string, string> = { lunch_and_learn: "Lunch & Learn", networking_dinner: "Networking Dinner", workshop: "Workshop", in_service: "In-Service", other: "Event" };
+                    return (
+                      <div key={evt.id} style={{ borderRadius: "14px", border: "1px solid rgba(11,18,34,0.08)", background: isPast ? "#fafaf7" : "white", padding: "20px", opacity: isPast ? 0.7 : 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "12px", color: "#7a8ba8" }}>{typeEmoji[evt.event_type] || "📅"} {typeLabel[evt.event_type] || "Event"}</span>
+                          <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: evt.visibility === "public" ? "rgba(36,85,255,0.08)" : "rgba(11,18,34,0.05)", color: evt.visibility === "public" ? "#2455ff" : "#7a8ba8" }}>{evt.visibility === "public" ? "Public" : "Network Only"}</span>
+                          {isPast && <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: "#f6f5f0", color: "#7a8ba8" }}>Past</span>}
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: "16px", color: "#0b1222", lineHeight: 1.3, marginBottom: "8px" }}>{evt.title}</div>
+                        <div style={{ fontSize: "13px", color: "#3b4963", marginBottom: "12px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                          <span>📅 {new Date(evt.starts_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at {new Date(evt.starts_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</span>
+                          {evt.location_name && <span>📍 {evt.location_name}</span>}
+                          <span>⏱ {evt.duration_minutes} min</span>
+                        </div>
+                        {evt.external_url && (
+                          <div style={{ marginBottom: "12px" }}>
+                            <a href={evt.external_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "12px", color: "#2455ff", fontWeight: 600, textDecoration: "none" }}>🔗 {evt.external_url.replace(/^https?:\/\//, "").split("/")[0]} →</a>
+                          </div>
+                        )}
+                        <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "14px" }}>
+                          {[
+                            { label: "Going", val: c.going, color: "#0d9488" },
+                            { label: "Maybe", val: c.maybe, color: "#92670A" },
+                            { label: "Declined", val: c.declined, color: "#e8604c" },
+                          ].map((s) => (
+                            <span key={s.label} style={{ fontSize: "13px", fontWeight: 700, color: s.color }}>{s.val ?? 0} <span style={{ fontWeight: 500, color: "#7a8ba8" }}>{s.label}</span></span>
+                          ))}
+                        </div>
+                        {(evt.event_rsvps ?? []).length > 0 && (
+                          <div style={{ marginBottom: "14px", borderTop: "1px solid rgba(11,18,34,0.06)", paddingTop: "12px" }}>
+                            <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a8ba8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>RSVPs</div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                              {(evt.event_rsvps ?? []).map((rsvp: any) => {
+                                const rName = rsvp.professionals?.name || rsvp.guest_name || rsvp.guest_email || "—";
+                                const sColor: Record<string, string> = { going: "#0d9488", maybe: "#92670A", declined: "#e8604c" };
+                                const sBg: Record<string, string> = { going: "rgba(13,148,136,0.08)", maybe: "rgba(217,119,6,0.08)", declined: "rgba(232,96,76,0.08)" };
+                                return (
+                                  <span key={rsvp.id} style={{ fontSize: "11px", fontWeight: 600, padding: "4px 10px", borderRadius: "6px", background: sBg[rsvp.status] ?? "#f6f5f0", color: sColor[rsvp.status] ?? "#7a8ba8" }}>{rName} · {rsvp.status}</span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        {!isPast && (
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            <button type="button" onClick={() => { setInviteModalEvent(evt); setInviteSelectedPros([]); setInviteGuestRows([{ name: "", email: "" }]); setInviteResults(null); }} style={{ fontSize: "12px", padding: "7px 16px", borderRadius: "10px", border: "1.5px solid #2455ff", background: "white", color: "#2455ff", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', system-ui, sans-serif" }}>Invite People</button>
+                            <button type="button" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/events/rsvp/${evt.id}`); }} style={{ fontSize: "12px", padding: "7px 16px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", background: "white", color: "#3b4963", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', system-ui, sans-serif" }}>Copy Link</button>
+                            <button type="button" onClick={() => handleCancelEvent(evt.id)} style={{ fontSize: "12px", padding: "7px 16px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", background: "white", color: "#7a8ba8", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', system-ui, sans-serif" }}>Cancel Event</button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {events.filter((e) => e.status === "cancelled").length > 0 && (
+                    <details style={{ marginTop: "8px" }}>
+                      <summary style={{ fontSize: "12px", color: "#7a8ba8", cursor: "pointer", fontWeight: 600 }}>{events.filter((e) => e.status === "cancelled").length} cancelled</summary>
+                      <div style={{ display: "grid", gap: "8px", marginTop: "8px" }}>
+                        {events.filter((e) => e.status === "cancelled").map((evt) => (
+                          <div key={evt.id} style={{ padding: "12px 16px", borderRadius: "10px", border: "1px solid rgba(232,96,76,0.12)", background: "rgba(232,96,76,0.03)", opacity: 0.6 }}>
+                            <span style={{ fontSize: "13px", color: "#e8604c", fontWeight: 600 }}>{evt.title}</span>
+                            <span style={{ fontSize: "11px", color: "#7a8ba8", marginLeft: "8px" }}>{new Date(evt.starts_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
+            </SectionCard>
+          </div>
+        )}
+
         {tab === "ce-history" && (() => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -3461,6 +3662,162 @@ export function RepDashboard({ repId }: { repId?: string }) {
         </div>
       </div>
     )}
+
+        {/* ── Create Event Modal ── */}
+        {createEventOpen && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => !eventSaving && setCreateEventOpen(false)}>
+            <div style={{ width: "100%", maxWidth: "560px", background: "white", borderRadius: "16px", padding: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
+                <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "18px", fontWeight: 800, color: "#0b1222", margin: 0 }}>Create Event</h3>
+                <button type="button" onClick={() => !eventSaving && setCreateEventOpen(false)} style={{ background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "#7a8ba8", lineHeight: 1 }}>×</button>
+              </div>
+              <form onSubmit={handleCreateEvent} style={{ display: "grid", gap: "16px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Type</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    {[{ id: "lunch_and_learn", label: "🍽️ Lunch & Learn" }, { id: "networking_dinner", label: "🥂 Networking Dinner" }, { id: "workshop", label: "📋 Workshop" }, { id: "in_service", label: "🏥 In-Service" }].map((t) => (
+                      <button key={t.id} type="button" onClick={() => setEventForm((f) => ({ ...f, eventType: t.id }))} style={{ padding: "10px 12px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, textAlign: "left", border: eventForm.eventType === t.id ? "2px solid #2455ff" : "1px solid rgba(11,18,34,0.08)", background: eventForm.eventType === t.id ? "rgba(36,85,255,0.06)" : "white", color: eventForm.eventType === t.id ? "#2455ff" : "#3b4963", cursor: "pointer", fontFamily: "'DM Sans', system-ui, sans-serif" }}>{t.label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Event Name</label>
+                  <input type="text" required value={eventForm.title} onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))} placeholder="Ethics in Elderly Care — Lunch & Learn" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Description (optional)</label>
+                  <textarea value={eventForm.description} onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))} placeholder="Join us for lunch and a discussion on…" rows={3} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "13px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box", resize: "none" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>External Link (optional)</label>
+                  <input type="url" value={eventForm.externalUrl} onChange={(e) => setEventForm((f) => ({ ...f, externalUrl: e.target.value }))} placeholder="https://eventbrite.com/your-event" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  <p style={{ fontSize: "11px", color: "#7a8ba8", marginTop: "4px" }}>If you have an existing signup page, paste it here. It'll be the primary link in invitations.</p>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Date</label>
+                    <input type="date" required value={eventForm.startsAt} onChange={(e) => setEventForm((f) => ({ ...f, startsAt: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Time</label>
+                    <input type="time" required value={eventForm.startsAtTime} onChange={(e) => setEventForm((f) => ({ ...f, startsAtTime: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Duration</label>
+                    <select value={eventForm.durationMinutes} onChange={(e) => setEventForm((f) => ({ ...f, durationMinutes: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      <option value="30">30 min</option><option value="45">45 min</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Max Capacity</label>
+                    <input type="number" min="1" max="500" value={eventForm.maxCapacity} onChange={(e) => setEventForm((f) => ({ ...f, maxCapacity: e.target.value }))} placeholder="Unlimited" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Venue</label>
+                    <input type="text" value={eventForm.locationName} onChange={(e) => setEventForm((f) => ({ ...f, locationName: e.target.value }))} placeholder="Memorial Hospital Cafeteria" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Address</label>
+                    <input type="text" value={eventForm.address} onChange={(e) => setEventForm((f) => ({ ...f, address: e.target.value }))} placeholder="1234 Main St" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>City</label>
+                    <input type="text" value={eventForm.city} onChange={(e) => setEventForm((f) => ({ ...f, city: e.target.value }))} placeholder="Houston" style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>State</label>
+                    <select value={eventForm.state} onChange={(e) => setEventForm((f) => ({ ...f, state: e.target.value }))} style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                      <option value="">Select…</option>
+                      {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div style={{ padding: "16px", borderRadius: "12px", background: "#f6f5f0", border: "1px solid rgba(11,18,34,0.06)" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Who can see this event?</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                    <button type="button" onClick={() => setEventForm((f) => ({ ...f, visibility: "network" }))} style={{ padding: "12px", borderRadius: "10px", textAlign: "left", border: eventForm.visibility === "network" ? "2px solid #2455ff" : "1px solid rgba(11,18,34,0.08)", background: eventForm.visibility === "network" ? "rgba(36,85,255,0.04)" : "white", cursor: "pointer" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: eventForm.visibility === "network" ? "#2455ff" : "#0b1222" }}>🔒 My Network</div>
+                      <div style={{ fontSize: "11px", color: "#7a8ba8", marginTop: "2px" }}>Only professionals I've added</div>
+                    </button>
+                    <button type="button" onClick={() => setEventForm((f) => ({ ...f, visibility: "public" }))} style={{ padding: "12px", borderRadius: "10px", textAlign: "left", border: eventForm.visibility === "public" ? "2px solid #2455ff" : "1px solid rgba(11,18,34,0.08)", background: eventForm.visibility === "public" ? "rgba(36,85,255,0.04)" : "white", cursor: "pointer" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: eventForm.visibility === "public" ? "#2455ff" : "#0b1222" }}>🌐 Public</div>
+                      <div style={{ fontSize: "11px", color: "#7a8ba8", marginTop: "2px" }}>All professionals in my area</div>
+                    </button>
+                  </div>
+                  {eventForm.visibility === "public" && <p style={{ fontSize: "11px", color: "#3b4963", marginTop: "8px", lineHeight: 1.4 }}>Public events appear for all professionals in your city/state. Make sure the city and state above are filled in.</p>}
+                </div>
+                <button type="submit" disabled={eventSaving} style={{ padding: "12px", borderRadius: "10px", border: "none", background: "#2455ff", color: "white", fontSize: "14px", fontWeight: 700, cursor: eventSaving ? "not-allowed" : "pointer", opacity: eventSaving ? 0.6 : 1, boxShadow: "0 2px 10px rgba(36,85,255,0.18)", fontFamily: "'DM Sans', system-ui, sans-serif" }}>{eventSaving ? "Creating…" : "Create Event"}</button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ── Invite Modal ── */}
+        {inviteModalEvent && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)", padding: "16px" }} onClick={() => !inviteSending && closeInviteModal()}>
+            <div style={{ width: "100%", maxWidth: "560px", background: "white", borderRadius: "16px", padding: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", maxHeight: "92vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
+                <div>
+                  <h3 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "18px", fontWeight: 800, color: "#0b1222", margin: 0 }}>Invite People</h3>
+                  <p style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "4px" }}>{inviteModalEvent.title}</p>
+                </div>
+                <button type="button" onClick={() => !inviteSending && closeInviteModal()} style={{ background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "#7a8ba8", lineHeight: 1 }}>×</button>
+              </div>
+              {inviteResults ? (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ fontSize: "48px", marginBottom: "8px" }}>{inviteResults.failed === 0 ? "✅" : "⚠️"}</div>
+                  <p style={{ fontWeight: 700, color: "#0b1222", fontSize: "16px" }}>{inviteResults.sent} invite{inviteResults.sent !== 1 ? "s" : ""} sent</p>
+                  {inviteResults.failed > 0 && <p style={{ fontSize: "13px", color: "#e8604c", marginTop: "8px" }}>{inviteResults.failed} failed</p>}
+                  <button type="button" onClick={closeInviteModal} style={{ marginTop: "20px", padding: "10px 24px", borderRadius: "10px", border: "none", background: "#2455ff", color: "white", fontSize: "14px", fontWeight: 700, cursor: "pointer" }}>Done</button>
+                </div>
+              ) : (
+                <>
+                  {professionals.length > 0 && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a8ba8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>From Your Network</div>
+                      <div style={{ maxHeight: "200px", overflowY: "auto", border: "1px solid rgba(11,18,34,0.08)", borderRadius: "10px" }}>
+                        {professionals.map((p) => (
+                          <label key={p.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderBottom: "1px solid rgba(11,18,34,0.06)", cursor: "pointer", background: inviteSelectedPros.includes(p.id) ? "rgba(36,85,255,0.04)" : "white" }}>
+                            <input type="checkbox" checked={inviteSelectedPros.includes(p.id)} onChange={(e) => { if (e.target.checked) setInviteSelectedPros((prev) => [...prev, p.id]); else setInviteSelectedPros((prev) => prev.filter((id) => id !== p.id)); }} style={{ accentColor: "#2455ff" }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 600, fontSize: "13px", color: "#0b1222" }}>{p.name}</div>
+                              <div style={{ fontSize: "11px", color: "#7a8ba8" }}>{p.email}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 600, color: "#7a8ba8", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>Invite by Email</div>
+                    {inviteGuestRows.map((row, i) => (
+                      <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 32px", gap: "8px", marginBottom: "6px" }}>
+                        <input type="text" placeholder="Name" value={row.name} onChange={(e) => { const rows = [...inviteGuestRows]; rows[i] = { ...rows[i], name: e.target.value }; setInviteGuestRows(rows); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "13px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                        <input type="email" placeholder="email@example.com" value={row.email} onChange={(e) => { const rows = [...inviteGuestRows]; rows[i] = { ...rows[i], email: e.target.value }; setInviteGuestRows(rows); }} style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid rgba(11,18,34,0.08)", fontSize: "13px", fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box" }} />
+                        <button type="button" onClick={() => setInviteGuestRows(inviteGuestRows.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "#7a8ba8", cursor: "pointer", fontSize: "16px" }}>×</button>
+                      </div>
+                    ))}
+                    <button type="button" onClick={() => setInviteGuestRows([...inviteGuestRows, { name: "", email: "" }])} style={{ fontSize: "12px", color: "#2455ff", background: "none", border: "1px dashed rgba(11,18,34,0.12)", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", marginTop: "4px" }}>+ Add Another</button>
+                  </div>
+                  {(() => {
+                    const total = inviteSelectedPros.length + inviteGuestRows.filter((r) => r.email.trim()).length;
+                    return (
+                      <button type="button" disabled={inviteSending || total === 0} onClick={handleSendInvites} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: "#2455ff", color: "white", fontSize: "14px", fontWeight: 700, cursor: (inviteSending || total === 0) ? "not-allowed" : "pointer", opacity: (inviteSending || total === 0) ? 0.6 : 1, boxShadow: "0 2px 10px rgba(36,85,255,0.18)", fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+                        {inviteSending ? "Sending…" : `Send ${total} Invite${total !== 1 ? "s" : ""}`}
+                      </button>
+                    );
+                  })()}
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
     {repOnboarding && (
       <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)" }}>

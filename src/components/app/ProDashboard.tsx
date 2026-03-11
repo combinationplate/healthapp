@@ -6,6 +6,7 @@ import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./Dashboard
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
+  { id: "events", label: "Events" },
   { id: "network", label: "Network" },
 ] as const;
 
@@ -64,6 +65,11 @@ const [connectedReps, setConnectedReps] = useState<{id: string; name: string}[]>
 const [networkReps, setNetworkReps] = useState<{id: string; name: string; connectedAt: string | null}[]>([]);
 const [networkLoading, setNetworkLoading] = useState(true);
 
+  // ── Events ──
+  const [proEvents, setProEvents] = useState<any[]>([]);
+  const [proEventsLoading, setProEventsLoading] = useState(true);
+  const [rsvpSaving, setRsvpSaving] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     setMyCoursesLoading(true);
@@ -116,6 +122,26 @@ const [networkLoading, setNetworkLoading] = useState(true);
         if (data.reps) setConnectedReps(data.reps);
       });
   }, [userId]);
+
+  useEffect(() => {
+    fetch("/api/pro/events", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (data.events) setProEvents(data.events); setProEventsLoading(false); });
+  }, []);
+
+  async function handleProRsvp(eventId: string, status: "going" | "maybe" | "declined") {
+    setRsvpSaving(eventId);
+    const res = await fetch("/api/events/rsvp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ eventId, status }),
+    });
+    if (res.ok) {
+      setProEvents((prev) => prev.map((e) => e.id === eventId ? { ...e, myRsvp: status } : e));
+    }
+    setRsvpSaving(null);
+  }
 
   useEffect(() => {
     fetch("/api/pro/network", { credentials: "include" })
@@ -379,6 +405,75 @@ const [networkLoading, setNetworkLoading] = useState(true);
 )}
             </SectionCard>
         </div>
+      )}
+
+      {tab === "events" && (
+        <SectionCard>
+          <div className="border-b border-[var(--border)] pb-3 mb-4">
+            <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Upcoming Events</h2>
+            <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Events from your reps and in your area</p>
+          </div>
+          {proEventsLoading ? (
+            <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
+          ) : proEvents.length === 0 ? (
+            <div className="py-8 text-center">
+              <div style={{ fontSize: "48px", marginBottom: "16px" }}>📅</div>
+              <p className="text-sm text-[var(--ink-muted)]">No upcoming events in your area.</p>
+              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">When reps schedule lunch & learns or workshops, they'll appear here.</p>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: "16px" }}>
+              {proEvents.map((evt) => {
+                const typeEmoji: Record<string, string> = { lunch_and_learn: "🍽️", networking_dinner: "🥂", workshop: "📋", in_service: "🏥", other: "📅" };
+                const typeLabel: Record<string, string> = { lunch_and_learn: "Lunch & Learn", networking_dinner: "Networking Dinner", workshop: "Workshop", in_service: "In-Service", other: "Event" };
+                return (
+                  <div key={evt.id} style={{ borderRadius: "14px", border: "1px solid rgba(11,18,34,0.08)", background: "white", padding: "20px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "12px", color: "#7a8ba8" }}>{typeEmoji[evt.eventType] || "📅"} {typeLabel[evt.eventType] || "Event"}</span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: evt.source === "public" ? "rgba(36,85,255,0.08)" : "rgba(13,148,136,0.08)", color: evt.source === "public" ? "#2455ff" : "#0d9488" }}>{evt.source === "public" ? "In Your Area" : "From Your Rep"}</span>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: "16px", color: "#0b1222", lineHeight: 1.3, marginBottom: "4px" }}>{evt.title}</div>
+                    <div style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "12px" }}>Hosted by {evt.repName}{evt.repOrg ? ` · ${evt.repOrg}` : ""}</div>
+                    <div style={{ background: "#f6f5f0", borderRadius: "10px", padding: "14px", marginBottom: "14px", fontSize: "13px", color: "#3b4963", display: "grid", gap: "4px" }}>
+                      <div>📅 {new Date(evt.startsAt).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} at {new Date(evt.startsAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}</div>
+                      <div>⏱ {evt.durationMinutes} min</div>
+                      {evt.locationName && <div>📍 {evt.locationName}{evt.address ? ` · ${evt.address}` : ""}</div>}
+                    </div>
+                    {evt.description && <p style={{ fontSize: "13px", color: "#3b4963", lineHeight: 1.6, marginBottom: "14px" }}>{evt.description}</p>}
+                    {evt.externalUrl && (
+                      <div style={{ marginBottom: "14px" }}>
+                        <a href={evt.externalUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#2455ff", fontWeight: 600, textDecoration: "none", padding: "8px 16px", borderRadius: "8px", border: "1px solid rgba(36,85,255,0.15)", background: "rgba(36,85,255,0.04)" }}>🔗 View Details & Sign Up →</a>
+                      </div>
+                    )}
+                    {evt.myRsvp === "going" ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(13,148,136,0.10)", color: "#0d9488", padding: "6px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 700 }}>✓ You're going</span>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "declined")} disabled={rsvpSaving === evt.id} style={{ fontSize: "12px", color: "#7a8ba8", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Cancel</button>
+                      </div>
+                    ) : evt.myRsvp === "maybe" ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ background: "rgba(217,119,6,0.08)", color: "#92670A", padding: "6px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 700 }}>Maybe</span>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "going")} disabled={rsvpSaving === evt.id} style={{ fontSize: "12px", color: "#0d9488", background: "none", border: "none", cursor: "pointer", textDecoration: "underline", fontWeight: 600 }}>Confirm</button>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "declined")} disabled={rsvpSaving === evt.id} style={{ fontSize: "12px", color: "#7a8ba8", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}>Decline</button>
+                      </div>
+                    ) : evt.myRsvp === "declined" ? (
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ background: "rgba(11,18,34,0.06)", color: "#7a8ba8", padding: "6px 14px", borderRadius: "999px", fontSize: "12px", fontWeight: 700 }}>Declined</span>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "going")} disabled={rsvpSaving === evt.id} style={{ fontSize: "12px", color: "#2455ff", background: "none", border: "none", cursor: "pointer", textDecoration: "underline", fontWeight: 600 }}>Changed your mind?</button>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "going")} disabled={rsvpSaving === evt.id} style={{ padding: "10px 24px", borderRadius: "10px", border: "none", background: "#2455ff", color: "white", fontSize: "13px", fontWeight: 700, cursor: rsvpSaving === evt.id ? "not-allowed" : "pointer", opacity: rsvpSaving === evt.id ? 0.6 : 1, boxShadow: "0 2px 10px rgba(36,85,255,0.18)" }}>I'll Be There</button>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "maybe")} disabled={rsvpSaving === evt.id} style={{ padding: "10px 16px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", background: "white", color: "#3b4963", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Maybe</button>
+                        <button type="button" onClick={() => handleProRsvp(evt.id, "declined")} disabled={rsvpSaving === evt.id} style={{ padding: "10px 16px", borderRadius: "10px", border: "1px solid rgba(11,18,34,0.08)", background: "white", color: "#7a8ba8", fontSize: "13px", fontWeight: 600, cursor: "pointer" }}>Decline</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </SectionCard>
       )}
 
       {tab === "network" && (
