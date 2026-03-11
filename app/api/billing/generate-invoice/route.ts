@@ -378,3 +378,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
+
+// GET handler for Vercel Cron
+// Vercel Cron jobs call GET with Authorization: Bearer <CRON_SECRET>
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Convert to POST internally — bill prior month (no params = default)
+  const internalRequest = new Request(request.url, {
+    method: "POST",
+    headers: request.headers,
+  });
+
+  return POST(internalRequest);
+}
