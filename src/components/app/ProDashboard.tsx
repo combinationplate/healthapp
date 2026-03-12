@@ -542,11 +542,11 @@ const [networkLoading, setNetworkLoading] = useState(true);
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
           <div>
             <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>City</label>
-            <input type="text" value={onboardingForm.city} onChange={e => setOnboardingForm(f => ({...f, city: e.target.value}))} placeholder="Houston" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+            <input type="text" required value={onboardingForm.city} onChange={e => setOnboardingForm(f => ({...f, city: e.target.value}))} placeholder="Houston" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
           </div>
           <div>
             <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>State</label>
-            <select value={onboardingForm.state} onChange={e => setOnboardingForm(f => ({...f, state: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+            <select required value={onboardingForm.state} onChange={e => setOnboardingForm(f => ({...f, state: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
               <option value="">Select...</option>
               {["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
