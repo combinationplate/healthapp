@@ -16,11 +16,17 @@ export default function ResetPasswordPage() {
   const [validSession, setValidSession] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+    // Check if there's already a session (PKCE may have exchanged before listener mounted)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setValidSession(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
         setValidSession(true);
       }
     });
+
     return () => subscription.unsubscribe();
   }, [supabase]);
 
