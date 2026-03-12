@@ -309,8 +309,8 @@ export function StateApprovals() {
           <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>📋</span>
           <p style={{ margin: 0, fontSize: "13px", color: "#3b4963", lineHeight: 1.6 }}>
             <strong style={{ color: "#0b1222" }}>PT, OT & SLP:</strong>{" "}
-            Currently certified in Texas through the relevant state licensing boards.
-            Courses are expanding to additional states through reciprocity agreements — check back as new states are added.
+            Currently approved in Texas — PT through <strong style={{ color: "#0b1222" }}>TPTA</strong> (Texas Physical Therapy Association), OT through the Texas OT Board, and SLP through the Texas SLP Board.
+            Expanding to additional states via reciprocity — check back as new states are added.
           </p>
         </div>
       )}

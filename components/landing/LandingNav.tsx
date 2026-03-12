@@ -74,6 +74,14 @@ export default function LandingNav() {
                 For Sales Teams
               </Link>
             </li>
+            <li>
+              <Link
+                href="/accreditation"
+                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+              >
+                Accreditation
+              </Link>
+            </li>
           </ul>
           <div className="flex items-center gap-2.5">
             <Link

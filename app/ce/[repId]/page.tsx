@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { AccreditationInline } from "@/src/components/AccreditationStrip";
 
 const DISCIPLINES = ["Nursing", "Social Work", "Case Management", "PT", "OT", "ST"];
 
@@ -193,6 +194,9 @@ export default function CELandingPage() {
               Sent by {repInfo.name}{repInfo.company ? ` · ${repInfo.company}` : ""}
             </p>
           )}
+          <div style={{ marginTop: "28px" }}>
+            <AccreditationInline />
+          </div>
         </div>
       </div>
     );
@@ -456,6 +460,14 @@ export default function CELandingPage() {
           }}>
             No account required. Course delivered by email.
           </p>
+
+          <div style={{
+            borderTop: `1px solid ${ds.border}`,
+            paddingTop: "16px",
+            marginTop: "4px",
+          }}>
+            <AccreditationInline />
+          </div>
         </form>
       </div>
     </div>

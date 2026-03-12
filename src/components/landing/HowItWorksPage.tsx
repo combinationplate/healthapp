@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { AccreditationStrip } from "../AccreditationStrip";
 
 /* ── Design tokens ──────────────────────────────────────────── */
 const ds = {
@@ -262,6 +263,21 @@ export default function HowItWorksPage() {
               ← Home
             </a>
             <a
+              href="/accreditation"
+              style={{
+                padding: "8px 20px",
+                borderRadius: ds.r,
+                border: `1px solid ${ds.border}`,
+                background: "transparent",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: ds.inkSoft,
+                textDecoration: "none",
+              }}
+            >
+              Accreditation
+            </a>
+            <a
               href="/login"
               style={{
                 padding: "8px 20px",
@@ -517,6 +533,9 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+
+      {/* ══════════════ ACCREDITATION STRIP ══════════════ */}
+      <AccreditationStrip />
 
       {/* ══════════════ FOR SALES TEAMS ══════════════ */}
       <section id="for-sales-teams" style={{ padding: "100px 0", background: ds.white }}>
@@ -898,6 +917,10 @@ export default function HowItWorksPage() {
             ·{" "}
             <a href="/how-it-works" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
               How It Works
+            </a>{" "}
+            ·{" "}
+            <a href="/accreditation" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
+              Accreditation
             </a>
           </p>
         </div>

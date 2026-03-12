@@ -5,6 +5,7 @@ import Distribution from "@/components/landing/Distribution";
 import ProblemSolution from "@/components/landing/ProblemSolution";
 import StatsBanner from "@/components/landing/StatsBanner";
 import HCPSection from "@/components/landing/HCPSection";
+import { AccreditationStrip } from "@/src/components/AccreditationStrip";
 import FinalCTA from "@/components/landing/FinalCTA";
 import Footer from "@/components/landing/Footer";
 import LandingModals from "@/components/landing/LandingModals";
@@ -20,6 +21,7 @@ export default function Home() {
         <ProblemSolution />
         <StatsBanner />
         <HCPSection />
+        <AccreditationStrip />
         <FinalCTA />
       </main>
       <Footer />

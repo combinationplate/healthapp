@@ -63,7 +63,7 @@ const DISCIPLINES = [
     color: "#e8604c",
     bg: "rgba(232,96,76,0.07)",
     icon: "💪",
-    detail: "Texas-approved through the Texas PT Board. Expanding to additional states via reciprocity.",
+    detail: "Texas-approved through TPTA (Texas Physical Therapy Association). Expanding to additional states via reciprocity.",
   },
   {
     name: "Occupational Therapy",
