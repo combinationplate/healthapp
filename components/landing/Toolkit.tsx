@@ -34,8 +34,6 @@ const cards = [
     icon: "📅",
     title: "Event Management",
     desc: "Invite professionals in your network to lunch-and-learns, in-services, and CE workshops. Manage RSVPs, send reminders, and pair events with free CE courses.",
-    tag: "Coming Soon",
-    tagClass: "bg-[rgba(232,96,76,.08)] text-coral",
   },
   {
     accent: "coral",

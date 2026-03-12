@@ -1,78 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
-/* ── Accreditation badge data ─────────────────────────────────── */
+/* ── Accreditation badge data (text-only until logo files are in place) ── */
 const BADGES = [
-  {
-    abbr: "ANCC",
-    full: "American Nurses Credentialing Center",
-    discipline: "Nursing",
-    color: "#2455ff",
-    bg: "rgba(36,85,255,0.08)",
-    logo: "/logos/ancc.png",
-  },
-  {
-    abbr: "ASWB/ACE",
-    full: "Approved Continuing Education — Assoc. of Social Work Boards",
-    discipline: "Social Work",
-    color: "#0d9488",
-    bg: "rgba(13,148,136,0.08)",
-    logo: "/logos/aswb.png",
-  },
-  {
-    abbr: "CCMC",
-    full: "Commission for Case Manager Certification",
-    discipline: "Case Mgmt",
-    color: "#92670A",
-    bg: "rgba(146,103,10,0.08)",
-  },
-  {
-    abbr: "TPTA",
-    full: "Texas Physical Therapy Association",
-    discipline: "PT (TX)",
-    color: "#e8604c",
-    bg: "rgba(232,96,76,0.08)",
-  },
-  {
-    abbr: "AOTA",
-    full: "American Occupational Therapy Association",
-    discipline: "OT",
-    color: "#7c3aed",
-    bg: "rgba(139,92,246,0.08)",
-  },
-  {
-    abbr: "ASHA",
-    full: "American Speech-Language-Hearing Association",
-    discipline: "SLP",
-    color: "#059669",
-    bg: "rgba(16,185,129,0.08)",
-  },
-] as const;
+  { label: "ANCC", full: "Nursing", color: "#2455ff", bg: "rgba(36,85,255,0.08)" },
+  { label: "ACE/ASWB", full: "Social Work", color: "#0d9488", bg: "rgba(13,148,136,0.08)" },
+  { label: "CCMC", full: "Case Mgmt", color: "#92670A", bg: "rgba(146,103,10,0.08)" },
+  { label: "TPTA", full: "PT (TX)", color: "#e8604c", bg: "rgba(232,96,76,0.08)" },
+  { label: "AOTA", full: "OT", color: "#7c3aed", bg: "rgba(139,92,246,0.08)" },
+  { label: "ASHA", full: "SLP", color: "#059669", bg: "rgba(16,185,129,0.08)" },
+];
 
-/* ── Badge pill (shared by both components) ─────────────────────── */
+/* ── Badge pill (text only) ───────────────────────────────────────── */
 type BadgePillProps = {
-  abbr: string;
+  label: string;
   full: string;
-  discipline: string;
   color: string;
   bg: string;
-  logo?: string;
   size?: "sm" | "md";
 };
 
-function BadgePill({
-  abbr,
-  full,
-  discipline,
-  color,
-  bg,
-  logo,
-  size = "md",
-}: BadgePillProps) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const showLogo = logo && !imgFailed;
-
+function BadgePill({ label, full, color, bg, size = "md" }: BadgePillProps) {
   return (
     <div
       title={full}
@@ -88,30 +37,17 @@ function BadgePill({
         cursor: "default",
       }}
     >
-      {showLogo ? (
-        <img
-          src={logo}
-          alt={abbr}
-          onError={() => setImgFailed(true)}
-          style={{
-            height: size === "sm" ? "14px" : "18px",
-            width: "auto",
-            objectFit: "contain",
-          }}
-        />
-      ) : (
-        <span
-          style={{
-            fontSize: size === "sm" ? "10px" : "11px",
-            fontWeight: 800,
-            color,
-            letterSpacing: "0.03em",
-            fontFamily: "'DM Sans', system-ui, sans-serif",
-          }}
-        >
-          {abbr}
-        </span>
-      )}
+      <span
+        style={{
+          fontSize: size === "sm" ? "10px" : "11px",
+          fontWeight: 800,
+          color,
+          letterSpacing: "0.03em",
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {label}
+      </span>
       <span
         style={{
           fontSize: size === "sm" ? "10px" : "11px",
@@ -120,7 +56,7 @@ function BadgePill({
           fontFamily: "'DM Sans', system-ui, sans-serif",
         }}
       >
-        {discipline}
+        {full}
       </span>
     </div>
   );
@@ -200,7 +136,7 @@ export function AccreditationStrip() {
           }}
         >
           {BADGES.map((b) => (
-            <BadgePill key={b.abbr} {...b} size="md" />
+            <BadgePill key={b.label} {...b} size="md" />
           ))}
         </div>
 
@@ -257,7 +193,7 @@ export function AccreditationInline() {
         CE credits approved by:
       </span>
       {BADGES.map((b) => (
-        <BadgePill key={b.abbr} {...b} size="sm" />
+        <BadgePill key={b.label} {...b} size="sm" />
       ))}
       <a
         href="/accreditation"

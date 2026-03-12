@@ -35,13 +35,13 @@ const DISCIPLINES = [
   {
     name: "Social Work",
     shortName: "MSW / LCSW",
-    accreditor: "NASW",
-    accreditorFull: "National Association of Social Workers",
+    accreditor: "ACE/ASWB",
+    accreditorFull: "Approved Continuing Education — Association of Social Work Boards",
     hours: "CE Hours",
     color: "#0d9488",
     bg: "rgba(13,148,136,0.07)",
     icon: "🤝",
-    detail: "Approved for NASW CE credit, accepted by social work licensing boards in all 50 states.",
+    detail: "Approved for ACE/ASWB CE credit, accepted by social work licensing boards in all 50 states.",
   },
   {
     name: "Case Management",
@@ -262,7 +262,7 @@ export default function AccreditationPage() {
               { label: "6 Disciplines", sub: "all major healthcare professions" },
               { label: "Free to Clinicians", sub: "paid for by sponsoring reps" },
               { label: "Instant Certificate", sub: "emailed on completion" },
-              { label: "Nationally Accredited", sub: "ANCC, NASW, CCMC & more" },
+              { label: "Nationally Accredited", sub: "ANCC, ACE/ASWB, CCMC & more" },
             ].map((item) => (
               <div key={item.label} style={{ textAlign: "center" }}>
                 <div style={{ fontWeight: 800, fontSize: "15px", color: ds.ink }}>{item.label}</div>
