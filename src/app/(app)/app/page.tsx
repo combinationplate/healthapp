@@ -21,8 +21,17 @@ export default async function AppPage() {
   if (!profile) {
     const role = roleFromMetadata(user.user_metadata);
     const fullName = (user.user_metadata?.full_name as string) ?? "";
+    const meta = user.user_metadata ?? {};
     await supabase.from("profiles").upsert(
-      { id: user.id, role, full_name: fullName, updated_at: new Date().toISOString() },
+      {
+        id: user.id,
+        role,
+        full_name: fullName,
+        city: (meta.city as string) ?? null,
+        state: (meta.state as string) ?? null,
+        discipline: (meta.discipline as string) ?? null,
+        updated_at: new Date().toISOString(),
+      },
       { onConflict: "id" }
     );
     profile = { id: user.id, role, full_name: fullName };

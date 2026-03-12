@@ -5,21 +5,27 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
+
 export default function SignupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const typeParam = searchParams.get("type") ?? "hcp"; // hcp | sales | manager
+  const typeParam = searchParams.get("type") ?? "hcp";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState<"manager" | "rep" | "professional">(
     typeParam === "sales" ? "rep" : typeParam === "manager" ? "manager" : "professional"
   );
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [discipline, setDiscipline] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
   const isSales = role === "rep";
   const isManager = role === "manager";
+  const isPro = role === "professional";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -27,11 +33,23 @@ export default function SignupPage() {
     setMessage(null);
     const supabase = createClient();
     const accountType = role === "rep" ? "sales" : role === "manager" ? "manager" : "hcp";
+
+    const metadata: Record<string, string> = {
+      full_name: fullName,
+      account_type: accountType,
+      role,
+    };
+    if (isPro) {
+      if (city.trim()) metadata.city = city.trim().replace(/\b\w/g, c => c.toUpperCase());
+      if (state) metadata.state = state;
+      if (discipline) metadata.discipline = discipline;
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName, account_type: accountType, role },
+        data: metadata,
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
       },
     });
@@ -58,7 +76,7 @@ export default function SignupPage() {
             ? "Lead your team with visibility and tools."
             : isSales
             ? "See how Pulse helps your sales team win more referrals."
-            : "Get free CE courses, event invites, career opportunities, and local rep connections."}
+            : "Get free CE courses, event invites, and local rep connections."}
         </p>
         <div className="mb-4">
           <label className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">I am a</label>
@@ -110,6 +128,58 @@ export default function SignupPage() {
               className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
             />
           </div>
+
+          {/* Professional-only fields */}
+          {isPro && (
+            <>
+              <div>
+                <label htmlFor="discipline" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">Discipline</label>
+                <select
+                  id="discipline"
+                  value={discipline}
+                  onChange={(e) => setDiscipline(e.target.value)}
+                  required
+                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                >
+                  <option value="">Select…</option>
+                  <option value="Nursing">Nursing</option>
+                  <option value="Social Work">Social Work</option>
+                  <option value="Case Mgmt">Case Management</option>
+                  <option value="PT">Physical Therapy</option>
+                  <option value="OT">Occupational Therapy</option>
+                  <option value="SLP">Speech-Language Pathology</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="city" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">City</label>
+                  <input
+                    id="city"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    required
+                    placeholder="Houston"
+                    className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="state" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">State</label>
+                  <select
+                    id="state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    required
+                    className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                  >
+                    <option value="">Select…</option>
+                    {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
           {message && (
             <p className={`text-sm ${message.type === "error" ? "text-[var(--coral)]" : "text-[var(--teal)]"}`}>
               {message.text}
