@@ -681,25 +681,25 @@ export default function HowItWorksPage() {
                   Free
                 </div>
                 <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>to get started</div>
+            </div>
+            <div style={{ borderRadius: ds.rLg, background: "rgba(36,85,255,0.05)", padding: "24px" }}>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  color: ds.inkMuted,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  marginBottom: "8px",
+                }}
+              >
+                CE Courses
               </div>
-              <div style={{ borderRadius: ds.rLg, background: "rgba(36,85,255,0.05)", padding: "24px" }}>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: ds.inkMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: "8px",
-                  }}
-                >
-                  CE Courses
-                </div>
-                <div style={{ fontFamily: ds.fontDisplay, fontSize: "36px", fontWeight: 900, color: ds.blue }}>
-                  Per Send
-                </div>
-                <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>standard course pricing</div>
+              <div style={{ fontFamily: ds.fontDisplay, fontSize: "36px", fontWeight: 900, color: ds.blue }}>
+                $15
               </div>
+              <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>per 1-hour CE course</div>
+            </div>
             </div>
 
             {/* Feature list */}
@@ -741,18 +741,17 @@ export default function HowItWorksPage() {
 
             {/* Course pricing note */}
             <div style={{ borderTop: `1px solid ${ds.border}`, paddingTop: "24px", marginBottom: "24px" }}>
+              <p style={{ fontSize: "14px", fontWeight: 700, color: ds.ink, marginBottom: "8px" }}>
+                How billing works:
+              </p>
+              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
+                You&apos;re only charged when a professional actually accesses their course — not when you send it. If you send 50 CEs and 30 are opened, you pay for 30. Sending a CE, generating a QR code, or creating a flyer is always free.
+              </p>
+              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
+                CE courses start at <strong style={{ color: ds.ink }}>$15 per 1-hour course</strong>. Multi-hour courses are priced per credit hour. Your company receives a monthly invoice based on actual usage.
+              </p>
               <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7 }}>
-                CE courses are priced individually based on credit hours — same pricing as{" "}
-                <a
-                  href="https://hiscornerstone.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: ds.blue, textDecoration: "none", fontWeight: 600 }}
-                >
-                  HISCornerstone.com
-                </a>
-                . Your company is invoiced monthly based on usage. Professionals always receive
-                courses at no cost to them.
+                Professionals never pay anything. The cost is covered by your company as a business development investment — typically a fraction of what a single lunch &amp; learn costs.
               </p>
             </div>
 
@@ -821,7 +820,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="How do sales teams pay?"
-              a="The platform is free to get started — no per-seat fees. CE courses are priced per send based on credit hours, the same rates as HISCornerstone.com. Your company receives a monthly invoice based on usage. During early access, we're offering complimentary CE sends to help you get started."
+              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE. Your company receives a monthly invoice based on actual usage. During early access, all CE sends are complimentary."
             />
             <FaqItem
               q="Can I use this for my whole team?"

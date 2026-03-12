@@ -77,9 +77,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li className="mb-2">
-                <Link href="#" className="text-[14px] text-white/65 hover:text-white">
+                <a
+                  href="mailto:hello@pulsereferrals.com?subject=Question%20about%20Pulse"
+                  className="text-[14px] text-white/65 hover:text-white"
+                >
                   Contact
-                </Link>
+                </a>
               </li>
               <li className="mb-2">
                 <Link href="#" className="text-[14px] text-white/65 hover:text-white">
