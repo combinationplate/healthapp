@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 
-const ALL_DISCIPLINES = ["Nursing", "Social Work", "Case Management", "PT", "OT", "SLP"] as const;
+const ALL_DISCIPLINES = ["Nursing", "Social Work", "Case Management", "PT", "OT", "ST"] as const;
 type Discipline = (typeof ALL_DISCIPLINES)[number];
 
 const DISCIPLINE_COLORS: Record<Discipline, { bg: string; text: string; activeBg: string; activeText: string }> = {
@@ -11,12 +11,12 @@ const DISCIPLINE_COLORS: Record<Discipline, { bg: string; text: string; activeBg
   "Case Management":{ bg: "rgba(146,103,10,0.07)",  text: "#92670A",  activeBg: "#92670A",  activeText: "#fff" },
   "PT":             { bg: "rgba(232,96,76,0.07)",   text: "#e8604c",  activeBg: "#e8604c",  activeText: "#fff" },
   "OT":             { bg: "rgba(139,92,246,0.07)",  text: "#7c3aed",  activeBg: "#7c3aed",  activeText: "#fff" },
-  "SLP":            { bg: "rgba(16,185,129,0.07)",  text: "#059669",  activeBg: "#059669",  activeText: "#fff" },
+  "ST":             { bg: "rgba(16,185,129,0.07)",  text: "#059669",  activeBg: "#059669",  activeText: "#fff" },
 };
 
 const SHORT_LABELS: Record<Discipline, string> = {
   "Nursing": "Nursing", "Social Work": "Social Work",
-  "Case Management": "Case Mgmt", "PT": "PT", "OT": "OT", "SLP": "SLP",
+  "Case Management": "Case Mgmt", "PT": "PT", "OT": "OT", "ST": "SLP",
 };
 
 type Row = { profession: string; state: string };
@@ -295,7 +295,7 @@ export function StateApprovals() {
       )}
 
       {/* PT/OT/SLP expansion note */}
-      {(!activeFilter || ["PT", "OT", "SLP"].includes(activeFilter)) && !loading && !error && (
+      {(!activeFilter || ["PT", "OT", "ST"].includes(activeFilter)) && !loading && !error && (
         <div style={{
           marginTop: "20px",
           padding: "16px 20px",
