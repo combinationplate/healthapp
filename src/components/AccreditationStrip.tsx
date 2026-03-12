@@ -51,6 +51,16 @@ const BADGES = [
 ] as const;
 
 /* ── Badge pill (shared by both components) ─────────────────────── */
+type BadgePillProps = {
+  abbr: string;
+  full: string;
+  discipline: string;
+  color: string;
+  bg: string;
+  logo?: string;
+  size?: "sm" | "md";
+};
+
 function BadgePill({
   abbr,
   full,
@@ -59,7 +69,7 @@ function BadgePill({
   bg,
   logo,
   size = "md",
-}: (typeof BADGES)[number] & { size?: "sm" | "md" }) {
+}: BadgePillProps) {
   const [imgFailed, setImgFailed] = useState(false);
   const showLogo = logo && !imgFailed;
 
