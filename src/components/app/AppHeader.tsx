@@ -5,7 +5,7 @@ import Link from "next/link";
 type Props = {
   displayName: string;
   roleLabel: string | null;
-  onSwitchRole: () => void;
+  onSwitchRole?: () => void;
 };
 
 export function AppHeader({ displayName, roleLabel, onSwitchRole }: Props) {
@@ -17,10 +17,20 @@ export function AppHeader({ displayName, roleLabel, onSwitchRole }: Props) {
           Pulse
         </Link>
         <nav className="flex items-center gap-3">
-          {displayName && <span className="text-sm font-medium text-[var(--ink)] hidden sm:inline">{displayName}</span>}
-          <button type="button" onClick={onSwitchRole} className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink-soft)] underline">
-            Switch role
-          </button>
+          {displayName && (
+            <span className="hidden text-sm font-medium text-[var(--ink)] sm:inline">
+              {displayName}
+            </span>
+          )}
+          {onSwitchRole && (
+            <button
+              type="button"
+              onClick={onSwitchRole}
+              className="text-sm text-[var(--ink-muted)] underline hover:text-[var(--ink-soft)]"
+            >
+              Switch role
+            </button>
+          )}
           {roleLabel && (
             <span className="rounded-lg bg-[var(--blue-glow)] px-3 py-1.5 text-xs font-semibold text-[var(--blue)]">
               {roleLabel}
