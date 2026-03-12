@@ -14,6 +14,22 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
 
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  async function handleForgotPassword() {
+    if (!resetEmail) return;
+    setResetLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetLoading(false);
+    if (!error) setResetSent(true);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -83,6 +99,51 @@ function LoginForm() {
           >
             {loading ? "Signing in…" : "Continue"}
           </button>
+          {!showReset ? (
+            <button
+              type="button"
+              onClick={() => setShowReset(true)}
+              className="text-sm text-[var(--blue)] hover:underline mt-2 block"
+            >
+              Forgot password?
+            </button>
+          ) : (
+            <div className="mt-4 p-4 rounded-[var(--r)] border border-[var(--border)] bg-[var(--cream)]">
+              <p className="text-sm font-semibold text-[var(--ink)] mb-2">Reset your password</p>
+              {resetSent ? (
+                <p className="text-sm text-[var(--teal)]">
+                  Check your email for a reset link.
+                </p>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm mb-2 focus:border-[var(--blue)] focus:outline-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={resetLoading}
+                      className="text-sm rounded-[var(--r)] bg-[var(--blue)] text-white px-4 py-2 font-semibold hover:bg-[var(--blue-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resetLoading ? "Sending…" : "Send reset link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowReset(false)}
+                      className="text-sm text-[var(--ink-muted)] hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </form>
         <p className="mt-6 text-center text-sm text-[var(--ink-soft)]">
           Don&apos;t have an account?{" "}
