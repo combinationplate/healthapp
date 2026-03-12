@@ -9,8 +9,7 @@ export async function GET() {
   const userEmail = (user.email ?? "").toLowerCase();
 
   // Find all professional records for this user (one per rep they're
-  // connected to). This gives us: which reps they know, and their
-  // city/state for public event matching.
+  // connected to). This gives us: which reps they know.
   const { data: proRecords } = await supabase
     .from("professionals")
     .select("id, city, state, rep_id")
@@ -21,9 +20,16 @@ export async function GET() {
     ...new Set((proRecords ?? []).map((p: any) => p.rep_id)),
   ];
 
-  // Use the first record's location for public event matching.
-  const proCity = proRecords?.[0]?.city ?? null;
-  const proState = proRecords?.[0]?.state ?? null;
+  // Get city/state from profiles (self-signup pros store location here).
+  // Fall back to professionals table if profiles doesn't have it.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("city, state")
+    .eq("id", user.id)
+    .single();
+
+  const proState = profile?.state ?? proRecords?.[0]?.state ?? null;
+  const proCity = profile?.city ?? proRecords?.[0]?.city ?? null;
 
   const now = new Date().toISOString();
   const allEvents: any[] = [];

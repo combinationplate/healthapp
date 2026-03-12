@@ -20,12 +20,13 @@ export async function POST(request: Request) {
   if (user) {
     // Match by email — a professional might have multiple records
     // (one per rep), so just grab the first to use as the RSVP identity
+    // Try professionals table first (rep-added contacts)
     const { data: pro } = await supabase
       .from("professionals")
       .select("id")
       .ilike("email", user.email ?? "")
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (pro) professionalId = pro.id;
   }
