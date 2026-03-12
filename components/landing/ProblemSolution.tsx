@@ -27,7 +27,7 @@ export default function ProblemSolution() {
               The Problem
             </p>
             <h2 className="mt-5 font-serif text-[clamp(28px,3.5vw,40px)] font-extrabold leading-tight tracking-[-.02em]">
-              Healthcare Marketing Is Manual, Fragmented, and Hard to Track
+              Your Reps Spend $500 per Lunch. What Do They Get Back?
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
               Your reps know that providing free CEs builds referral relationships

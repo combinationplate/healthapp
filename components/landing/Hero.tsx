@@ -10,10 +10,10 @@ export default function Hero() {
       <Container className="relative z-10">
         <div className="mx-auto max-w-[860px] text-center">
           <div className="mb-7 inline-flex items-center gap-2 rounded-[40px] border border-[var(--border)] bg-white px-5 py-2 text-[13px] font-semibold text-ink-soft shadow-[0_2px_12px_rgba(0,0,0,.04)]">
-            <span className="font-bold text-teal">Free</span> Nationally accredited CE courses for nurses, social workers &amp; therapists
+            <span className="font-bold text-teal">Free</span> Nationally accredited CE courses for nurses, social workers, case managers &amp; therapists
           </div>
           <h1 className="mb-6 font-serif text-[clamp(38px,5.5vw,68px)] font-black leading-[1.08] tracking-[-.03em]">
-            Free CEs for Professionals.<br /><em className="italic text-teal">Referrals</em> for Sales Teams.
+            Free CEs for Healthcare Pros.<br /><em className="italic text-teal">Referrals</em> for Sales Teams.
           </h1>
           <p className="mx-auto mb-10 max-w-[680px] text-[19px] leading-[1.7] text-ink-soft">
             Every nurse, social worker, and case manager needs continuing education — but most facilities don&apos;t pay for it. Pulse gives healthcare professionals free, nationally accredited CE courses, and gives hospice, home health, and rehab sales teams the referral relationships that come with providing them.
