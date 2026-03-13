@@ -34,6 +34,20 @@ export default async function AppPage() {
       },
       { onConflict: "id" }
     );
+
+    // Notify + enroll in drip
+    const origin = process.env.NEXT_PUBLIC_APP_URL || "https://pulsereferrals.com";
+    fetch(`${origin}/api/drip/enroll`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        fullName,
+        role,
+      }),
+    }).catch(() => {});
+
     profile = { id: user.id, role, full_name: fullName };
   }
 
