@@ -22,7 +22,7 @@ export default function HomePage() {
               href="/signup?type=sales"
               className="inline-flex items-center gap-2 rounded-[var(--r)] bg-[var(--blue)] px-9 py-4 text-base font-bold text-white shadow-[0_4px_24px_rgba(36,85,255,.25)] transition-all hover:bg-[var(--blue-dark)] hover:-translate-y-0.5 hover:shadow-[0_8px_32px_rgba(36,85,255,.3)]"
             >
-              Request a Demo
+              Get Started Free
             </Link>
             <Link
               href="/#professionals"
@@ -179,7 +179,7 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <Link href="/signup?type=sales" className="inline-flex items-center gap-2 rounded-[var(--r)] bg-[var(--blue)] px-9 py-4 text-base font-bold text-white shadow-[0_4px_24px_rgba(36,85,255,.25)] hover:bg-[var(--blue-dark)] hover:-translate-y-0.5">Request a Demo</Link>
+              <Link href="/signup?type=sales" className="inline-flex items-center gap-2 rounded-[var(--r)] bg-[var(--blue)] px-9 py-4 text-base font-bold text-white shadow-[0_4px_24px_rgba(36,85,255,.25)] hover:bg-[var(--blue-dark)] hover:-translate-y-0.5">Get Started Free</Link>
             </div>
           </div>
         </div>
@@ -260,7 +260,7 @@ export default function HomePage() {
               <span className="mb-3 block text-[40px]">💼</span>
               <h3 className="text-xl font-extrabold text-[var(--ink)] mb-2">Sales Teams & Managers</h3>
               <p className="mb-6 text-sm text-[var(--ink-soft)] leading-relaxed">The complete marketing toolkit — CE distribution, QR field tools, events, tracking, discovery, gamification, and analytics.</p>
-              <Link href="/signup?type=sales" className="inline-flex w-full justify-center rounded-[var(--r)] bg-[var(--blue)] px-9 py-4 text-base font-bold text-white transition-all hover:bg-[var(--blue-dark)]">Request a Demo</Link>
+              <Link href="/signup?type=sales" className="inline-flex w-full justify-center rounded-[var(--r)] bg-[var(--blue)] px-9 py-4 text-base font-bold text-white transition-all hover:bg-[var(--blue-dark)]">Get Started Free</Link>
             </div>
             <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
               <span className="mb-3 block text-[40px]">🧑‍⚕️</span>

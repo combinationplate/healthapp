@@ -69,7 +69,7 @@ export default function SignupPage() {
       <div className="w-full max-w-[400px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 shadow-lg">
         <div className="mb-6 flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">
           <svg width={32} height={22} viewBox="0 0 36 24"><path className="heartbeat-path" d="M0 12 L8 12 L11 4 L15 20 L19 8 L22 14 L25 12 L36 12" fill="none" stroke="#2455FF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-          {isManager ? "Manager Sign Up" : isSales ? "Request a Demo" : "Create Free Account"}
+          {isManager ? "Manager Sign Up" : isSales ? "Get Started Free" : "Create Free Account"}
         </div>
         <p className="mb-4 text-sm text-[var(--ink-muted)]">
           {isManager
@@ -192,7 +192,7 @@ export default function SignupPage() {
               isManager ? "bg-[var(--coral)] hover:opacity-90" : isSales ? "bg-[var(--blue)] hover:bg-[var(--blue-dark)]" : "bg-[var(--teal)] hover:bg-[var(--teal-dark)]"
             }`}
           >
-            {loading ? "Creating account…" : isManager ? "Create Account" : isSales ? "Request Demo" : "Create Free Account"}
+            {loading ? "Creating account…" : isManager ? "Create Account" : isSales ? "Get Started Free" : "Create Free Account"}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-[var(--ink-soft)]">
