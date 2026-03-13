@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export type ProfileRole = "manager" | "rep" | "professional";
 
@@ -11,13 +11,15 @@ export interface Profile {
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  const admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+  const { data, error } = await admin
     .from("profiles")
     .select("id, role, full_name, created_at, updated_at")
     .eq("id", userId)
     .single();
-
   if (error || !data) return null;
   return data as Profile;
 }
