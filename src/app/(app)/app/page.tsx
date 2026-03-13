@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import { AppDashboard } from "@/components/app/AppDashboard";
 import { getProfile } from "@/lib/supabase/getProfile";
 import type { ProfileRole } from "@/lib/supabase/getProfile";
@@ -18,10 +20,8 @@ export default async function AppPage() {
   if (!user) return null;
 
   let profile = await getProfile(user.id);
-  let isNewUser = false;
 
   if (!profile) {
-    isNewUser = true;
     const role = roleFromMetadata(user.user_metadata);
     const fullName = (user.user_metadata?.full_name as string) ?? "";
     const meta = user.user_metadata ?? {};
@@ -40,20 +40,17 @@ export default async function AppPage() {
     profile = { id: user.id, role, full_name: fullName };
   }
 
-  // Enroll in drip + notify (inline, no fetch needed)
-  console.log("DRIP: starting enrollment for", user.email, profile.role);
+  // Enroll in drip + notify
   try {
-    const { createClient: createAdmin } = await import("@supabase/supabase-js");
-    const admin = createAdmin(
+    const admin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    const dripSequence =
-      profile.role === "rep"
-        ? "rep_welcome"
-        : profile.role === "manager"
-        ? "rep_welcome"
-        : "pro_welcome";
+
+    const dripSequence = profile.role === "rep" ? "rep_welcome"
+      : profile.role === "manager" ? "rep_welcome"
+      : "pro_welcome";
+
     const { data: existingDrip } = await admin
       .from("drip_enrollments")
       .select("id")
@@ -62,15 +59,11 @@ export default async function AppPage() {
       .maybeSingle();
 
     if (!existingDrip) {
-      // New user — notify you
-      const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
-      const roleLabel =
-        profile.role === "rep"
-          ? "Sales Rep"
-          : profile.role === "manager"
-          ? "Manager"
-          : "Healthcare Professional";
+      const roleLabel = profile.role === "rep" ? "Sales Rep"
+        : profile.role === "manager" ? "Manager"
+        : "Healthcare Professional";
+
       await resend.emails.send({
         from: "Pulse Alerts <noreply@pulsereferrals.com>",
         to: "ztaylor120@gmail.com",
@@ -82,16 +75,12 @@ export default async function AppPage() {
               <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Name</td><td>${profile.full_name || "—"}</td></tr>
               <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Email</td><td>${user.email}</td></tr>
               <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Role</td><td>${roleLabel}</td></tr>
-              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Time</td><td>${new Date().toLocaleString(
-                "en-US",
-                { timeZone: "America/Chicago" }
-              )}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Time</td><td>${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })}</td></tr>
             </table>
           </div>
         `,
       });
 
-      // Enroll in drip
       await admin.from("drip_enrollments").insert({
         user_id: user.id,
         sequence: dripSequence,
