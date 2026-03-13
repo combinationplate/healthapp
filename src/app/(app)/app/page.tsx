@@ -18,7 +18,10 @@ export default async function AppPage() {
   if (!user) return null;
 
   let profile = await getProfile(user.id);
+  let isNewUser = false;
+
   if (!profile) {
+    isNewUser = true;
     const role = roleFromMetadata(user.user_metadata);
     const fullName = (user.user_metadata?.full_name as string) ?? "";
     const meta = user.user_metadata ?? {};
@@ -34,26 +37,25 @@ export default async function AppPage() {
       },
       { onConflict: "id" }
     );
-
-    // Notify + enroll in drip
-    const origin = process.env.NEXT_PUBLIC_APP_URL || "https://pulsereferrals.com";
-    fetch(`${origin}/api/drip/enroll`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user.id,
-        email: user.email,
-        fullName,
-        role,
-      }),
-    }).catch(() => {});
-
     profile = { id: user.id, role, full_name: fullName };
   }
 
+  // Notify + enroll in drip (runs on every login, but the upsert
+  // with onConflict in the enroll route means it only enrolls once)
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "https://pulsereferrals.com";
+  fetch(`${origin}/api/drip/enroll`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      userId: user.id,
+      email: user.email,
+      fullName: profile.full_name ?? "",
+      role: profile.role,
+    }),
+  }).catch(() => {});
+
   const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
   const role = profile.role;
-  // users.role accepts only manager | rep | professional
   const userTableRole = role === "manager" || role === "rep" || role === "professional" ? role : "manager";
   await supabase.from("users").upsert(
     { id: user.id, email: user.email ?? "", role: userTableRole, name: displayName ?? "" },
