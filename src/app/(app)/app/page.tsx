@@ -25,7 +25,11 @@ export default async function AppPage() {
     const role = roleFromMetadata(user.user_metadata);
     const fullName = (user.user_metadata?.full_name as string) ?? "";
     const meta = user.user_metadata ?? {};
-    await supabase.from("profiles").upsert(
+    const admin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    await admin.from("profiles").upsert(
       {
         id: user.id,
         role,
