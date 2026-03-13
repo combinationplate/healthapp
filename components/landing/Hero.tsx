@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import Container from "@/components/ui/Container";
-import { showModal } from "./LandingModals";
 
 export default function Hero() {
   return (
@@ -19,20 +19,18 @@ export default function Hero() {
             Every nurse, social worker, and case manager needs continuing education — but most facilities don&apos;t pay for it. Pulse gives healthcare professionals free, nationally accredited CE courses, and gives hospice, home health, and rehab sales teams the referral relationships that come with providing them.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
-            <button
-              type="button"
-              onClick={() => showModal("hcp")}
+            <Link
+              href="/signup?type=hcp"
               className="inline-flex items-center gap-2 rounded-[var(--r)] bg-teal px-9 py-4 text-base font-bold text-white shadow-glow-teal transition-all hover:bg-teal-dark hover:shadow-[0_8px_32px_rgba(13,148,136,.3)] hover:-translate-y-0.5"
             >
               Get Free CE Courses
-            </button>
-            <button
-              type="button"
-              onClick={() => showModal("sales")}
+            </Link>
+            <Link
+              href="/signup?type=sales"
               className="inline-flex items-center gap-2 rounded-[var(--r)] border-2 border-[var(--border)] bg-white px-9 py-4 text-base font-bold text-ink transition-colors hover:border-blue hover:text-blue"
             >
               I&apos;m a Sales Rep →
-            </button>
+            </Link>
           </div>
         </div>
       </Container>

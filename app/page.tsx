@@ -8,8 +8,6 @@ import HCPSection from "@/components/landing/HCPSection";
 import { AccreditationStrip } from "@/src/components/AccreditationStrip";
 import FinalCTA from "@/components/landing/FinalCTA";
 import Footer from "@/components/landing/Footer";
-import LandingModals from "@/components/landing/LandingModals";
-
 export default function Home() {
   return (
     <>
@@ -25,7 +23,6 @@ export default function Home() {
         <FinalCTA />
       </main>
       <Footer />
-      <LandingModals />
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Container from "@/components/ui/Container";
-import { showModal } from "./LandingModals";
+import Link from "next/link";
 
 const problemItems = [
   "Finding the right CE for each discipline & state takes forever",
@@ -100,13 +100,12 @@ export default function ProblemSolution() {
                 </li>
               ))}
             </ul>
-            <button
-              type="button"
-              onClick={() => showModal("sales")}
+            <Link
+              href="/signup?type=sales"
               className="mt-7 inline-flex items-center gap-2 rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow transition-all hover:bg-blue-dark hover:-translate-y-0.5"
             >
-              Request a Demo
-            </button>
+              Get Started Free
+            </Link>
           </div>
         </div>
       </Container>

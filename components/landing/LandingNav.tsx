@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Container from "@/components/ui/Container";
-import { showModal } from "./LandingModals";
 
 function PulseLogo() {
   return (
@@ -90,20 +89,18 @@ export default function LandingNav() {
             >
               Log in
             </Link>
-            <button
-              type="button"
-              onClick={() => showModal("hcp")}
+            <Link
+              href="/signup?type=hcp"
               className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-5 py-2 text-[13px] font-semibold text-ink-soft transition-colors hover:border-teal hover:text-teal"
             >
               Get Free CEs
-            </button>
-            <button
-              type="button"
-              onClick={() => showModal("sales")}
+            </Link>
+            <Link
+              href="/signup?type=sales"
               className="rounded-[var(--r)] bg-ink px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-blue"
             >
-              Request Demo
-            </button>
+              Get Started Free
+            </Link>
           </div>
         </div>
       </Container>

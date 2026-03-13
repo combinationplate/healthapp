@@ -154,7 +154,7 @@ export function LandingNav() {
                 whiteSpace: "nowrap",
               }}
             >
-              Request Demo
+              Get Started Free
             </Link>
             <button
               type="button"

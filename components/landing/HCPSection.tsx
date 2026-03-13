@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import Container from "@/components/ui/Container";
-import { showModal } from "./LandingModals";
 
 const benefits = [
   {
@@ -69,13 +69,12 @@ export default function HCPSection() {
               Register and start getting free, nationally accredited CE courses
               matched to your discipline and state.
             </p>
-            <button
-              type="button"
-              onClick={() => showModal("hcp")}
+            <Link
+              href="/signup?type=hcp"
               className="inline-flex items-center justify-center rounded-[var(--r)] bg-teal px-9 py-4 text-base font-bold text-white shadow-glow-teal transition-all hover:bg-teal-dark hover:-translate-y-0.5"
             >
               Create My Free Account
-            </button>
+            </Link>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {disciplines.map((d) => (
                 <span

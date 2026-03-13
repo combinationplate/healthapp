@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import Container from "@/components/ui/Container";
-import { showModal } from "./LandingModals";
 
 export default function FinalCTA() {
   return (
@@ -25,13 +25,12 @@ export default function FinalCTA() {
               codes, branded flyers, bulk send, network management, professional
               discovery, and manager dashboards.
             </p>
-            <button
-              type="button"
-              onClick={() => showModal("sales")}
-              className="w-full justify-center rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow"
+            <Link
+              href="/signup?type=sales"
+              className="w-full justify-center rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow inline-flex"
             >
-              Request a Demo
-            </button>
+              Get Started Free
+            </Link>
           </div>
           <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
             <span className="mb-3 block text-[40px]">🧑‍⚕️</span>
@@ -43,13 +42,12 @@ export default function FinalCTA() {
               mental health, and more. Matched to your discipline and state. No
               cost, ever.
             </p>
-            <button
-              type="button"
-              onClick={() => showModal("hcp")}
-              className="w-full justify-center rounded-[var(--r)] bg-teal px-9 py-4 text-base font-bold text-white"
+            <Link
+              href="/signup?type=hcp"
+              className="w-full justify-center rounded-[var(--r)] bg-teal px-9 py-4 text-base font-bold text-white inline-flex"
             >
               Get Free CEs
-            </button>
+            </Link>
           </div>
         </div>
       </Container>
