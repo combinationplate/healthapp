@@ -40,19 +40,68 @@ export default async function AppPage() {
     profile = { id: user.id, role, full_name: fullName };
   }
 
-  // Notify + enroll in drip (runs on every login, but the upsert
-  // with onConflict in the enroll route means it only enrolls once)
-  const origin = process.env.NEXT_PUBLIC_APP_URL || "https://pulsereferrals.com";
-  fetch(`${origin}/api/drip/enroll`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: user.id,
-      email: user.email,
-      fullName: profile.full_name ?? "",
-      role: profile.role,
-    }),
-  }).catch(() => {});
+  // Enroll in drip + notify (inline, no fetch needed)
+  try {
+    const { createClient: createAdmin } = await import("@supabase/supabase-js");
+    const admin = createAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const dripSequence =
+      profile.role === "rep"
+        ? "rep_welcome"
+        : profile.role === "manager"
+        ? "rep_welcome"
+        : "pro_welcome";
+    const { data: existingDrip } = await admin
+      .from("drip_enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("sequence", dripSequence)
+      .maybeSingle();
+
+    if (!existingDrip) {
+      // New user — notify you
+      const { Resend } = await import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const roleLabel =
+        profile.role === "rep"
+          ? "Sales Rep"
+          : profile.role === "manager"
+          ? "Manager"
+          : "Healthcare Professional";
+      await resend.emails.send({
+        from: "Pulse Alerts <noreply@pulsereferrals.com>",
+        to: "ztaylor120@gmail.com",
+        subject: `New signup: ${profile.full_name || user.email} (${roleLabel})`,
+        html: `
+          <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
+            <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New Pulse Signup</h2>
+            <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Name</td><td>${profile.full_name || "—"}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Email</td><td>${user.email}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Role</td><td>${roleLabel}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Time</td><td>${new Date().toLocaleString(
+                "en-US",
+                { timeZone: "America/Chicago" }
+              )}</td></tr>
+            </table>
+          </div>
+        `,
+      });
+
+      // Enroll in drip
+      await admin.from("drip_enrollments").insert({
+        user_id: user.id,
+        sequence: dripSequence,
+        current_step: 0,
+        next_send_at: new Date().toISOString(),
+        completed: false,
+      });
+    }
+  } catch (e) {
+    console.error("Drip enrollment error:", e);
+  }
 
   const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
   const role = profile.role;
