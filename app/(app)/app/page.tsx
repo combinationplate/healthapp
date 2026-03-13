@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 import { AppDashboard } from "@/components/app/AppDashboard";
 import { getProfile } from "@/lib/supabase/getProfile";
 import type { ProfileRole } from "@/lib/supabase/getProfile";
@@ -8,6 +10,7 @@ function roleFromMetadata(metadata: Record<string, unknown> | undefined): Profil
   if (role === "manager" || role === "rep" || role === "professional") return role;
   const accountType = (metadata?.account_type as string) ?? "";
   if (accountType.toLowerCase() === "sales") return "rep";
+  if (accountType.toLowerCase() === "manager") return "manager";
   return "professional";
 }
 
@@ -16,44 +19,87 @@ export default async function AppPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { createClient: createServiceClient } = await import("@supabase/supabase-js");
-  const admin = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-  const state = (user.user_metadata?.state as string) ?? null;
-  const city = (user.user_metadata?.city as string) ?? null;
-
   let profile = await getProfile(user.id);
+
   if (!profile) {
     const role = roleFromMetadata(user.user_metadata);
     const fullName = (user.user_metadata?.full_name as string) ?? "";
-    await admin.rpc("upsert_profile_safe", {
-      p_id: user.id,
-      p_role: role,
-      p_full_name: fullName,
-      p_state: state,
-      p_city: city,
-    });
+    const meta = user.user_metadata ?? {};
+    await supabase.from("profiles").upsert(
+      {
+        id: user.id,
+        role,
+        full_name: fullName,
+        city: (meta.city as string) ?? null,
+        state: (meta.state as string) ?? null,
+        discipline: (meta.discipline as string) ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" }
+    );
     profile = { id: user.id, role, full_name: fullName };
+  }
+
+  // Enroll in drip + notify
+  try {
+    const admin = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const dripSequence = profile.role === "rep" ? "rep_welcome"
+      : profile.role === "manager" ? "rep_welcome"
+      : "pro_welcome";
+
+    const { data: existingDrip } = await admin
+      .from("drip_enrollments")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("sequence", dripSequence)
+      .maybeSingle();
+
+    if (!existingDrip) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const roleLabel = profile.role === "rep" ? "Sales Rep"
+        : profile.role === "manager" ? "Manager"
+        : "Healthcare Professional";
+
+      await resend.emails.send({
+        from: "Pulse Alerts <noreply@pulsereferrals.com>",
+        to: "ztaylor120@gmail.com",
+        subject: `New signup: ${profile.full_name || user.email} (${roleLabel})`,
+        html: `
+          <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
+            <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New Pulse Signup</h2>
+            <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Name</td><td>${profile.full_name || "—"}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Email</td><td>${user.email}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Role</td><td>${roleLabel}</td></tr>
+              <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Time</td><td>${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })}</td></tr>
+            </table>
+          </div>
+        `,
+      });
+
+      await admin.from("drip_enrollments").insert({
+        user_id: user.id,
+        sequence: dripSequence,
+        current_step: 0,
+        next_send_at: new Date().toISOString(),
+        completed: false,
+      });
+    }
+  } catch (e) {
+    console.error("Drip enrollment error:", e);
   }
 
   const displayName = profile.full_name ?? (user.user_metadata?.full_name as string | undefined);
   const role = profile.role;
   const userTableRole = role === "manager" || role === "rep" || role === "professional" ? role : "manager";
-
   await supabase.from("users").upsert(
     { id: user.id, email: user.email ?? "", role: userTableRole, name: displayName ?? "" },
     { onConflict: "id" }
   );
-
-  await admin.rpc("upsert_profile_safe", {
-    p_id: user.id,
-    p_role: userTableRole,
-    p_full_name: displayName ?? "",
-    p_state: state,
-    p_city: city,
-  });
 
   return (
     <AppDashboard
