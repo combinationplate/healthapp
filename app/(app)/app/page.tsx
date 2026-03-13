@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { AppDashboard } from "@/components/app/AppDashboard";
 import { getProfile } from "@/lib/supabase/getProfile";
 import type { ProfileRole } from "@/lib/supabase/getProfile";
