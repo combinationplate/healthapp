@@ -41,6 +41,7 @@ export default async function AppPage() {
   }
 
   // Enroll in drip + notify (inline, no fetch needed)
+  console.log("DRIP: starting enrollment for", user.email, profile.role);
   try {
     const { createClient: createAdmin } = await import("@supabase/supabase-js");
     const admin = createAdmin(
