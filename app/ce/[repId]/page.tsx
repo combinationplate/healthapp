@@ -384,9 +384,23 @@ export default function CELandingPage() {
                 style={{ ...inputStyle, appearance: "none" as const }}
               >
                 <option value="">Choose a course…</option>
-                {courses.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>
-                ))}
+                {courses
+                  .filter((c: any) => {
+                    if (!discipline || !c.professions) return true;
+                    const disciplineMap: Record<string, string> = {
+                      "Nursing": "Nursing",
+                      "Social Work": "Social Work",
+                      "Case Management": "Case Management",
+                      "PT": "PT",
+                      "OT": "OT",
+                      "ST": "ST",
+                    };
+                    const mapped = disciplineMap[discipline] ?? discipline;
+                    return c.professions.includes(mapped);
+                  })
+                  .map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.hours} hrs)</option>
+                  ))}
               </select>
             </div>
           )}

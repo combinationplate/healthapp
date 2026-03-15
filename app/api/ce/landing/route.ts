@@ -41,11 +41,23 @@ export async function GET(request: Request) {
       .single();
     if (data) courses = [data];
   } else {
-    const { data } = await admin
-      .from("courses")
-      .select("id, name, hours, topic")
-      .order("name");
-    courses = data ?? [];
+    // Get courses with their approved professions
+    const { data: cpData } = await admin
+      .from("course_professions")
+      .select("profession, courses(id, name, hours, topic)")
+      .order("profession");
+
+    // Build course list with professions attached
+    const courseMap = new Map<string, { id: string; name: string; hours: number; topic: string | null; professions: string[] }>();
+    for (const row of (cpData ?? []) as any[]) {
+      const c = Array.isArray(row.courses) ? row.courses[0] : row.courses;
+      if (!c?.id) continue;
+      if (!courseMap.has(c.id)) {
+        courseMap.set(c.id, { ...c, professions: [] });
+      }
+      courseMap.get(c.id)!.professions.push(row.profession);
+    }
+    courses = Array.from(courseMap.values()).sort((a: any, b: any) => a.name.localeCompare(b.name));
   }
 
   // Check if QR cap is reached

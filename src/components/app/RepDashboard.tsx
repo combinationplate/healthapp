@@ -361,6 +361,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [bulkRows, setBulkRows] = useState([{ name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }]);
   const [bulkSelectedPros, setBulkSelectedPros] = useState<string[]>([]);
   const [bulkNetworkSearch, setBulkNetworkSearch] = useState("");
+  const [bulkDisciplineFilter, setBulkDisciplineFilter] = useState("All");
   const [bulkCourseId, setBulkCourseId] = useState("");
   const [bulkDiscount, setBulkDiscount] = useState("100% Free");
   const [bulkSending, setBulkSending] = useState(false);
@@ -619,6 +620,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setBulkRows([{ name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }, { name: "", email: "", discipline: "" }]);
     setBulkSelectedPros([]);
     setBulkNetworkSearch("");
+    setBulkDisciplineFilter("All");
     setBulkCourseId("");
     setBulkDiscount("100% Free");
     setBulkSending(false);
@@ -2260,9 +2262,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         {/* From Network tab */}
                         {bulkTab === "network" && (
                           <div>
+                            <div style={{ display: "flex", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
+                              {["All", "Nursing", "Social Work", "Case Mgmt", "PT", "OT", "SLP"].map((d) => (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => setBulkDisciplineFilter(d)}
+                                  style={{
+                                    padding: "4px 12px", borderRadius: "999px", fontSize: "11px", fontWeight: 600, cursor: "pointer", border: "none",
+                                    background: bulkDisciplineFilter === d ? "var(--ink)" : "#f0efeb",
+                                    color: bulkDisciplineFilter === d ? "white" : "#7a8ba8",
+                                  }}
+                                >{d}</button>
+                              ))}
+                            </div>
                             <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                               <input value={bulkNetworkSearch} onChange={e => setBulkNetworkSearch(e.target.value)} placeholder="Search by name, email, facility…" style={{ flex: 1, padding: "8px 12px", borderRadius: "8px", border: "1px solid var(--border)", fontSize: "13px" }} />
-                              <button type="button" onClick={() => setBulkSelectedPros(professionals.map(p => p.id))} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Select All</button>
+                              <button type="button" onClick={() => setBulkSelectedPros(professionals.filter(p => {
+                                if (bulkDisciplineFilter === "All") return true;
+                                return (p.discipline ?? "").toLowerCase().includes(bulkDisciplineFilter.toLowerCase().split(/[/\s]/)[0]);
+                              }).map(p => p.id))} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Select All</button>
                               <button type="button" onClick={() => setBulkSelectedPros([])} className={BTN_SECONDARY} style={{ fontSize: "12px", padding: "6px 10px", whiteSpace: "nowrap" }}>Deselect All</button>
                             </div>
                             {professionals.length === 0 ? (
@@ -2271,6 +2290,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               <div style={{ maxHeight: "260px", overflowY: "auto", border: "1px solid var(--border)", borderRadius: "8px" }}>
                                 {professionals
                                   .filter(p => {
+                                    if (bulkDisciplineFilter !== "All") {
+                                      if (!(p.discipline ?? "").toLowerCase().includes(bulkDisciplineFilter.toLowerCase().split(/[/\s]/)[0])) return false;
+                                    }
                                     const q = bulkNetworkSearch.toLowerCase();
                                     return !q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q) || (p.facility ?? "").toLowerCase().includes(q);
                                   })
