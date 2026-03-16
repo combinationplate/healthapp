@@ -120,6 +120,11 @@ export function LandingNav() {
                 Accreditation
               </Link>
             </li>
+            <li>
+              <Link href="/blog" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+                Blog
+              </Link>
+            </li>
           </ul>
 
           {/* Right side */}
@@ -194,6 +199,7 @@ export function LandingNav() {
               { href: "/#professionals", label: "Free CEs" },
               { href: "/#cta", label: "For Sales Teams" },
               { href: "/accreditation", label: "Accreditation" },
+              { href: "/blog", label: "Blog" },
             ].map((link) => (
               <Link
                 key={link.href}

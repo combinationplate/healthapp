@@ -81,6 +81,14 @@ export default function LandingNav() {
                 Accreditation
               </Link>
             </li>
+            <li>
+              <Link
+                href="/blog"
+                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+              >
+                Blog
+              </Link>
+            </li>
           </ul>
           <div className="flex items-center gap-2.5">
             <Link

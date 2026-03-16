@@ -1,4 +1,5 @@
 import { MetadataRoute } from "next";
+import { getAllPosts } from "@/lib/blog";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
@@ -35,6 +36,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "yearly",
       priority: 0.5,
     },
+    {
+      url: `${base}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    ...getAllPosts().map((post) => ({
+      url: `${base}/blog/${post.slug}`,
+      lastModified: new Date(post.date),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
   ];
 }
 
