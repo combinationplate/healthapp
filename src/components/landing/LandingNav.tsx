@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export function LandingNav() {
+export default function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (

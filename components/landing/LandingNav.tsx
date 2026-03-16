@@ -1,117 +1,238 @@
 "use client";
 
 import Link from "next/link";
-import Container from "@/components/ui/Container";
-
-function PulseLogo() {
-  return (
-    <svg width="36" height="36" viewBox="0 0 56 56" fill="none">
-      <rect width="56" height="56" rx="14" fill="#0b1222" />
-      <path
-        d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
-        stroke="url(#nav-glow)"
-        strokeWidth="8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        opacity="0.3"
-      />
-      <path
-        d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
-        stroke="url(#nav-line)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <defs>
-        <linearGradient id="nav-line" x1="10" y1="28" x2="46" y2="28">
-          <stop offset="0%" stopColor="#6B8AFF" />
-          <stop offset="100%" stopColor="#5EEAD4" />
-        </linearGradient>
-        <linearGradient id="nav-glow" x1="10" y1="28" x2="46" y2="28">
-          <stop offset="0%" stopColor="#2455ff" />
-          <stop offset="100%" stopColor="#0d9488" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
+import { useState } from "react";
 
 export default function LandingNav() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
-    <nav className="sticky top-0 z-[200] border-b border-[var(--border)] bg-white/92 backdrop-blur-[16px]">
-      <Container>
-        <div className="flex h-16 items-center justify-between">
+    <nav
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 200,
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(11,18,34,0.08)",
+      }}
+    >
+      <style>{`
+        @media (max-width: 767px) {
+          .lnav-desktop { display: none !important; }
+        }
+        @media (min-width: 768px) {
+          .lnav-hamburger { display: none !important; }
+          .lnav-mobile-menu { display: none !important; }
+        }
+      `}</style>
+
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+        <div
+          style={{
+            display: "flex",
+            height: "64px",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 font-serif text-[26px] font-extrabold text-ink"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
           >
-            <PulseLogo />
-            Pulse
+            <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
+              <rect width="56" height="56" rx="14" fill="#0b1222" />
+              <path
+                d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                stroke="url(#lnav-glow)"
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity="0.3"
+              />
+              <path
+                d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28"
+                stroke="url(#lnav-line)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <defs>
+                <linearGradient id="lnav-line" x1="10" y1="28" x2="46" y2="28">
+                  <stop offset="0%" stopColor="#6B8AFF" />
+                  <stop offset="100%" stopColor="#5EEAD4" />
+                </linearGradient>
+                <linearGradient id="lnav-glow" x1="10" y1="28" x2="46" y2="28">
+                  <stop offset="0%" stopColor="#2455ff" />
+                  <stop offset="100%" stopColor="#0d9488" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <span
+              style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                fontSize: "24px",
+                fontWeight: 900,
+                color: "#0b1222",
+              }}
+            >
+              Pulse
+            </span>
           </Link>
-          <ul className="flex list-none items-center gap-7">
+
+          {/* Desktop nav links — hidden below 768px */}
+          <ul
+            className="lnav-desktop"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "28px",
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+            }}
+          >
             <li>
-              <Link
-                href="/how-it-works"
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/how-it-works" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 How It Works
               </Link>
             </li>
             <li>
-              <Link
-                href="#professionals"
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/#professionals" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 Free CEs
               </Link>
             </li>
             <li>
-              <Link
-                href="#sales-teams"
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/#cta" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 For Sales Teams
               </Link>
             </li>
             <li>
-              <Link
-                href="/accreditation"
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/accreditation" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 Accreditation
               </Link>
             </li>
             <li>
-              <Link
-                href="/blog"
-                className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-              >
+              <Link href="/blog" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 Blog
               </Link>
             </li>
           </ul>
-          <div className="flex items-center gap-2.5">
-            <Link
-              href="/login"
-              className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-5 py-2 text-[13px] font-semibold text-ink-soft transition-colors hover:border-teal hover:text-teal"
-            >
-              Log in
-            </Link>
+
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Link
               href="/signup?type=hcp"
-              className="rounded-[var(--r)] border border-[var(--border)] bg-transparent px-5 py-2 text-[13px] font-semibold text-ink-soft transition-colors hover:border-teal hover:text-teal"
+              className="lnav-desktop"
+              style={{
+                display: "inline-block",
+                padding: "8px 20px",
+                borderRadius: "10px",
+                border: "1px solid rgba(11,18,34,0.08)",
+                background: "transparent",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#3b4963",
+                textDecoration: "none",
+              }}
             >
-              Get Free CEs
+              I&apos;m a Healthcare Pro
             </Link>
             <Link
               href="/signup?type=sales"
-              className="rounded-[var(--r)] bg-ink px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-blue"
+              style={{
+                padding: "8px 20px",
+                borderRadius: "10px",
+                background: "#0b1222",
+                color: "#ffffff",
+                fontSize: "13px",
+                fontWeight: 600,
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
             >
               Get Started Free
             </Link>
+            <button
+              type="button"
+              className="lnav-hamburger"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label="Toggle menu"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "none",
+                border: "none",
+                fontSize: "22px",
+                cursor: "pointer",
+                color: "#0b1222",
+                padding: "4px 0 4px 8px",
+              }}
+            >
+              {mobileOpen ? "✕" : "☰"}
+            </button>
           </div>
         </div>
-      </Container>
+
+        {/* Mobile dropdown */}
+        {mobileOpen && (
+          <div
+            className="lnav-mobile-menu"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              borderTop: "1px solid rgba(11,18,34,0.08)",
+              paddingBottom: "16px",
+            }}
+          >
+            {[
+              { href: "/how-it-works", label: "How It Works" },
+              { href: "/#professionals", label: "Free CEs" },
+              { href: "/#cta", label: "For Sales Teams" },
+              { href: "/accreditation", label: "Accreditation" },
+              { href: "/blog", label: "Blog" },
+            ].map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                style={{
+                  fontSize: "15px",
+                  fontWeight: 600,
+                  color: "#0b1222",
+                  textDecoration: "none",
+                  padding: "14px 0",
+                  borderBottom: "1px solid rgba(11,18,34,0.04)",
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link
+              href="/signup?type=hcp"
+              onClick={() => setMobileOpen(false)}
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "#0d9488",
+                textDecoration: "none",
+                padding: "14px 0",
+              }}
+            >
+              I&apos;m a Healthcare Pro →
+            </Link>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
