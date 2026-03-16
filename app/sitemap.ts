@@ -38,8 +38,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${base}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
+      lastModified,
+      changeFrequency: "weekly" as const,
       priority: 0.7,
     },
     ...getAllPosts().map((post) => ({
