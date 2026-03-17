@@ -93,6 +93,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email service not configured" }, { status: 503 });
     }
 
+    const fromAddress =
+      process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -100,9 +103,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from:
-          process.env.RESEND_FROM_EMAIL ??
-          `${repName} via Pulse <noreply@pulsereferrals.com>`,
+        from: `${repName} via Pulse <${fromAddress}>`,
         to: recipientEmail,
         subject,
         html,
