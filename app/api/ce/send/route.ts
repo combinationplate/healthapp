@@ -85,13 +85,27 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: rep } = await supabase.from("users").select("name").eq("id", repId).single();
-    const repName = (rep?.name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Rep").trim() || "Rep";
+    const { data: repProfile } = await admin
+      .from("profiles")
+      .select("full_name, org_id")
+      .eq("id", repId)
+      .single();
+    const repName =
+      (repProfile?.full_name ??
+        user.user_metadata?.full_name ??
+        user.email?.split("@")[0] ??
+        "Rep")
+        .trim() || "Rep";
     const repEmail = user.email ?? "";
-
-    // Fetch org/company name from profiles table
-    const { data: repProfile } = await supabase.from("profiles").select("org_name").eq("id", repId).single();
-    const repOrgName = repProfile?.org_name ?? "";
+    let repOrgName = "";
+    if (repProfile?.org_id) {
+      const { data: org } = await admin
+        .from("orgs")
+        .select("name")
+        .eq("id", repProfile.org_id)
+        .single();
+      repOrgName = org?.name ?? "";
+    }
 
     // 1. Try existing professionals table
     const { data: proFromProfessionals } = await supabase
