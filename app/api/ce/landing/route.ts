@@ -84,7 +84,10 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     rep: {
-      name: repProfile?.full_name ?? repProfile?.email?.split("@")[0] ?? "Your Rep",
+      name:
+        repProfile?.full_name ??
+        repProfile?.email?.split("@")[0] ??
+        "Rep",
       company: orgName,
     },
     courses,

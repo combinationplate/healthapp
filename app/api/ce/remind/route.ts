@@ -58,7 +58,11 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .single();
 
-    const repName = repProfile?.full_name ?? user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Your Rep";
+    const repName =
+      repProfile?.full_name ??
+      user.user_metadata?.full_name ??
+      user.email?.split("@")[0] ??
+      "Rep";
     const repOrgName = repProfile?.org_name ?? "";
     const repEmail = user.email ?? "";
 

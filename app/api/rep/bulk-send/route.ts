@@ -163,7 +163,7 @@ export async function POST(request: Request) {
           couponCode,
           accessUrl: redirectUrl,
           discount,
-          repName: repProfile?.full_name ?? "Your Rep",
+          repName: repProfile?.full_name ?? (repEmail.split("@")[0] || "Rep"),
           repEmail,
           repOrgName,
         };
