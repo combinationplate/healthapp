@@ -45,18 +45,27 @@ export async function POST(request: Request) {
     // Get rep profile + org
     const { data: repProfile } = await admin
       .from("profiles")
-      .select("id, full_name, org_id, org_name")
+      .select("id, full_name, org_id")
       .eq("id", repId)
       .single();
 
-    let repOrgName = repProfile?.org_name ?? "";
-    if (!repOrgName && repProfile?.org_id) {
-      const { data: org } = await admin.from("orgs").select("name").eq("id", repProfile.org_id).single();
+    let repOrgName = "";
+    if (repProfile?.org_id) {
+      const { data: org } = await admin
+        .from("orgs")
+        .select("name")
+        .eq("id", repProfile.org_id)
+        .single();
       repOrgName = org?.name ?? "";
     }
 
     const { data: repAuthUser } = await admin.auth.admin.getUserById(repId);
     const repEmail = repAuthUser?.user?.email ?? "";
+    const repDisplayName =
+      repProfile?.full_name?.trim() ||
+      repAuthUser?.user?.user_metadata?.full_name?.trim() ||
+      repEmail.split("@")[0] ||
+      "Rep";
 
     // Check which emails already received this course from this rep
     const emails = recipients.map((r: Recipient) => r.email.trim().toLowerCase());
@@ -92,7 +101,7 @@ export async function POST(request: Request) {
 
       try {
         // Generate coupon code
-        const repName = (repProfile?.full_name ?? "REP").split(" ")[0].toUpperCase();
+        const repName = repDisplayName.split(" ")[0].toUpperCase();
         const initials = name.split(/\s+/).map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
         const month = new Date().toLocaleString("default", { month: "short" }).toUpperCase();
         const year = new Date().getFullYear().toString().slice(-2);
@@ -163,7 +172,7 @@ export async function POST(request: Request) {
           couponCode,
           accessUrl: redirectUrl,
           discount,
-          repName: repProfile?.full_name ?? (repEmail.split("@")[0] || "Rep"),
+          repName: repDisplayName,
           repEmail,
           repOrgName,
         };
