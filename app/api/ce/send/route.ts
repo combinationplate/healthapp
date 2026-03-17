@@ -235,7 +235,9 @@ export async function POST(request: Request) {
     }
 
     const resendKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
+    const fromEmail =
+      process.env.RESEND_FROM_EMAIL ??
+      `${repName} via Pulse <noreply@pulsereferrals.com>`;
     const accessUrl = courseAccessUrl(couponCode);
 
     if (resendKey) {

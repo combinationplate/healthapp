@@ -275,7 +275,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "noreply@pulsereferrals.com",
+        from: `${emailParams.repName} via Pulse <noreply@pulsereferrals.com>`,
         to: emailNormalized,
         subject: buildCeEmailSubject(emailParams),
         html: buildCeEmailHtml(emailParams),

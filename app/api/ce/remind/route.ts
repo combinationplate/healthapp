@@ -96,7 +96,9 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${resendKey}`,
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>",
+        from:
+          process.env.RESEND_FROM_EMAIL ??
+          `${repName} via Pulse <noreply@pulsereferrals.com>`,
         to: recipientEmail,
         subject,
         html,
