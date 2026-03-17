@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     // Get rep info
     const { data: repProfile } = await admin
       .from("profiles")
-      .select("full_name, org_name")
+      .select("full_name, org_id")
       .eq("id", user.id)
       .single();
 
@@ -63,7 +63,15 @@ export async function POST(request: Request) {
       user.user_metadata?.full_name ??
       user.email?.split("@")[0] ??
       "Rep";
-    const repOrgName = repProfile?.org_name ?? "";
+    let repOrgName = "";
+    if (repProfile?.org_id) {
+      const { data: org } = await admin
+        .from("orgs")
+        .select("name")
+        .eq("id", repProfile.org_id)
+        .maybeSingle();
+      repOrgName = org?.name ?? "";
+    }
     const repEmail = user.email ?? "";
 
     // Build the access URL

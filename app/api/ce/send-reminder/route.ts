@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     const accessUrl = productId ? courseAccessUrl(productId, sendRow.coupon_code) : "https://hiscornerstone.com/";
 
     const resendKey = process.env.RESEND_API_KEY;
-    const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
+    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
 
     if (resendKey) {
       const resend = new Resend(resendKey);
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       `;
       const text = `Hi ${proRow.name},\n\nReminder: your representative sent you access to this CE course:\n\n${sendRow.course_name} (${sendRow.course_hours} hrs) · ${sendRow.discount}\n\nAccess your course: ${accessUrl}\n\n— Pulse`;
       const { error: emailError } = await resend.emails.send({
-        from: fromEmail,
+        from: `Pulse <${fromAddress}>`,
         to: proRow.email,
         subject: `Reminder: Your CE course – ${sendRow.course_name}`,
         html,
