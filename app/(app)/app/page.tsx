@@ -70,7 +70,7 @@ export default async function AppPage() {
 
       await resend.emails.send({
         from: "Pulse Alerts <noreply@pulsereferrals.com>",
-        to: "ztaylor120@gmail.com",
+        to: "hello@pulsereferrals.com",
         subject: `New signup: ${profile.full_name || user.email} (${roleLabel})`,
         html: `
           <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">

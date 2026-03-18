@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       role === "rep" ? "Sales Rep" : role === "manager" ? "Manager" : "Healthcare Professional";
     await resend.emails.send({
       from: "Pulse Alerts <noreply@pulsereferrals.com>",
-      to: "ztaylor120@gmail.com",
+      to: "hello@pulsereferrals.com",
       subject: `New signup: ${fullName || email} (${roleLabel})`,
       html: `
         <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
