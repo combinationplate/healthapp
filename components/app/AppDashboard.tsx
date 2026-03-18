@@ -9,7 +9,7 @@ import { AppHeader } from "./AppHeader";
 
 type Role = "manager" | "rep" | "professional";
 
-const ADMIN_EMAILS = ["hello@pulsereferrals.com"];
+const ADMIN_EMAILS = ["ztaylor120@gmail.com"];
 
 type Props = {
   userId?: string;

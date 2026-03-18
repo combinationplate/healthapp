@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 
-const ADMIN_EMAILS = ["hello@pulsereferrals.com"];
+const ADMIN_EMAILS = ["ztaylor120@gmail.com"];
 
 export default async function AdminBillingPage() {
   const supabase = await createClient();
