@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import React, { Suspense, useState, type FormEvent } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 function LoginForm() {
   const router = useRouter();
@@ -20,6 +21,7 @@ function LoginForm() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function handleForgotPassword() {
     if (!resetEmail) return;
@@ -32,12 +34,16 @@ function LoginForm() {
     if (!error) setResetSent(true);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken: captchaToken ?? undefined },
+    });
     setLoading(false);
     if (error) {
       setMessage({ type: "error", text: error.message });
@@ -89,6 +95,11 @@ function LoginForm() {
               className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
             />
           </div>
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+            onSuccess={(token) => setCaptchaToken(token)}
+            options={{ size: "flexible", theme: "light" }}
+          />
           {message && (
             <p className={`text-sm ${message.type === "error" ? "text-[var(--coral)]" : "text-[var(--teal)]"}`}>
               {message.text}

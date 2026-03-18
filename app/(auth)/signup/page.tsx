@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import React, { Suspense, useState, type FormEvent } from "react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
@@ -36,12 +37,13 @@ function SignupForm() {
   const [discipline, setDiscipline] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const isSales = role === "rep";
   const isManager = role === "manager";
   const isPro = role === "professional";
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     setMessage(null);
@@ -65,6 +67,7 @@ function SignupForm() {
       options: {
         data: metadata,
         emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/app`,
+        captchaToken: captchaToken ?? undefined,
       },
     });
     setLoading(false);
@@ -190,6 +193,11 @@ function SignupForm() {
             </>
           )}
 
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+            onSuccess={(token) => setCaptchaToken(token)}
+            options={{ size: "flexible", theme: "light" }}
+          />
           {message && (
             <p className={`text-sm ${message.type === "error" ? "text-[var(--coral)]" : "text-[var(--teal)]"}`}>
               {message.text}
