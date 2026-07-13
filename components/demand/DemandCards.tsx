@@ -85,7 +85,7 @@ export function DemandCards({ requests }: { requests: PublicRequest[] }) {
               </div>
             ) : (
               <button className="demand-claim" disabled={st === "loading"} onClick={() => claim(r.id)}>
-                {st === "loading" ? "Claiming…" : "Claim this intro — free"}
+                {st === "loading" ? "Claiming…" : "Claim this intro"}
               </button>
             )}
             {st === "error" && <div className="demand-status demand-err">Something went wrong — please try again.</div>}

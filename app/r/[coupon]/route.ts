@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from "@supabase/supabase-js";
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+import { introduceOnRedemption } from "@/lib/demand/introduce";
 
 export async function GET(
   request: Request,
@@ -16,7 +17,7 @@ export async function GET(
 
     const { data: ceSend } = await admin
       .from("ce_sends")
-      .select("id, coupon_code, product_id, course_id, clicked_at, redeemed_at")
+      .select("id, coupon_code, product_id, course_id, clicked_at, redeemed_at, rep_id, professional_id")
       .eq("coupon_code", couponCode)
       .single();
 
@@ -29,6 +30,8 @@ export async function GET(
           redeemed_at: now,
         })
         .eq("id", ceSend.id);
+      // First redemption — if this fulfills a claimed demand request, introduce both sides.
+      after(introduceOnRedemption(admin, ceSend.id));
     } else if (ceSend && !ceSend.redeemed_at) {
       // Already clicked before, but redeemed_at wasn't set (backfill)
       await admin

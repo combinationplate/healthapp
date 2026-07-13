@@ -92,6 +92,12 @@ export default async function DemandPage() {
 
       <LandingNav />
 
+      <div style={{ maxWidth: 1060, margin: "0 auto", padding: "18px 24px 0" }}>
+        <Link href="/" style={{ fontSize: 13, color: "#7a8ba8", textDecoration: "none", fontWeight: 600 }}>
+          &larr; Back to home
+        </Link>
+      </div>
+
       <header className="pd-hero">
         <h1>
           Licensed professionals near you are <em>waiting for a CE sponsor.</em>
@@ -132,7 +138,7 @@ export default async function DemandPage() {
 
       <div className="pd-how">
         <div className="pd-how-inner">
-          <div className="pd-step"><div className="k">STEP 1</div><h3>Claim a request in your market</h3><p>Pick a professional in your referral territory. Claiming is free — we cover the CE.</p></div>
+          <div className="pd-step"><div className="k">STEP 1</div><h3>Claim a request in your market</h3><p>Pick a professional in your referral territory. You sponsor their CE — less than the cost of a lunch-and-learn, and far more valuable.</p></div>
           <div className="pd-step"><div className="k">STEP 2</div><h3>They get CE, from you</h3><p>The professional completes nationally accredited CE, delivered with your name and organization as the sponsor.</p></div>
           <div className="pd-step"><div className="k">STEP 3</div><h3>You get the introduction</h3><p>Pulse connects you both. A warm referral-source relationship, started with a genuine favor.</p></div>
         </div>
