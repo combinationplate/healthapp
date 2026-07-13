@@ -216,7 +216,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     orgName: "",
   });
   const [billingSetupSaving, setBillingSetupSaving] = useState(false);
-  const [sendCeCourse, setSendCeCourse] = useState<string>("");
+  const [sendCeCourses, setSendCeCourses] = useState<string[]>([]);
   const [sendCeDiscount, setSendCeDiscount] = useState<string>(CE_DISCOUNTS[0]);
   const [sendCeMessage, setSendCeMessage] = useState("");
   const [sendCeAddToNetwork, setSendCeAddToNetwork] = useState(true);
@@ -908,7 +908,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   async function openSendCeModal(pro: ProfessionalRow | null) {
     const resolvedPro = pro ?? (professionals.length === 1 ? professionals[0] : null);
     setSendCePro(resolvedPro);
-    setSendCeCourse("");
+    setSendCeCourses([]);
     setSendCeDiscount(CE_DISCOUNTS[0]);
     setSendCeMessage("");
     setSendCeError(null);
@@ -944,8 +944,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
       setSendCeError("Select a professional.");
       return;
     }
-    if (!sendCeCourse) {
-      setSendCeError("Please select a course.");
+    if (sendCeCourses.length === 0) {
+      setSendCeError("Please select at least one course.");
       return;
     }
     const pro = sendCePro ?? (professionals.length > 0 ? professionals[0] : null);
@@ -963,7 +963,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         body: JSON.stringify({
           professionalId: pro.id,
           repId,
-          courseId: sendCeCourse,
+          courseIds: sendCeCourses,
           discount: sendCeDiscount,
           personalMessage: sendCeMessage.trim() || undefined,
           recipient: pro.email ? {
@@ -3218,13 +3218,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                               </p>
                             ) : (
                               topicFiltered.map(({ course, profession }) => {
-                                const isSelected = sendCeCourse === course.id;
+                                const isSelected = sendCeCourses.includes(course.id);
                                 const displayName = cleanCourseName(course.name);
                                 const isNew = /^\*NEW\*/i.test(course.name);
                                 return (
                                   <div
                                     key={course.id}
-                                    onClick={() => setSendCeCourse(course.id)}
+                                    onClick={() => setSendCeCourses((prev) => prev.includes(course.id) ? prev.filter((id) => id !== course.id) : [...prev, course.id])}
                                     style={{
                                       padding: '14px 16px',
                                       borderRadius: '10px',
@@ -3319,8 +3319,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>Free to professional</div>
                         <div style={{ fontSize: '11px', color: '#7a8ba8', marginTop: '2px' }}>
-                          {sendCeCourse && filteredCourses.find(({ course }) => course.id === sendCeCourse)?.course.price
-                            ? `Your company covers $${filteredCourses.find(({ course }) => course.id === sendCeCourse)!.course.price} per send`
+                          {sendCeCourses.length > 0
+                            ? `${sendCeCourses.length} course${sendCeCourses.length !== 1 ? "s" : ""} selected · billed to your company`
                             : "Course cost billed to your company"}
                         </div>
                       </div>
@@ -3375,7 +3375,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
                   <div className="flex gap-2 justify-end pt-1">
                     <button type="button" className={BTN_SECONDARY} onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
-                    <button type="submit" disabled={sendCeSaving || !sendCeCourse} className={`${BTN_PRIMARY} disabled:opacity-60`}>{sendCeSaving ? "Sending…" : "Send CE"}</button>
+                    <button type="submit" disabled={sendCeSaving || sendCeCourses.length === 0} className={`${BTN_PRIMARY} disabled:opacity-60`}>{sendCeSaving ? "Sending…" : sendCeCourses.length > 1 ? `Send ${sendCeCourses.length} CEs` : "Send CE"}</button>
                   </div>
                 </form>
               )}

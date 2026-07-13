@@ -3,7 +3,14 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { createWooCoupon } from "@/lib/woocommerce/createCoupon";
-import { buildCeEmailSubject, buildCeEmailHtml, buildCeEmailText } from "@/lib/email/ce-email";
+import {
+  buildCeEmailSubject,
+  buildCeEmailHtml,
+  buildCeEmailText,
+  buildCeMultiEmailSubject,
+  buildCeMultiEmailHtml,
+  buildCeMultiEmailText,
+} from "@/lib/email/ce-email";
 
 const CART_BASE = "https://hiscornerstone.com/";
 function courseAccessUrl(couponCode: string): string {
@@ -43,18 +50,26 @@ function generateCouponCode(repName: string): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { professionalId, repId, courseId, discount, personalMessage, recipient } = body as {
+    const { professionalId, repId, courseId, courseIds, discount, personalMessage, recipient } = body as {
       professionalId: string;
       repId: string;
-      courseId: string;
+      courseId?: string;
+      courseIds?: string[];
       discount: string;
       personalMessage?: string;
       recipient?: { name: string; email: string; discipline?: string; city?: string; state?: string; facility?: string };
     };
 
-    if (!professionalId || !repId || !courseId || !discount) {
+    // Accept a single courseId (back-compat) OR an array of courseIds (multi-send).
+    const courseIdList = Array.isArray(courseIds) && courseIds.length > 0
+      ? Array.from(new Set(courseIds.filter(Boolean)))
+      : courseId
+        ? [courseId]
+        : [];
+
+    if (!professionalId || !repId || courseIdList.length === 0 || !discount) {
       return NextResponse.json(
-        { error: "Missing professionalId, repId, courseId, or discount" },
+        { error: "Missing professionalId, repId, course(s), or discount" },
         { status: 400 }
       );
     }
@@ -69,14 +84,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Look up course by UUID from the courses table
-    const { data: course, error: courseError } = await supabase
+    // Look up all selected courses by UUID from the courses table
+    const { data: courses, error: courseError } = await supabase
       .from("courses")
       .select("id, name, hours, product_id")
-      .eq("id", courseId)
-      .single();
+      .in("id", courseIdList);
 
-    if (courseError || !course) {
+    if (courseError || !courses || courses.length === 0) {
       return NextResponse.json({ error: "Course not found" }, { status: 400 });
     }
 
@@ -177,58 +191,78 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not find email for this professional. Try adding them to your network first." }, { status: 404 });
     }
 
-    const couponCode = generateCouponCode(repName);
-    const productIdForDb = course.product_id;
+    // Create a coupon + ce_send record for each selected course.
+    const sentCourses: { courseName: string; courseHours: number; couponCode: string; accessUrl: string }[] = [];
+    const failedCourses: string[] = [];
 
-    const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 90);
+    for (const course of courses) {
+      const couponCode = generateCouponCode(repName);
+      const productIdForDb = course.product_id;
 
-    const wooResult = await createWooCoupon({
-      code: couponCode,
-      amount: discountToAmount(discount),
-      discountType: "percent",
-      productIds: [productIdForDb],
-      dateExpires: expiryDate.toISOString().split("T")[0],
-      usageLimit: 1,
-      description: `Pulse CE: ${course.name} (${discount})`,
-    });
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + 90);
 
-    if (wooResult.error) {
-      const status = wooResult.error === "WooCommerce credentials not configured" ? 503 : 502;
+      const wooResult = await createWooCoupon({
+        code: couponCode,
+        amount: discountToAmount(discount),
+        discountType: "percent",
+        productIds: [productIdForDb],
+        dateExpires: expiryDate.toISOString().split("T")[0],
+        usageLimit: 1,
+        description: `Pulse CE: ${course.name} (${discount})`,
+      });
+
+      if (wooResult.error) {
+        console.warn(`Coupon creation failed for ${course.name}:`, wooResult.error);
+        failedCourses.push(course.name);
+        continue;
+      }
+
+      const { error: sendError } = await admin.from("ce_sends").insert({
+        rep_id: repId,
+        professional_id: ceSendProId,
+        course_name: course.name,
+        course_hours: course.hours,
+        discount,
+        coupon_code: couponCode,
+        personal_message: personalMessage?.trim() || null,
+        product_id: productIdForDb,
+      });
+
+      if (sendError) {
+        console.warn(`ce_send insert failed for ${course.name}:`, sendError.message);
+        failedCourses.push(course.name);
+        continue;
+      }
+
+      const { error: touchError } = await admin.from("touchpoints").insert({
+        rep_id: repId,
+        professional_id: ceSendProId,
+        type: "ce_send",
+        notes: `${course.name} (${couponCode})`,
+        points: 5,
+      });
+      if (touchError) {
+        // Log but don't fail; ce_send was recorded
+        console.warn("Touchpoint insert failed:", touchError);
+      }
+
+      sentCourses.push({
+        courseName: course.name,
+        courseHours: course.hours,
+        couponCode,
+        accessUrl: courseAccessUrl(couponCode),
+      });
+    }
+
+    if (sentCourses.length === 0) {
       return NextResponse.json(
-        { error: `Could not create coupon in store: ${wooResult.error}` },
-        { status }
+        { error: "Could not create any course coupons in the store. Please try again." },
+        { status: 502 }
       );
     }
 
-    const { error: sendError } = await admin.from("ce_sends").insert({
-      rep_id: repId,
-      professional_id: ceSendProId,
-      course_name: course.name,
-      course_hours: course.hours,
-      discount,
-      coupon_code: couponCode,
-      personal_message: personalMessage?.trim() || null,
-      product_id: productIdForDb,
-    });
-
-    if (sendError) {
-      return NextResponse.json({ error: sendError.message }, { status: 500 });
-    }
-
-    const { error: touchError } = await admin.from("touchpoints").insert({
-      rep_id: repId,
-      professional_id: ceSendProId,
-      type: "ce_send",
-      notes: `${course.name} (${couponCode})`,
-      points: 5,
-    });
-
-    if (touchError) {
-      // Log but don't fail the request; ce_send was recorded
-      console.warn("Touchpoint insert failed:", touchError);
-    }
-
+    // Mark one pending CE request fulfilled (if any)
     const { data: pendingRequest } = await admin
       .from("ce_requests")
       .select("id")
@@ -252,38 +286,61 @@ export async function POST(request: Request) {
     const fromAddress =
       process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
     const fromEmail = `${repName} via Pulse <${fromAddress}>`;
-    const accessUrl = courseAccessUrl(couponCode);
 
     if (resendKey) {
       const resend = new Resend(resendKey);
 
-      const emailParams = {
-        recipientName: pro.name,
-        courseName: course.name,
-        courseHours: course.hours,
-        couponCode,
-        accessUrl,
-        discount,
-        repName,
-        repEmail,
-        repOrgName,
-        personalMessage: personalMessage?.trim(),
-      };
-
-      const { error: emailError } = await resend.emails.send({
-        from: fromEmail,
-        to: pro.email,
-        subject: buildCeEmailSubject(emailParams),
-        html: buildCeEmailHtml(emailParams),
-        text: buildCeEmailText(emailParams),
-      });
-      if (emailError) {
-        console.warn("Resend error:", emailError);
-        // Still return success; record and points are saved
+      if (sentCourses.length === 1) {
+        // Single course — use the original per-course email (unchanged look)
+        const c = sentCourses[0];
+        const emailParams = {
+          recipientName: pro.name,
+          courseName: c.courseName,
+          courseHours: c.courseHours,
+          couponCode: c.couponCode,
+          accessUrl: c.accessUrl,
+          discount,
+          repName,
+          repEmail,
+          repOrgName,
+          personalMessage: personalMessage?.trim(),
+        };
+        const { error: emailError } = await resend.emails.send({
+          from: fromEmail,
+          to: pro.email,
+          subject: buildCeEmailSubject(emailParams),
+          html: buildCeEmailHtml(emailParams),
+          text: buildCeEmailText(emailParams),
+        });
+        if (emailError) console.warn("Resend error:", emailError);
+      } else {
+        // Multiple courses — one combined email listing them all
+        const multiParams = {
+          recipientName: pro.name,
+          repName,
+          repEmail,
+          repOrgName,
+          personalMessage: personalMessage?.trim(),
+          courses: sentCourses,
+        };
+        const { error: emailError } = await resend.emails.send({
+          from: fromEmail,
+          to: pro.email,
+          subject: buildCeMultiEmailSubject(multiParams),
+          html: buildCeMultiEmailHtml(multiParams),
+          text: buildCeMultiEmailText(multiParams),
+        });
+        if (emailError) console.warn("Resend error:", emailError);
       }
     }
 
-    return NextResponse.json({ success: true, couponCode });
+    return NextResponse.json({
+      success: true,
+      sent: sentCourses.length,
+      failed: failedCourses.length,
+      failedCourses,
+      coupons: sentCourses.map((c) => c.couponCode),
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

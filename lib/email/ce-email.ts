@@ -109,3 +109,116 @@ export function buildCeEmailText(p: CeEmailParams): string {
   ].filter(line => line !== undefined).join("\n");
 }
 
+
+// ─── Multi-course (combined) CE email ───────────────────────────
+
+type CeMultiCourse = {
+  courseName: string;
+  courseHours: number;
+  couponCode: string;
+  accessUrl: string;
+};
+
+type CeMultiEmailParams = {
+  recipientName: string;
+  repName: string;
+  repEmail?: string;
+  repOrgName?: string;
+  personalMessage?: string;
+  courses: CeMultiCourse[];
+};
+
+export function buildCeMultiEmailSubject(p: CeMultiEmailParams): string {
+  const firstName = p.repName.split(/\s+/)[0];
+  const n = p.courses.length;
+  const org = p.repOrgName ? ` from ${p.repOrgName}` : "";
+  return `${firstName}${org} sent you ${n} CE courses`;
+}
+
+export function buildCeMultiEmailHtml(p: CeMultiEmailParams): string {
+  const recipientFirst = p.recipientName.split(/\s+/)[0];
+  const repFirst = p.repName.split(/\s+/)[0];
+  const n = p.courses.length;
+
+  const personalBlock = p.personalMessage?.trim()
+    ? `<p style="margin:16px 0;padding:12px 16px;background:#f9f9f6;border-left:3px solid #0d9488;border-radius:4px;font-size:14px;color:#3b4963;line-height:1.6;">${escapeHtml(p.personalMessage.trim())}</p>`
+    : "";
+
+  const courseCards = p.courses
+    .map(
+      (c) => `
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 14px;border:1px solid #e6e6e0;border-radius:10px;">
+  <tr><td style="padding:18px 20px;">
+    <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0b1222;">${escapeHtml(c.courseName)}</p>
+    <p style="margin:0 0 14px;font-size:13px;color:#7a8ba8;">${c.courseHours} credit hour${c.courseHours !== 1 ? "s" : ""} &middot; Nationally accredited &middot; Online, self-paced</p>
+    <a href="${escapeHtml(c.accessUrl)}" style="display:inline-block;background:#2455ff;color:#ffffff;text-decoration:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:700;">Access This Course</a>
+    <p style="margin:12px 0 0;font-size:13px;color:#7a8ba8;">Coupon code: <strong style="color:#0b1222;">${escapeHtml(c.couponCode)}</strong></p>
+  </td></tr>
+  </table>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;text-align:left;">
+<tr><td>
+
+  <p style="margin:0 0 16px;font-size:15px;color:#0b1222;line-height:1.6;">
+    Hi ${escapeHtml(recipientFirst)},
+  </p>
+
+  <p style="margin:0 0 16px;font-size:15px;color:#3b4963;line-height:1.6;">
+    ${escapeHtml(repFirst)}${p.repOrgName ? ` at ${escapeHtml(p.repOrgName)}` : ""} sent you ${n} complimentary continuing education courses:
+  </p>
+
+  ${personalBlock}
+  ${courseCards}
+
+  <p style="margin:16px 0 24px;font-size:13px;color:#7a8ba8;line-height:1.5;">
+    For each course, click its button, then complete checkout on HISCornerstone.com with the coupon applied. Each course is 100% online and self-paced.
+  </p>
+
+  <p style="margin:0;font-size:13px;color:#7a8ba8;line-height:1.5;">
+    ${escapeHtml(p.repName)}${p.repEmail ? `<br/><a href="mailto:${escapeHtml(p.repEmail)}" style="color:#2455ff;text-decoration:none;">${escapeHtml(p.repEmail)}</a>` : ""}${p.repOrgName ? `<br/>${escapeHtml(p.repOrgName)}` : ""}
+  </p>
+
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+export function buildCeMultiEmailText(p: CeMultiEmailParams): string {
+  const recipientFirst = p.recipientName.split(/\s+/)[0];
+  const repFirst = p.repName.split(/\s+/)[0];
+  const n = p.courses.length;
+  const lines: string[] = [
+    `Hi ${recipientFirst},`,
+    ``,
+    `${repFirst}${p.repOrgName ? ` at ${p.repOrgName}` : ""} sent you ${n} complimentary continuing education courses:`,
+    ``,
+  ];
+  if (p.personalMessage?.trim()) {
+    lines.push(`"${p.personalMessage.trim()}"`, ``);
+  }
+  p.courses.forEach((c, i) => {
+    lines.push(
+      `${i + 1}. ${c.courseName} (${c.courseHours} credit hour${c.courseHours !== 1 ? "s" : ""})`,
+      `   Access: ${c.accessUrl}`,
+      `   Coupon code: ${c.couponCode}`,
+      ``
+    );
+  });
+  lines.push(
+    `For each course, click the link, then complete checkout on HISCornerstone.com with the coupon applied.`,
+    ``,
+    `${p.repName}`
+  );
+  if (p.repEmail) lines.push(p.repEmail);
+  if (p.repOrgName) lines.push(p.repOrgName);
+  return lines.join("\n");
+}

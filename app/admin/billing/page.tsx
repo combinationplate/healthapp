@@ -80,7 +80,7 @@ export default async function AdminBillingPage() {
 
   const { data: reqProfiles } = await admin
     .from("profiles")
-    .select("id, full_name, discipline, city, state")
+    .select("id, full_name, discipline, city, state, facility")
     .in("id", reqProfileIds.length > 0 ? reqProfileIds : ["none"]);
 
   const { data: reqProfessionals } = await admin
@@ -108,10 +108,8 @@ export default async function AdminBillingPage() {
       professional_email:
         emailMap.get(r.professional_id) || contact?.email || "",
       discipline: prof?.discipline || contact?.discipline || "",
-      location:
-        [prof?.city, prof?.state].filter(Boolean).join(", ") ||
-        contact?.facility ||
-        "",
+      facility: prof?.facility || contact?.facility || "",
+      location: [prof?.city, prof?.state].filter(Boolean).join(", "),
       rep_name: rep?.full_name
         ? rep.full_name
         : r.invited_rep_email
