@@ -61,7 +61,7 @@ function SignupForm() {
       if (discipline) metadata.discipline = discipline;
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -75,6 +75,27 @@ function SignupForm() {
       setMessage({ type: "error", text: error.message });
       return;
     }
+
+    // Notify admin of the new signup immediately (non-blocking — a failure here
+    // must never delay or break the user's signup).
+    try {
+      void fetch("/api/notify-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: data.user?.id,
+          email,
+          fullName,
+          role,
+          city: isPro ? city : undefined,
+          state: isPro ? state : undefined,
+          discipline: isPro ? discipline : undefined,
+        }),
+      });
+    } catch {
+      // ignore
+    }
+
     router.push("/app");
   }
 

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
+import { CeRequestsLog } from "@/components/admin/CeRequestsLog";
 
 const ADMIN_EMAILS = ["ztaylor120@gmail.com"];
 
@@ -57,6 +58,61 @@ export default async function AdminBillingPage() {
       rep_email: emailMap.get(s.rep_id) ?? "",
       org_name: orgName,
       billable: s.clicked_at ? s.course_hours * 15 : 0,
+    };
+  });
+
+  // ── CE Requests (professionals requesting a CE topic) ──────────
+  const { data: ceRequests } = await admin
+    .from("ce_requests")
+    .select(
+      "id, professional_id, topic, hours, deadline, status, created_at, rep_id, invited_rep_email",
+    )
+    .order("created_at", { ascending: false })
+    .limit(500);
+
+  const reqProIds = [
+    ...new Set((ceRequests ?? []).map((r) => r.professional_id).filter(Boolean)),
+  ];
+  const reqRepIds = [
+    ...new Set((ceRequests ?? []).map((r) => r.rep_id).filter(Boolean)),
+  ];
+  const reqProfileIds = [...new Set([...reqProIds, ...reqRepIds])];
+
+  const { data: reqProfiles } = await admin
+    .from("profiles")
+    .select("id, full_name, discipline")
+    .in("id", reqProfileIds.length > 0 ? reqProfileIds : ["none"]);
+
+  const { data: reqProfessionals } = await admin
+    .from("professionals")
+    .select("id, name, email, discipline")
+    .in("id", reqProIds.length > 0 ? reqProIds : ["none"]);
+
+  const reqProfileMap = new Map((reqProfiles ?? []).map((p) => [p.id, p]));
+  const reqProfessionalMap = new Map(
+    (reqProfessionals ?? []).map((p) => [p.id, p]),
+  );
+
+  const requestRows = (ceRequests ?? []).map((r) => {
+    const prof = reqProfileMap.get(r.professional_id);
+    const contact = reqProfessionalMap.get(r.professional_id);
+    const rep = r.rep_id ? reqProfileMap.get(r.rep_id) : null;
+    return {
+      id: r.id,
+      created_at: r.created_at,
+      topic: r.topic,
+      hours: r.hours,
+      deadline: r.deadline,
+      status: r.status ?? "pending",
+      professional_name: prof?.full_name || contact?.name || "Unknown",
+      professional_email:
+        emailMap.get(r.professional_id) || contact?.email || "",
+      discipline: prof?.discipline || contact?.discipline || "",
+      rep_name: rep?.full_name
+        ? rep.full_name
+        : r.invited_rep_email
+        ? `Invited: ${r.invited_rep_email}`
+        : "Unassigned",
     };
   });
 
@@ -259,6 +315,19 @@ export default async function AdminBillingPage() {
             </div>
           ))}
         </div>
+
+        <h2
+          style={{
+            fontFamily: "'Fraunces', Georgia, serif",
+            fontSize: "18px",
+            fontWeight: 800,
+            color: "#0b1222",
+            marginBottom: "14px",
+          }}
+        >
+          CE Requests
+        </h2>
+        <CeRequestsLog rows={requestRows} />
 
         <h2
           style={{
