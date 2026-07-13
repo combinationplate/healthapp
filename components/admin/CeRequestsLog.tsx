@@ -12,6 +12,7 @@ export type CeRequestRow = {
   professional_name: string;
   professional_email: string;
   discipline: string;
+  location: string;
   rep_name: string;
 };
 
@@ -37,7 +38,8 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
         r.professional_email.toLowerCase().includes(q) ||
         r.topic.toLowerCase().includes(q) ||
         r.rep_name.toLowerCase().includes(q) ||
-        (r.discipline ?? "").toLowerCase().includes(q)
+        (r.discipline ?? "").toLowerCase().includes(q) ||
+        (r.location ?? "").toLowerCase().includes(q)
       );
     });
   }, [rows, status, query]);
@@ -116,6 +118,7 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
                   "Date",
                   "Professional",
                   "Discipline",
+                  "Location",
                   "Topic",
                   "Hrs",
                   "Deadline",
@@ -144,7 +147,7 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     style={{ padding: "24px", textAlign: "center", color: "#7a8ba8" }}
                   >
                     No CE requests match your filter.
@@ -180,6 +183,15 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
                       </td>
                       <td style={{ padding: "8px 10px", color: "#3b4963" }}>
                         {r.discipline || "—"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px 10px",
+                          color: "#3b4963",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {r.location || "—"}
                       </td>
                       <td
                         style={{

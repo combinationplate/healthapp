@@ -80,12 +80,12 @@ export default async function AdminBillingPage() {
 
   const { data: reqProfiles } = await admin
     .from("profiles")
-    .select("id, full_name, discipline")
+    .select("id, full_name, discipline, city, state")
     .in("id", reqProfileIds.length > 0 ? reqProfileIds : ["none"]);
 
   const { data: reqProfessionals } = await admin
     .from("professionals")
-    .select("id, name, email, discipline")
+    .select("id, name, email, discipline, facility")
     .in("id", reqProIds.length > 0 ? reqProIds : ["none"]);
 
   const reqProfileMap = new Map((reqProfiles ?? []).map((p) => [p.id, p]));
@@ -108,6 +108,10 @@ export default async function AdminBillingPage() {
       professional_email:
         emailMap.get(r.professional_id) || contact?.email || "",
       discipline: prof?.discipline || contact?.discipline || "",
+      location:
+        [prof?.city, prof?.state].filter(Boolean).join(", ") ||
+        contact?.facility ||
+        "",
       rep_name: rep?.full_name
         ? rep.full_name
         : r.invited_rep_email
