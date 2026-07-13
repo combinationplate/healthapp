@@ -35,6 +35,7 @@ function SignupForm() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [discipline, setDiscipline] = useState("");
+  const [facility, setFacility] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -59,6 +60,7 @@ function SignupForm() {
       if (city.trim()) metadata.city = city.trim().replace(/\b\w/g, c => c.toUpperCase());
       if (state) metadata.state = state;
       if (discipline) metadata.discipline = discipline;
+      if (facility.trim()) metadata.facility = facility.trim();
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -90,6 +92,7 @@ function SignupForm() {
           city: isPro ? city : undefined,
           state: isPro ? state : undefined,
           discipline: isPro ? discipline : undefined,
+          facility: isPro ? facility : undefined,
         }),
       });
     } catch {
@@ -183,6 +186,18 @@ function SignupForm() {
                   <option value="OT">Occupational Therapy</option>
                   <option value="SLP">Speech-Language Pathology</option>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="facility" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">Facility</label>
+                <input
+                  id="facility"
+                  type="text"
+                  value={facility}
+                  onChange={(e) => setFacility(e.target.value)}
+                  required
+                  placeholder="St. Luke's Hospital"
+                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>

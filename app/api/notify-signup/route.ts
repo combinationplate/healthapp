@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     city?: string;
     state?: string;
     discipline?: string;
+    facility?: string;
   };
   try {
     body = await request.json();
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid body" }, { status: 400 });
   }
 
-  const { userId, email, fullName, role, city, state, discipline } = body;
+  const { userId, email, fullName, role, city, state, discipline, facility } = body;
   if (!email || !role) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
     ["Role", roleLabel],
   ];
   if (discipline) infoRows.push(["Discipline", discipline]);
+  if (facility) infoRows.push(["Facility", facility]);
   if (location) infoRows.push(["Location", location]);
   infoRows.push([
     "Time",

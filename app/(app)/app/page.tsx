@@ -37,6 +37,7 @@ export default async function AppPage() {
         city: (meta.city as string) ?? null,
         state: (meta.state as string) ?? null,
         discipline: (meta.discipline as string) ?? null,
+        facility: (meta.facility as string) ?? null,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
