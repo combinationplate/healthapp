@@ -1,5 +1,6 @@
 import LandingNav from "@/components/landing/LandingNav";
 import Hero from "@/components/landing/Hero";
+import DemandBanner from "@/components/landing/DemandBanner";
 import Toolkit from "@/components/landing/Toolkit";
 import Distribution from "@/components/landing/Distribution";
 import ProblemSolution from "@/components/landing/ProblemSolution";
@@ -14,6 +15,7 @@ export default function Home() {
       <LandingNav />
       <main>
         <Hero />
+        <DemandBanner />
         <Toolkit />
         <Distribution />
         <ProblemSolution />

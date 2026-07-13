@@ -78,6 +78,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
+    // Notify admin of the new CE request (also visible in the admin CE log).
+    try {
+      const alertKey = process.env.RESEND_API_KEY;
+      if (alertKey) {
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("full_name, discipline, city, state, facility")
+          .eq("id", user.id)
+          .single();
+        const alertResend = new Resend(alertKey);
+        const loc = [prof?.city, prof?.state].filter(Boolean).join(", ");
+        await alertResend.emails.send({
+          from: "Pulse Alerts <noreply@pulsereferrals.com>",
+          to: process.env.SIGNUP_ALERT_EMAIL || "hello@pulsereferrals.com",
+          subject: `New CE request: ${topic} (${hours} hrs)`,
+          html: `
+            <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
+              <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New CE request</h2>
+              <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Professional</td><td>${prof?.full_name ?? "—"}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Discipline</td><td>${prof?.discipline ?? "—"}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Facility</td><td>${prof?.facility ?? "—"}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Location</td><td>${loc || "—"}</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${topic} (${hours} hrs)</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Deadline</td><td>${deadline}</td></tr>
+              </table>
+            </div>`,
+        });
+      }
+    } catch (e) {
+      console.error("CE request admin notify failed:", e);
+    }
+
     if (visible) {
       await admin
         .from("profiles")
