@@ -185,6 +185,20 @@ export default async function BlogPostPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: post.html }}
         />
 
+        <nav
+          aria-label="Free CE by discipline"
+          style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px 8px" }}
+        >
+          <p style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#7a8ba8", margin: "0 0 12px" }}>
+            Free CE by discipline
+          </p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+            <Link href="/free-ce-for-nurses" style={{ fontSize: 14, fontWeight: 600, color: "#2455ff", textDecoration: "none", border: "1px solid rgba(11,18,34,0.08)", borderRadius: 10, padding: "10px 16px" }}>Free CE for Nurses</Link>
+            <Link href="/free-ce-for-social-workers" style={{ fontSize: 14, fontWeight: 600, color: "#2455ff", textDecoration: "none", border: "1px solid rgba(11,18,34,0.08)", borderRadius: 10, padding: "10px 16px" }}>Free CE for Social Workers</Link>
+            <Link href="/free-ce-for-case-managers" style={{ fontSize: 14, fontWeight: 600, color: "#2455ff", textDecoration: "none", border: "1px solid rgba(11,18,34,0.08)", borderRadius: 10, padding: "10px 16px" }}>Free CE for Case Managers</Link>
+          </div>
+        </nav>
+
         <section
           style={{
             maxWidth: 720,

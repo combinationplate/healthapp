@@ -1,6 +1,7 @@
 export const metadata = {
   title: "Contact Pulse",
   description: "Get in touch with the Pulse team for questions, support, and billing.",
+  alternates: { canonical: "https://pulsereferrals.com/contact" },
 };
 
 export default function ContactPage() {

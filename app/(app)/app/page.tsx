@@ -42,6 +42,14 @@ export default async function AppPage() {
       },
       { onConflict: "id" }
     );
+    // Store attribution. Kept out of the upsert so a missing referral_source
+    // column (until the migration runs) can never block profile creation.
+    if (meta.referral_source) {
+      await admin
+        .from("profiles")
+        .update({ referral_source: meta.referral_source as string })
+        .eq("id", user.id);
+    }
     profile = { id: user.id, role, full_name: fullName };
   }
 

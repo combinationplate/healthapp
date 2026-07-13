@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <footer className="bg-ink py-14 pt-14 text-white">
       <Container>
-        <div className="mb-10 grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-10 grid gap-12 md:grid-cols-2 lg:grid-cols-5">
           <div>
             <div className="mb-2.5 flex items-center gap-2.5 font-serif text-[26px] font-extrabold">
               <svg width="28" height="28" viewBox="0 0 56 56" fill="none">
@@ -68,6 +68,17 @@ export default function Footer() {
           </div>
           <div>
             <h4 className="mb-3.5 text-[12px] font-bold uppercase tracking-[.1em] text-white/35">
+              Free CE
+            </h4>
+            <ul className="list-none">
+              <li className="mb-2"><Link href="/free-ce-for-nurses" className="text-[14px] text-white/65 hover:text-white">CE for Nurses</Link></li>
+              <li className="mb-2"><Link href="/free-ce-for-social-workers" className="text-[14px] text-white/65 hover:text-white">CE for Social Workers</Link></li>
+              <li className="mb-2"><Link href="/free-ce-for-case-managers" className="text-[14px] text-white/65 hover:text-white">CE for Case Managers</Link></li>
+              <li className="mb-2"><Link href="/accreditation" className="text-[14px] text-white/65 hover:text-white">Accreditation</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="mb-3.5 text-[12px] font-bold uppercase tracking-[.1em] text-white/35">
               Company
             </h4>
             <ul className="list-none">
@@ -85,7 +96,7 @@ export default function Footer() {
                 </a>
               </li>
               <li className="mb-2">
-                <Link href="#" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/blog" className="text-[14px] text-white/65 hover:text-white">
                   Blog
                 </Link>
               </li>

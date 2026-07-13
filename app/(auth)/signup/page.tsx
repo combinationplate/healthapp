@@ -36,6 +36,8 @@ function SignupForm() {
   const [state, setState] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [facility, setFacility] = useState("");
+  const [referralSource, setReferralSource] = useState("");
+  const [referralOther, setReferralOther] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -62,6 +64,10 @@ function SignupForm() {
       if (discipline) metadata.discipline = discipline;
       if (facility.trim()) metadata.facility = facility.trim();
     }
+
+    const referral =
+      referralSource === "Other" ? "Other: " + referralOther.trim() : referralSource;
+    if (referral) metadata.referral_source = referral;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -93,6 +99,7 @@ function SignupForm() {
           state: isPro ? state : undefined,
           discipline: isPro ? discipline : undefined,
           facility: isPro ? facility : undefined,
+          referralSource: referral,
         }),
       });
     } catch {
@@ -228,6 +235,36 @@ function SignupForm() {
               </div>
             </>
           )}
+
+          <div>
+            <label htmlFor="referral" className="mb-1.5 block text-xs font-semibold text-[var(--ink-soft)]">How did you hear about us?</label>
+            <select
+              id="referral"
+              value={referralSource}
+              onChange={(e) => setReferralSource(e.target.value)}
+              required
+              className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+            >
+              <option value="">Select…</option>
+              <option value="Google / search">Google or search engine</option>
+              <option value="AI assistant">AI assistant (ChatGPT, Claude, etc.)</option>
+              <option value="Facebook">Facebook</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="A colleague">A colleague</option>
+              <option value="Event / QR code">An event or QR code</option>
+              <option value="Other">Other</option>
+            </select>
+            {referralSource === "Other" && (
+              <input
+                type="text"
+                value={referralOther}
+                onChange={(e) => setReferralOther(e.target.value)}
+                required
+                placeholder="Please tell us"
+                className="mt-2 w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+              />
+            )}
+          </div>
 
           <Turnstile
             siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}

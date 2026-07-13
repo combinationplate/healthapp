@@ -4,6 +4,14 @@ export const metadata = {
   title: "Accreditation & CE Approvals — Pulse",
   description:
     "Pulse CE courses are accredited for Nursing, Social Work, Case Management, PT, OT, and SLP. Browse state-by-state approvals for each discipline.",
+  alternates: { canonical: "https://pulsereferrals.com/accreditation" },
+  openGraph: {
+    title: "Accreditation & CE Approvals — Pulse",
+    description: "Pulse CE courses are accredited for Nursing, Social Work, Case Management, PT, OT, and SLP.",
+    url: "https://pulsereferrals.com/accreditation",
+    siteName: "Pulse",
+    type: "website",
+  },
 };
 
 /* ── Design tokens (server-safe inline styles) ──────────────────── */
