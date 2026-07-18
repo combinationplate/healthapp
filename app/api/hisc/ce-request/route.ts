@@ -58,11 +58,12 @@ async function findOrCreateProfessional(
   if (createErr) {
     for (let page = 1; page <= 3; page++) {
       const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 500 });
-      const hit = list?.users?.find(
+      const users = (list?.users ?? []) as { id: string; email?: string | null }[];
+      const hit = users.find(
         (u) => (u.email ?? "").toLowerCase() === lead.email.toLowerCase()
       );
       if (hit) return { userId: hit.id, created: false };
-      if (!list || list.users.length < 500) break;
+      if (users.length < 500) break;
     }
     console.error("[hisc/ce-request] could not create or find user:", createErr.message);
   }
