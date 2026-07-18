@@ -4,7 +4,7 @@
  * Description: Bridge between pulsereferrals.com and Hiscornerstone. Provides an HMAC-signed
  *              enrollment endpoint (find-or-create user + LearnDash enroll + one-time magic
  *              login link) and reports LearnDash course completions back to Pulse.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Pulse
  *
  * INSTALL (easy way): WP Admin → Plugins → Add New Plugin → Upload Plugin →
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PULSE_CONNECT_VERSION', '1.1.0' );
+define( 'PULSE_CONNECT_VERSION', '1.2.0' );
 define( 'PULSE_TOKEN_TTL', 15 * MINUTE_IN_SECONDS );
 define( 'PULSE_TS_TOLERANCE', 300 ); // seconds of clock drift allowed on signed requests
 
@@ -39,6 +39,18 @@ function pulse_get_webhook_url() {
 	}
 	$opt = (string) get_option( 'pulse_webhook_url', '' );
 	return $opt !== '' ? $opt : 'https://pulsereferrals.com/api/webhooks/course-completed';
+}
+
+function pulse_get_api_base() {
+	$opt = (string) get_option( 'pulse_api_url', '' );
+	return rtrim( $opt !== '' ? $opt : 'https://pulsereferrals.com', '/' );
+}
+
+/** Sign an outbound payload to Pulse. Returns array( timestamp, signature ). */
+function pulse_sign_payload( $body ) {
+	$ts  = (string) time();
+	$sig = hash_hmac( 'sha256', $ts . '.' . $body, pulse_get_secret() );
+	return array( $ts, $sig );
 }
 
 /* -------------------------------------------------------------------------
@@ -297,6 +309,172 @@ add_action( 'learndash_course_completed', function ( $data ) {
 }, 10, 1 );
 
 /* -------------------------------------------------------------------------
+ * Free CE request form — [pulse_ce_request_form] shortcode + public relay
+ * ---------------------------------------------------------------------- */
+
+// Public endpoint the on-page form posts to. WP relays to Pulse server-side
+// so the shared secret never reaches the browser.
+add_action( 'rest_api_init', function () {
+	register_rest_route( 'pulse/v1', '/ce-request', array(
+		'methods'             => 'POST',
+		'callback'            => 'pulse_handle_public_ce_request',
+		'permission_callback' => '__return_true',
+	) );
+} );
+
+function pulse_handle_public_ce_request( WP_REST_Request $request ) {
+	$p = $request->get_json_params();
+
+	// Honeypot — bots fill every field.
+	if ( ! empty( $p['website'] ) ) {
+		return array( 'success' => true ); // pretend success, drop silently
+	}
+
+	// Light rate limit: 5 submissions per IP per hour.
+	$ip    = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	$rlkey = 'pulse_cer_' . md5( $ip );
+	$count = (int) get_transient( $rlkey );
+	if ( $count >= 5 ) {
+		return new WP_Error( 'pulse_rate_limited', 'Too many requests — please try again later.', array( 'status' => 429 ) );
+	}
+	set_transient( $rlkey, $count + 1, HOUR_IN_SECONDS );
+
+	$name       = isset( $p['name'] ) ? sanitize_text_field( $p['name'] ) : '';
+	$email      = isset( $p['email'] ) ? sanitize_email( $p['email'] ) : '';
+	$discipline = isset( $p['discipline'] ) ? sanitize_text_field( $p['discipline'] ) : '';
+	$city       = isset( $p['city'] ) ? sanitize_text_field( $p['city'] ) : '';
+	$state      = isset( $p['state'] ) ? strtoupper( sanitize_text_field( $p['state'] ) ) : '';
+	$facility   = isset( $p['facility'] ) ? sanitize_text_field( $p['facility'] ) : '';
+	$topic      = isset( $p['topic'] ) ? sanitize_text_field( $p['topic'] ) : '';
+	$hours      = isset( $p['hours'] ) ? max( 1, min( 30, (int) $p['hours'] ) ) : 1;
+
+	if ( '' === $name || ! is_email( $email ) || '' === $discipline || '' === $city || strlen( $state ) !== 2 ) {
+		return new WP_Error( 'pulse_bad_request', 'Please fill in your name, email, discipline, city, and state.', array( 'status' => 400 ) );
+	}
+	if ( pulse_get_secret() === '' ) {
+		return new WP_Error( 'pulse_not_configured', 'This form is not configured yet.', array( 'status' => 500 ) );
+	}
+
+	$body = wp_json_encode( array(
+		'name'       => $name,
+		'email'      => strtolower( $email ),
+		'discipline' => $discipline,
+		'city'       => $city,
+		'state'      => $state,
+		'facility'   => $facility,
+		'topic'      => $topic,
+		'hours'      => $hours,
+		'source'     => 'hiscornerstone',
+	) );
+	list( $ts, $sig ) = pulse_sign_payload( $body );
+
+	$res = wp_remote_post( pulse_get_api_base() . '/api/hisc/ce-request', array(
+		'headers' => array(
+			'Content-Type'      => 'application/json',
+			'X-Pulse-Timestamp' => $ts,
+			'X-Pulse-Signature' => $sig,
+		),
+		'body'    => $body,
+		'timeout' => 12,
+	) );
+
+	if ( is_wp_error( $res ) || wp_remote_retrieve_response_code( $res ) >= 400 ) {
+		$detail = is_wp_error( $res ) ? $res->get_error_message() : wp_remote_retrieve_body( $res );
+		error_log( '[pulse-connect] ce-request relay failed: ' . $detail );
+		return new WP_Error( 'pulse_relay_failed', 'Something went wrong submitting your request. Please try again in a moment.', array( 'status' => 502 ) );
+	}
+
+	return array( 'success' => true );
+}
+
+// [pulse_ce_request_form] — drop into any page/post. Inherits the theme's
+// fonts; accents use the H.I.S. Cornerstone palette so it never looks foreign.
+add_shortcode( 'pulse_ce_request_form', function () {
+	$endpoint = esc_url( rest_url( 'pulse/v1/ce-request' ) );
+	$states   = array( 'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC' );
+	$disciplines = array( 'Registered Nurse (RN)', 'LVN / LPN', 'Social Worker', 'Case Manager', 'Licensed Professional Counselor', 'Occupational Therapist', 'Physical Therapist', 'Speech-Language Pathologist', 'Other Healthcare Professional' );
+
+	$state_opts = '';
+	foreach ( $states as $s ) {
+		$state_opts .= '<option value="' . esc_attr( $s ) . '">' . esc_html( $s ) . '</option>';
+	}
+	$disc_opts = '';
+	foreach ( $disciplines as $d ) {
+		$disc_opts .= '<option value="' . esc_attr( $d ) . '">' . esc_html( $d ) . '</option>';
+	}
+
+	ob_start();
+	?>
+	<style>
+		.pulse-cer{max-width:640px;margin:0 auto;background:#fff;border:1px solid #DDE9EE;border-radius:12px;padding:28px;box-shadow:0 4px 18px rgba(56,59,60,.06);}
+		.pulse-cer h3{margin:0 0 6px;color:#4E818B;}
+		.pulse-cer .pulse-cer-sub{margin:0 0 20px;color:#383B3C;opacity:.8;font-size:.95em;}
+		.pulse-cer label{display:block;font-weight:600;color:#383B3C;font-size:.88em;margin:14px 0 4px;}
+		.pulse-cer input,.pulse-cer select{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #DDE9EE;border-radius:8px;background:#fff;color:#383B3C;font:inherit;}
+		.pulse-cer input:focus,.pulse-cer select:focus{outline:none;border-color:#4E818B;}
+		.pulse-cer .pulse-cer-row{display:flex;gap:12px;}
+		.pulse-cer .pulse-cer-row>div{flex:1;}
+		.pulse-cer button{margin-top:20px;width:100%;padding:13px 20px;background:#4E818B;color:#fff;border:none;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;}
+		.pulse-cer button:hover{background:#3f6a73;}
+		.pulse-cer button:disabled{opacity:.6;cursor:wait;}
+		.pulse-cer .pulse-cer-err{color:#b3423f;font-size:.9em;margin-top:10px;display:none;}
+		.pulse-cer .pulse-cer-fine{font-size:.78em;color:#383B3C;opacity:.65;margin-top:12px;line-height:1.5;}
+		.pulse-cer-done{max-width:640px;margin:0 auto;background:#DDE9EE;border-radius:12px;padding:28px;text-align:center;color:#383B3C;display:none;}
+		.pulse-cer-done h3{color:#4E818B;margin:0 0 8px;}
+		.pulse-cer .pulse-hp{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden;}
+	</style>
+	<form class="pulse-cer" id="pulse-cer-form">
+		<h3>Request a Sponsored CE Course</h3>
+		<p class="pulse-cer-sub">Tell us what you need — local healthcare partners sponsor accredited CE courses for professionals in their area at no cost to you.</p>
+		<div class="pulse-cer-row">
+			<div><label for="pcer-name">Full name *</label><input id="pcer-name" name="name" type="text" required autocomplete="name" /></div>
+			<div><label for="pcer-email">Email *</label><input id="pcer-email" name="email" type="email" required autocomplete="email" /></div>
+		</div>
+		<label for="pcer-disc">Discipline *</label>
+		<select id="pcer-disc" name="discipline" required><option value="">Select your discipline…</option><?php echo $disc_opts; // phpcs:ignore ?></select>
+		<div class="pulse-cer-row">
+			<div><label for="pcer-city">City *</label><input id="pcer-city" name="city" type="text" required autocomplete="address-level2" /></div>
+			<div><label for="pcer-state">State *</label><select id="pcer-state" name="state" required><option value="">State…</option><?php echo $state_opts; // phpcs:ignore ?></select></div>
+		</div>
+		<label for="pcer-fac">Facility / employer <span style="font-weight:400;opacity:.6;">(optional)</span></label>
+		<input id="pcer-fac" name="facility" type="text" autocomplete="organization" />
+		<div class="pulse-cer-row">
+			<div><label for="pcer-topic">Course topic <span style="font-weight:400;opacity:.6;">(optional)</span></label><input id="pcer-topic" name="topic" type="text" placeholder="e.g. Ethics, Dementia care — or leave blank" /></div>
+			<div><label for="pcer-hours">CE hours needed *</label><select id="pcer-hours" name="hours"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="5">5</option><option value="10">10+</option></select></div>
+		</div>
+		<div class="pulse-hp" aria-hidden="true"><label>Website<input name="website" type="text" tabindex="-1" autocomplete="off" /></label></div>
+		<button type="submit" id="pcer-btn">Request My Free CE Course</button>
+		<p class="pulse-cer-err" id="pcer-err"></p>
+		<p class="pulse-cer-fine">Sponsored courses are fulfilled by local healthcare partners through our partner platform, Pulse. By submitting, you agree to be contacted by email about your request. No cost, no credit card — ever.</p>
+	</form>
+	<div class="pulse-cer-done" id="pulse-cer-done">
+		<h3>Request received!</h3>
+		<p>We're matching your request with a sponsor in your area. You'll get an email confirmation now, and your course by email once a sponsor picks it up — usually within a few days.</p>
+	</div>
+	<script>
+	(function(){
+		var form=document.getElementById('pulse-cer-form');
+		if(!form)return;
+		form.addEventListener('submit',function(e){
+			e.preventDefault();
+			var btn=document.getElementById('pcer-btn'),err=document.getElementById('pcer-err');
+			err.style.display='none';btn.disabled=true;btn.textContent='Submitting…';
+			var data={};new FormData(form).forEach(function(v,k){data[k]=v;});
+			fetch('<?php echo $endpoint; // phpcs:ignore ?>',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})
+			.then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
+			.then(function(res){
+				if(res.ok&&res.j&&res.j.success){form.style.display='none';document.getElementById('pulse-cer-done').style.display='block';}
+				else{throw new Error((res.j&&res.j.message)||'Something went wrong.');}
+			})
+			.catch(function(ex){err.textContent=ex.message||'Something went wrong. Please try again.';err.style.display='block';btn.disabled=false;btn.textContent='Request My Free CE Course';});
+		});
+	})();
+	</script>
+	<?php
+	return ob_get_clean();
+} );
+
+/* -------------------------------------------------------------------------
  * Settings page (Settings → Pulse Connect)
  * ---------------------------------------------------------------------- */
 
@@ -307,6 +485,7 @@ add_action( 'admin_menu', function () {
 add_action( 'admin_init', function () {
 	register_setting( 'pulse_connect', 'pulse_shared_secret', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 	register_setting( 'pulse_connect', 'pulse_webhook_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
+	register_setting( 'pulse_connect', 'pulse_api_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
 } );
 
 function pulse_render_settings_page() {
@@ -370,7 +549,18 @@ function pulse_render_settings_page() {
 						<p class="description">Leave blank for the default (recommended).</p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><label for="pulse_api_url">Pulse app URL</label></th>
+					<td>
+						<input type="url" id="pulse_api_url" name="pulse_api_url"
+							value="<?php echo esc_attr( get_option( 'pulse_api_url', '' ) ); ?>"
+							class="regular-text code"
+							placeholder="https://pulsereferrals.com" />
+						<p class="description">Used by the CE request form shortcode. Leave blank for the default (recommended).</p>
+					</td>
+				</tr>
 			</table>
+			<p class="description" style="margin-top:8px;">Shortcode for the request form: <code>[pulse_ce_request_form]</code> — add it to any page.</p>
 			<?php submit_button( 'Save Settings' ); ?>
 		</form>
 	</div>
