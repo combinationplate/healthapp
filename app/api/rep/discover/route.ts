@@ -27,7 +27,10 @@ export async function GET() {
     .eq("role", "professional")
     .neq("id", user.id);
 
-  if (repProfile?.state) {
+  // House account (Pulse Team) has no territory — it fulfills nationwide.
+  const HOUSE_EMAIL = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();
+  const isHouse = (user.email ?? "").toLowerCase() === HOUSE_EMAIL;
+  if (repProfile?.state && !isHouse) {
     query = query.eq("state", repProfile.state);
   }
 

@@ -251,6 +251,7 @@ function SignupForm() {
               <option value="Facebook">Facebook</option>
               <option value="LinkedIn">LinkedIn</option>
               <option value="A colleague">A colleague</option>
+              <option value="Email from H.I.S. Cornerstone">Email from H.I.S. Cornerstone</option>
               <option value="Event / QR code">An event or QR code</option>
               <option value="Other">Other</option>
             </select>
