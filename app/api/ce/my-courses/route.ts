@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const CART_BASE = "https://hiscornerstone.com/";
 const FALLBACK_REDEEM_URL = "https://hiscornerstone.com";
 
-function courseAccessUrl(productId: number, couponCode: string): string {
-  const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
-  return `${CART_BASE}?${params.toString()}`;
+/** Route through /r → /start so dashboard "Redeem" gets the direct-enrollment flow too. */
+function courseAccessUrl(couponCode: string): string {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsereferrals.com").replace(/\/$/, "");
+  return `${appUrl}/r/${couponCode}`;
 }
 
 export async function GET() {
@@ -32,10 +32,9 @@ export async function GET() {
       const expiryAt = new Date(sentAt);
       expiryAt.setDate(expiryAt.getDate() + 90);
       const repName = (r.users as { name?: string } | null)?.name ?? "Rep";
-      const productId = r.product_id as number | null;
       const couponCode = r.coupon_code as string;
-      const redeemUrl = productId
-        ? courseAccessUrl(productId, couponCode)
+      const redeemUrl = couponCode
+        ? courseAccessUrl(couponCode)
         : FALLBACK_REDEEM_URL;
       return {
         id: r.id,

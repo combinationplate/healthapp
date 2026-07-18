@@ -2,10 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const CART_BASE = "https://hiscornerstone.com/";
-function courseAccessUrl(productId: number, couponCode: string): string {
-  const params = new URLSearchParams({ "add-to-cart": String(productId), coupon_code: couponCode });
-  return `${CART_BASE}?${params.toString()}`;
+/** Route through /r → /start so reminders get the direct-enrollment flow too. */
+function courseAccessUrl(couponCode: string): string {
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsereferrals.com").replace(/\/$/, "");
+  return `${appUrl}/r/${couponCode}`;
 }
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -48,8 +48,7 @@ export async function POST(request: Request) {
     }
 
     const proRow = pro as { name: string; email: string };
-    const productId = sendRow.product_id;
-    const accessUrl = productId ? courseAccessUrl(productId, sendRow.coupon_code) : "https://hiscornerstone.com/";
+    const accessUrl = sendRow.coupon_code ? courseAccessUrl(sendRow.coupon_code) : "https://hiscornerstone.com/";
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";

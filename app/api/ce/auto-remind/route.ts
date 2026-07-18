@@ -111,8 +111,9 @@ export async function GET(request: Request) {
     const appUrl =
       (process.env.NEXT_PUBLIC_APP_URL ??
         "https://pulsereferrals.com").replace(/\/$/, "");
-    const accessUrl =
-      ce.redirect_url || `${appUrl}/r/${ce.coupon_code as string}`;
+    // Always route through /r → /start so reminders get the direct-enrollment
+    // flow too (legacy redirect_url pointed straight at the Woo cart).
+    const accessUrl = `${appUrl}/r/${ce.coupon_code as string}`;
     const isLastReminder = ce.reminder_count === 2;
 
     const emailParams = {
