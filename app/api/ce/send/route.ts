@@ -194,6 +194,7 @@ export async function POST(request: Request) {
     // Create a coupon + ce_send record for each selected course.
     const sentCourses: { courseName: string; courseHours: number; couponCode: string; accessUrl: string }[] = [];
     const failedCourses: string[] = [];
+    const insertedSendIds: string[] = [];
 
     for (const course of courses) {
       const couponCode = generateCouponCode(repName);
@@ -218,22 +219,28 @@ export async function POST(request: Request) {
         continue;
       }
 
-      const { error: sendError } = await admin.from("ce_sends").insert({
-        rep_id: repId,
-        professional_id: ceSendProId,
-        course_name: course.name,
-        course_hours: course.hours,
-        discount,
-        coupon_code: couponCode,
-        personal_message: personalMessage?.trim() || null,
-        product_id: productIdForDb,
-      });
+      const { data: insertedSend, error: sendError } = await admin
+        .from("ce_sends")
+        .insert({
+          rep_id: repId,
+          professional_id: ceSendProId,
+          course_name: course.name,
+          course_hours: course.hours,
+          discount,
+          coupon_code: couponCode,
+          personal_message: personalMessage?.trim() || null,
+          product_id: productIdForDb,
+          recipient_email: pro.email,
+        })
+        .select("id")
+        .single();
 
-      if (sendError) {
-        console.warn(`ce_send insert failed for ${course.name}:`, sendError.message);
+      if (sendError || !insertedSend) {
+        console.warn(`ce_send insert failed for ${course.name}:`, sendError?.message);
         failedCourses.push(course.name);
         continue;
       }
+      insertedSendIds.push(insertedSend.id);
 
       const { error: touchError } = await admin.from("touchpoints").insert({
         rep_id: repId,
@@ -287,6 +294,8 @@ export async function POST(request: Request) {
       process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
     const fromEmail = `${repName} via Pulse <${fromAddress}>`;
 
+    let emailErrorMsg: string | null = null;
+
     if (resendKey) {
       const resend = new Resend(resendKey);
 
@@ -312,7 +321,10 @@ export async function POST(request: Request) {
           html: buildCeEmailHtml(emailParams),
           text: buildCeEmailText(emailParams),
         });
-        if (emailError) console.warn("Resend error:", emailError);
+        if (emailError) {
+          console.error("Resend error (single send):", emailError);
+          emailErrorMsg = emailError.message ?? "Email send failed";
+        }
       } else {
         // Multiple courses — one combined email listing them all
         const multiParams = {
@@ -331,8 +343,25 @@ export async function POST(request: Request) {
           html: buildCeMultiEmailHtml(multiParams),
           text: buildCeMultiEmailText(multiParams),
         });
-        if (emailError) console.warn("Resend error:", emailError);
+        if (emailError) {
+          console.error("Resend error (multi send):", emailError);
+          emailErrorMsg = emailError.message ?? "Email send failed";
+        }
       }
+    } else {
+      emailErrorMsg = "RESEND_API_KEY not configured";
+    }
+
+    // Record delivery outcome so failures are visible, not silent.
+    if (insertedSendIds.length > 0) {
+      await admin
+        .from("ce_sends")
+        .update(
+          emailErrorMsg
+            ? { email_error: emailErrorMsg }
+            : { email_sent_at: new Date().toISOString() }
+        )
+        .in("id", insertedSendIds);
     }
 
     return NextResponse.json({
@@ -341,6 +370,8 @@ export async function POST(request: Request) {
       failed: failedCourses.length,
       failedCourses,
       coupons: sentCourses.map((c) => c.couponCode),
+      emailSent: !emailErrorMsg,
+      emailError: emailErrorMsg,
     });
   } catch (e) {
     console.error(e);

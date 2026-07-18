@@ -130,6 +130,21 @@ export default function LandingNav() {
           {/* Right side */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <Link
+              href="/login"
+              className="lnav-desktop"
+              style={{
+                display: "inline-block",
+                padding: "8px 14px",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#2455ff",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Sign in
+            </Link>
+            <Link
               href="/signup?type=hcp"
               className="lnav-desktop"
               style={{
@@ -217,6 +232,20 @@ export default function LandingNav() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              style={{
+                fontSize: "15px",
+                fontWeight: 600,
+                color: "#2455ff",
+                textDecoration: "none",
+                padding: "14px 0",
+                borderBottom: "1px solid rgba(11,18,34,0.04)",
+              }}
+            >
+              Sign in →
+            </Link>
             <Link
               href="/signup?type=hcp"
               onClick={() => setMobileOpen(false)}

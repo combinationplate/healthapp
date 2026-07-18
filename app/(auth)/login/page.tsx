@@ -12,10 +12,25 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/app";
+  const urlError = searchParams.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(() => {
+    if (urlError === "link-expired") {
+      return {
+        type: "error",
+        text: "That reset link has expired or was already used. Use “Forgot password?” below to request a fresh one.",
+      };
+    }
+    if (urlError === "auth") {
+      return {
+        type: "error",
+        text: "We couldn't verify that link. Please sign in, or request a new link below.",
+      };
+    }
+    return null;
+  });
 
   const [showReset, setShowReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");

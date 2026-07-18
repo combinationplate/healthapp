@@ -271,7 +271,7 @@ export async function POST(request: Request) {
       repOrgName: orgName,
     };
 
-    await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -285,6 +285,24 @@ export async function POST(request: Request) {
         text: buildCeEmailText(emailParams),
       }),
     });
+
+    // Record the delivery outcome — a swallowed failure here means a
+    // professional standing at a facility never gets their course.
+    if (!emailRes.ok) {
+      const errText = await emailRes.text().catch(() => "");
+      console.error("Resend error (QR landing):", emailRes.status, errText);
+      if (ceSendData?.id) {
+        await admin
+          .from("ce_sends")
+          .update({ email_error: `Resend ${emailRes.status}: ${errText.slice(0, 300)}` })
+          .eq("id", ceSendData.id);
+      }
+    } else if (ceSendData?.id) {
+      await admin
+        .from("ce_sends")
+        .update({ email_sent_at: new Date().toISOString() })
+        .eq("id", ceSendData.id);
+    }
 
     return NextResponse.json({ success: true });
   } catch (e) {

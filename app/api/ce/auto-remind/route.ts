@@ -145,13 +145,24 @@ export async function GET(request: Request) {
       const fromAddress =
         process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
 
-      await resend.emails.send({
+      const { error: sendErr } = await resend.emails.send({
         from: `${repName} via Pulse <${fromAddress}>`,
         to: proEmail,
         subject,
         html: buildCeEmailHtml(emailParams),
         text: buildCeEmailText(emailParams),
       });
+
+      if (sendErr) {
+        // Don't count a reminder that never went out — record why and retry next run.
+        console.error(`Reminder send failed for ce_send ${ce.id}:`, sendErr);
+        await admin
+          .from("ce_sends")
+          .update({ email_error: sendErr.message ?? "Reminder email failed" })
+          .eq("id", ce.id);
+        skipped++;
+        continue;
+      }
 
       await admin
         .from("ce_sends")

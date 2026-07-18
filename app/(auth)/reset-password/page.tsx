@@ -16,6 +16,15 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [validSession, setValidSession] = useState(false);
+  const [checkTimedOut, setCheckTimedOut] = useState(false);
+
+  useEffect(() => {
+    // If no session materializes within a few seconds, the link was bad/expired
+    // (or opened in a context we can't verify) — show a way out instead of
+    // spinning on "Verifying" forever.
+    const t = setTimeout(() => setCheckTimedOut(true), 6000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     // Check if there's already a session (PKCE may have exchanged before listener mounted)
@@ -68,7 +77,22 @@ export default function ResetPasswordPage() {
         </p>
 
         {!validSession ? (
-          <p className="text-sm text-[var(--ink-muted)]">Verifying reset link…</p>
+          checkTimedOut ? (
+            <div>
+              <p className="text-sm text-[var(--coral)]">
+                We couldn&apos;t verify this reset link — it may have expired or
+                already been used.
+              </p>
+              <p className="mt-3 text-sm text-[var(--ink-muted)]">
+                <Link href="/login" className="font-semibold text-[var(--blue)] hover:underline">
+                  Request a new reset link
+                </Link>{" "}
+                from the sign-in page.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--ink-muted)]">Verifying reset link…</p>
+          )
         ) : success ? (
           <p className="text-sm text-[var(--teal)]">
             Password updated! Redirecting to login…
