@@ -322,6 +322,7 @@ export async function POST(request: Request) {
           repOrgName,
           personalMessage: personalMessage?.trim(),
           courses: sentCourses,
+          discount,
         };
         const { error: emailError } = await resend.emails.send({
           from: fromEmail,

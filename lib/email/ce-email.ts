@@ -29,6 +29,7 @@ export function buildCeEmailSubject(p: CeEmailParams): string {
 export function buildCeEmailHtml(p: CeEmailParams): string {
   const recipientFirst = p.recipientName.split(/\s+/)[0];
   const repFirst = p.repName.split(/\s+/)[0];
+  const isFree = p.discount === "100% Free";
 
   const personalBlock = p.personalMessage?.trim()
     ? `<p style="margin:16px 0;padding:12px 16px;background:#f9f9f6;border-left:3px solid #0d9488;border-radius:4px;font-size:14px;color:#3b4963;line-height:1.6;">${escapeHtml(p.personalMessage.trim())}</p>`
@@ -47,7 +48,7 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
   </p>
 
   <p style="margin:0 0 16px;font-size:15px;color:#3b4963;line-height:1.6;">
-    ${escapeHtml(repFirst)}${p.repOrgName ? ` at ${escapeHtml(p.repOrgName)}` : ""} sent you a complimentary continuing education course:
+    ${escapeHtml(repFirst)}${p.repOrgName ? ` at ${escapeHtml(p.repOrgName)}` : ""} sent you a ${isFree ? "complimentary" : "discounted"} continuing education course:
   </p>
 
   <p style="margin:0 0 4px;font-size:16px;font-weight:700;color:#0b1222;">
@@ -65,13 +66,21 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
     </a>
   </p>
 
-  <p style="margin:0 0 8px;font-size:13px;color:#7a8ba8;">
+  ${isFree
+    ? `<p style="margin:0 0 8px;font-size:13px;color:#7a8ba8;line-height:1.5;">
+    Click the button above and you&#39;ll be taken straight into your course on HISCornerstone.com &mdash; no account setup or checkout needed. The course is 100% online and self-paced.
+  </p>
+
+  <p style="margin:0 0 24px;font-size:12px;color:#a8aeb9;line-height:1.5;">
+    Backup code (only needed if the button doesn&#39;t work): <strong style="color:#7a8ba8;">${escapeHtml(p.couponCode)}</strong> at HISCornerstone.com checkout.
+  </p>`
+    : `<p style="margin:0 0 8px;font-size:13px;color:#7a8ba8;">
     Your coupon code: <strong style="color:#0b1222;">${escapeHtml(p.couponCode)}</strong>
   </p>
 
   <p style="margin:0 0 24px;font-size:13px;color:#7a8ba8;line-height:1.5;">
-    Click the button above, then complete checkout on HISCornerstone.com with your coupon applied. The course is 100% online and self-paced.
-  </p>
+    Click the button above, then complete checkout on HISCornerstone.com with your ${escapeHtml(p.discount.toLowerCase())} discount applied. The course is 100% online and self-paced.
+  </p>`}
 
   <p style="margin:0;font-size:13px;color:#7a8ba8;line-height:1.5;">
     ${escapeHtml(p.repName)}${p.repEmail ? `<br/><a href="mailto:${escapeHtml(p.repEmail)}" style="color:#2455ff;text-decoration:none;">${escapeHtml(p.repEmail)}</a>` : ""}${p.repOrgName ? `<br/>${escapeHtml(p.repOrgName)}` : ""}
@@ -87,10 +96,11 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
 export function buildCeEmailText(p: CeEmailParams): string {
   const recipientFirst = p.recipientName.split(/\s+/)[0];
   const repFirst = p.repName.split(/\s+/)[0];
+  const isFree = p.discount === "100% Free";
   return [
     `Hi ${recipientFirst},`,
     ``,
-    `${repFirst}${p.repOrgName ? ` at ${p.repOrgName}` : ""} sent you a complimentary continuing education course:`,
+    `${repFirst}${p.repOrgName ? ` at ${p.repOrgName}` : ""} sent you a ${isFree ? "complimentary" : "discounted"} continuing education course:`,
     ``,
     `${p.courseName}`,
     `${p.courseHours} credit hour${p.courseHours !== 1 ? "s" : ""} - Nationally accredited - Online, self-paced`,
@@ -99,9 +109,13 @@ export function buildCeEmailText(p: CeEmailParams): string {
     p.personalMessage?.trim() ? `` : ``,
     `Access your course: ${p.accessUrl}`,
     ``,
-    `Coupon code: ${p.couponCode}`,
+    isFree
+      ? `Click the link and you'll be taken straight into your course on HISCornerstone.com — no account setup or checkout needed.`
+      : `Coupon code: ${p.couponCode}`,
     ``,
-    `Click the link, then complete checkout on HISCornerstone.com with your coupon applied.`,
+    isFree
+      ? `Backup code (only if the link doesn't work): ${p.couponCode} at HISCornerstone.com checkout.`
+      : `Click the link, then complete checkout on HISCornerstone.com with your ${p.discount.toLowerCase()} discount applied.`,
     ``,
     `${p.repName}`,
     p.repEmail ? p.repEmail : ``,
@@ -126,6 +140,8 @@ type CeMultiEmailParams = {
   repOrgName?: string;
   personalMessage?: string;
   courses: CeMultiCourse[];
+  /** Shared discount for all courses in this send (e.g. "100% Free"). Defaults to free. */
+  discount?: string;
 };
 
 export function buildCeMultiEmailSubject(p: CeMultiEmailParams): string {
@@ -139,6 +155,7 @@ export function buildCeMultiEmailHtml(p: CeMultiEmailParams): string {
   const recipientFirst = p.recipientName.split(/\s+/)[0];
   const repFirst = p.repName.split(/\s+/)[0];
   const n = p.courses.length;
+  const isFree = (p.discount ?? "100% Free") === "100% Free";
 
   const personalBlock = p.personalMessage?.trim()
     ? `<p style="margin:16px 0;padding:12px 16px;background:#f9f9f6;border-left:3px solid #0d9488;border-radius:4px;font-size:14px;color:#3b4963;line-height:1.6;">${escapeHtml(p.personalMessage.trim())}</p>`
@@ -152,7 +169,7 @@ export function buildCeMultiEmailHtml(p: CeMultiEmailParams): string {
     <p style="margin:0 0 4px;font-size:15px;font-weight:700;color:#0b1222;">${escapeHtml(c.courseName)}</p>
     <p style="margin:0 0 14px;font-size:13px;color:#7a8ba8;">${c.courseHours} credit hour${c.courseHours !== 1 ? "s" : ""} &middot; Nationally accredited &middot; Online, self-paced</p>
     <a href="${escapeHtml(c.accessUrl)}" style="display:inline-block;background:#2455ff;color:#ffffff;text-decoration:none;padding:11px 28px;border-radius:8px;font-size:14px;font-weight:700;">Access This Course</a>
-    <p style="margin:12px 0 0;font-size:13px;color:#7a8ba8;">Coupon code: <strong style="color:#0b1222;">${escapeHtml(c.couponCode)}</strong></p>
+    <p style="margin:12px 0 0;font-size:12px;color:#a8aeb9;">${isFree ? "Backup code (only if the button doesn&#39;t work)" : "Coupon code"}: <strong style="color:#7a8ba8;">${escapeHtml(c.couponCode)}</strong></p>
   </td></tr>
   </table>`
     )
@@ -171,14 +188,16 @@ export function buildCeMultiEmailHtml(p: CeMultiEmailParams): string {
   </p>
 
   <p style="margin:0 0 16px;font-size:15px;color:#3b4963;line-height:1.6;">
-    ${escapeHtml(repFirst)}${p.repOrgName ? ` at ${escapeHtml(p.repOrgName)}` : ""} sent you ${n} complimentary continuing education courses:
+    ${escapeHtml(repFirst)}${p.repOrgName ? ` at ${escapeHtml(p.repOrgName)}` : ""} sent you ${n} ${isFree ? "complimentary" : "discounted"} continuing education courses:
   </p>
 
   ${personalBlock}
   ${courseCards}
 
   <p style="margin:16px 0 24px;font-size:13px;color:#7a8ba8;line-height:1.5;">
-    For each course, click its button, then complete checkout on HISCornerstone.com with the coupon applied. Each course is 100% online and self-paced.
+    ${isFree
+      ? "Click each course&#39;s button and you&#39;ll be taken straight into it on HISCornerstone.com &mdash; no account setup or checkout needed. Each course is 100% online and self-paced."
+      : `For each course, click its button, then complete checkout on HISCornerstone.com with your ${escapeHtml((p.discount ?? "").toLowerCase())} discount applied. Each course is 100% online and self-paced.`}
   </p>
 
   <p style="margin:0;font-size:13px;color:#7a8ba8;line-height:1.5;">
@@ -196,10 +215,11 @@ export function buildCeMultiEmailText(p: CeMultiEmailParams): string {
   const recipientFirst = p.recipientName.split(/\s+/)[0];
   const repFirst = p.repName.split(/\s+/)[0];
   const n = p.courses.length;
+  const isFree = (p.discount ?? "100% Free") === "100% Free";
   const lines: string[] = [
     `Hi ${recipientFirst},`,
     ``,
-    `${repFirst}${p.repOrgName ? ` at ${p.repOrgName}` : ""} sent you ${n} complimentary continuing education courses:`,
+    `${repFirst}${p.repOrgName ? ` at ${p.repOrgName}` : ""} sent you ${n} ${isFree ? "complimentary" : "discounted"} continuing education courses:`,
     ``,
   ];
   if (p.personalMessage?.trim()) {
@@ -209,12 +229,16 @@ export function buildCeMultiEmailText(p: CeMultiEmailParams): string {
     lines.push(
       `${i + 1}. ${c.courseName} (${c.courseHours} credit hour${c.courseHours !== 1 ? "s" : ""})`,
       `   Access: ${c.accessUrl}`,
-      `   Coupon code: ${c.couponCode}`,
+      isFree
+        ? `   Backup code (only if the link doesn't work): ${c.couponCode}`
+        : `   Coupon code: ${c.couponCode}`,
       ``
     );
   });
   lines.push(
-    `For each course, click the link, then complete checkout on HISCornerstone.com with the coupon applied.`,
+    isFree
+      ? `Click each link and you'll be taken straight into the course on HISCornerstone.com — no account setup or checkout needed.`
+      : `For each course, click the link, then complete checkout on HISCornerstone.com with your ${(p.discount ?? "").toLowerCase()} discount applied.`,
     ``,
     `${p.repName}`
   );

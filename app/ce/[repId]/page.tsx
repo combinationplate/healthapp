@@ -187,7 +187,7 @@ export default function CELandingPage() {
             letterSpacing: "-0.01em",
           }}>Check your email!</h1>
           <p style={{ color: ds.inkMuted, fontSize: "15px", lineHeight: 1.6 }}>
-            Your free CE course is on its way. Check your inbox for the access link and coupon code.
+            Your free CE course is on its way. Check your inbox — one click on the access link and you&apos;re in the course.
           </p>
           {repInfo && (
             <p style={{ color: ds.inkMuted, fontSize: "13px", marginTop: "20px" }}>

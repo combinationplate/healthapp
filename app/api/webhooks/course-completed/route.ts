@@ -1,6 +1,110 @@
-import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClient as createServiceClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { Resend } from "resend";
 import { verifyPulseSignature } from "@/lib/hiscornerstone/enroll";
+
+/**
+ * Congrats email to the professional when they complete a Pulse-sponsored
+ * course. Deliberately Pulse-sent (not a Hiscornerstone-wide notification) so
+ * the "request your next free CE" pitch only ever reaches sponsored learners —
+ * never paying Hiscornerstone customers. Best-effort; never fails the webhook.
+ */
+async function sendCompletionCongrats(
+  admin: SupabaseClient,
+  ceSendId: string,
+  certificateUrl: string | null
+): Promise<void> {
+  try {
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) return;
+
+    const { data: send } = await admin
+      .from("ce_sends")
+      .select("course_name, course_hours, professional_id, rep_id")
+      .eq("id", ceSendId)
+      .single();
+    if (!send) return;
+
+    const { data: pro } = await admin
+      .from("professionals")
+      .select("name, email")
+      .eq("id", send.professional_id)
+      .single();
+    if (!pro?.email) return;
+
+    let repName = "";
+    if (send.rep_id) {
+      const { data: rep } = await admin
+        .from("profiles")
+        .select("full_name")
+        .eq("id", send.rep_id)
+        .single();
+      repName = rep?.full_name ?? "";
+    }
+
+    const firstName = (pro.name ?? "there").split(/\s+/)[0];
+    const ctaUrl =
+      "https://pulsereferrals.com/signup?utm_source=pulse&utm_medium=email&utm_campaign=ce-completed";
+    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+
+    const certBlock = certificateUrl
+      ? `<p style="margin:0 0 20px;">
+          <a href="${certificateUrl}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;">Download Your Certificate</a>
+        </p>`
+      : `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">Your certificate is available in your account on HISCornerstone.com.</p>`;
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px;"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;text-align:left;"><tr><td>
+  <p style="margin:0 0 16px;font-size:15px;color:#0b1222;line-height:1.6;">Hi ${firstName},</p>
+  <p style="margin:0 0 16px;font-size:15px;color:#3b4963;line-height:1.6;">
+    Congratulations — you completed <strong style="color:#0b1222;">${send.course_name}</strong>${send.course_hours ? ` (${send.course_hours} credit hour${Number(send.course_hours) === 1 ? "" : "s"})` : ""}. Nice work.
+  </p>
+  ${certBlock}
+  ${repName ? `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">This course was sponsored for you by <strong style="color:#0b1222;">${repName}</strong> — if it was helpful, they'd love to hear it.</p>` : ""}
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#f6f5f0;border-radius:10px;"><tr><td style="padding:20px;">
+    <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0b1222;">Need more CE hours?</p>
+    <p style="margin:0 0 14px;font-size:14px;color:#3b4963;line-height:1.6;">
+      Professionals on Pulse get free, nationally accredited CE courses sponsored by local healthcare partners. Request your next course in under a minute.
+    </p>
+    <a href="${ctaUrl}" style="display:inline-block;background:#2455ff;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;">Request Your Next Free CE</a>
+  </td></tr></table>
+  <p style="margin:0;font-size:12px;color:#a8aeb9;">Pulse · pulsereferrals.com</p>
+</td></tr></table>
+</td></tr></table>
+</body></html>`;
+
+    const text = [
+      `Hi ${firstName},`,
+      ``,
+      `Congratulations — you completed ${send.course_name}. Nice work.`,
+      ``,
+      certificateUrl
+        ? `Download your certificate: ${certificateUrl}`
+        : `Your certificate is available in your account on HISCornerstone.com.`,
+      ``,
+      repName ? `This course was sponsored for you by ${repName}.` : ``,
+      ``,
+      `Need more CE hours? Professionals on Pulse get free, nationally accredited CE courses sponsored by local healthcare partners.`,
+      `Request your next course: ${ctaUrl}`,
+      ``,
+      `Pulse · pulsereferrals.com`,
+    ].join("\n");
+
+    const resend = new Resend(resendKey);
+    await resend.emails.send({
+      from: `Pulse <${fromAddress}>`,
+      to: pro.email,
+      subject: `Congratulations — you completed ${send.course_name}! 🎓`,
+      html,
+      text,
+    });
+  } catch (e) {
+    console.warn("[course-completed] congrats email failed:", e);
+  }
+}
 
 /**
  * POST /api/webhooks/course-completed
@@ -57,6 +161,7 @@ export async function POST(request: Request) {
             certificate_url: body.certificate_url ?? null,
           })
           .eq("id", ceSend.id);
+        await sendCompletionCongrats(admin, ceSend.id, body.certificate_url ?? null);
       }
       return NextResponse.json({ received: true });
     }
@@ -89,6 +194,7 @@ export async function POST(request: Request) {
               certificate_url: body.certificate_url ?? null,
             })
             .eq("id", candidate.id);
+          await sendCompletionCongrats(admin, candidate.id, body.certificate_url ?? null);
         }
       }
     }
