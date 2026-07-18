@@ -49,15 +49,19 @@ export default async function AdminBillingPage() {
   const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
   const emailMap = new Map((authUsers?.users ?? []).map((u) => [u.id, u.email]));
 
+  // House account (Pulse Team) sends are demos/fulfillment — never billable.
+  const HOUSE_EMAIL = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();
   const rows = (sends ?? []).map((s) => {
     const profile = profileMap.get(s.rep_id);
     const orgName = profile?.org_id ? orgMap.get(profile.org_id) ?? "" : "";
+    const repEmail = emailMap.get(s.rep_id) ?? "";
+    const isHouse = repEmail.toLowerCase() === HOUSE_EMAIL;
     return {
       ...s,
       rep_name: profile?.full_name ?? "Unknown",
-      rep_email: emailMap.get(s.rep_id) ?? "",
-      org_name: orgName,
-      billable: s.clicked_at ? s.course_hours * 15 : 0,
+      rep_email: repEmail,
+      org_name: isHouse ? "Pulse (house)" : orgName,
+      billable: !isHouse && s.clicked_at ? s.course_hours * 15 : 0,
     };
   });
 
