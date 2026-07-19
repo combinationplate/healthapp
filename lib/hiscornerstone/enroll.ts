@@ -8,6 +8,9 @@ import crypto from "crypto";
 export type EnrollParams = {
   email: string;
   name?: string;
+  /** Certificate-grade name parts, confirmed by the professional on /start. */
+  firstName?: string;
+  lastName?: string;
   /** WooCommerce product ID — resolved to a LearnDash course on the WP side. */
   productId: number;
   /** Pulse ce_sends UUID — echoed back on the course-completed webhook. */
@@ -45,6 +48,8 @@ export async function enrollOnHiscornerstone(params: EnrollParams): Promise<Enro
   const body = JSON.stringify({
     email: params.email.trim().toLowerCase(),
     name: params.name ?? "",
+    first_name: params.firstName ?? "",
+    last_name: params.lastName ?? "",
     product_id: params.productId,
     ce_send_id: params.ceSendId,
   });

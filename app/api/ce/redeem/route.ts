@@ -16,8 +16,14 @@ import { enrollOnHiscornerstone } from "@/lib/hiscornerstone/enroll";
  */
 export async function POST(request: Request) {
   try {
-    const body = (await request.json().catch(() => ({}))) as { coupon?: string };
+    const body = (await request.json().catch(() => ({}))) as {
+      coupon?: string;
+      firstName?: string;
+      lastName?: string;
+    };
     const code = (body.coupon ?? "").trim().toUpperCase();
+    const firstName = (body.firstName ?? "").trim().slice(0, 60);
+    const lastName = (body.lastName ?? "").trim().slice(0, 60);
     if (!code) {
       return NextResponse.json({ error: "Missing coupon" }, { status: 400 });
     }
@@ -83,9 +89,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ redirect: checkoutFallback, mode: "checkout" });
     }
 
+    // If the professional confirmed/corrected their certificate name on the
+    // interstitial, persist it — this becomes the name on their certificate.
+    const confirmedName = [firstName, lastName].filter(Boolean).join(" ");
+    if (confirmedName && confirmedName !== (pro.name ?? "").trim()) {
+      await admin
+        .from("professionals")
+        .update({ name: confirmedName })
+        .eq("id", ceSend.professional_id);
+    }
+
+    const nameParts = confirmedName
+      ? { firstName, lastName }
+      : (() => {
+          const parts = (pro.name ?? "").trim().split(/\s+/);
+          return { firstName: parts[0] ?? "", lastName: parts.slice(1).join(" ") };
+        })();
+
     const enroll = await enrollOnHiscornerstone({
       email: pro.email,
-      name: pro.name ?? "",
+      name: confirmedName || (pro.name ?? ""),
+      firstName: nameParts.firstName,
+      lastName: nameParts.lastName,
       productId,
       ceSendId: ceSend.id,
     });

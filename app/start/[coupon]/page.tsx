@@ -24,7 +24,7 @@ export default async function StartCoursePage({
 
   const { data: ceSend } = await admin
     .from("ce_sends")
-    .select("id, coupon_code, course_name, course_hours, discount, redeemed_at, rep_id")
+    .select("id, coupon_code, course_name, course_hours, discount, redeemed_at, rep_id, professional_id")
     .eq("coupon_code", code)
     .single();
 
@@ -36,6 +36,21 @@ export default async function StartCoursePage({
       .eq("id", ceSend.rep_id)
       .single();
     repName = rep?.full_name ?? "";
+  }
+
+  // Prefill the certificate-name fields from what we have on file; the
+  // professional confirms or corrects before enrollment.
+  let initialFirst = "";
+  let initialLast = "";
+  if (ceSend?.professional_id) {
+    const { data: proRow } = await admin
+      .from("professionals")
+      .select("name")
+      .eq("id", ceSend.professional_id)
+      .single();
+    const parts = (proRow?.name ?? "").trim().split(/\s+/).filter(Boolean);
+    initialFirst = parts[0] ?? "";
+    initialLast = parts.slice(1).join(" ");
   }
 
   const isFree = ceSend?.discount === "100% Free";
@@ -106,6 +121,9 @@ export default async function StartCoursePage({
                     ? "Start Your Course"
                     : "Continue to Checkout"
               }
+              collectName={isFree}
+              initialFirst={initialFirst}
+              initialLast={initialLast}
             />
 
             <p style={{ fontSize: 13, color: "#8a91a0", marginTop: 20, lineHeight: 1.5 }}>

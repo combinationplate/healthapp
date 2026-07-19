@@ -4,7 +4,7 @@
  * Description: Bridge between pulsereferrals.com and Hiscornerstone. Provides an HMAC-signed
  *              enrollment endpoint (find-or-create user + LearnDash enroll + one-time magic
  *              login link) and reports LearnDash course completions back to Pulse.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      Pulse
  *
  * INSTALL (easy way): WP Admin → Plugins → Add New Plugin → Upload Plugin →
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PULSE_CONNECT_VERSION', '1.2.0' );
+define( 'PULSE_CONNECT_VERSION', '1.3.0' );
 define( 'PULSE_TOKEN_TTL', 15 * MINUTE_IN_SECONDS );
 define( 'PULSE_TS_TOLERANCE', 300 ); // seconds of clock drift allowed on signed requests
 
@@ -153,16 +153,27 @@ function pulse_handle_enroll( WP_REST_Request $request ) {
 		);
 	}
 
+	// --- Resolve the certificate-grade name ---
+	// Prefer explicit first_name/last_name (confirmed by the professional on
+	// Pulse's /start page); fall back to splitting the combined name.
+	$full_name = isset( $p['name'] ) ? sanitize_text_field( $p['name'] ) : '';
+	$first     = isset( $p['first_name'] ) ? sanitize_text_field( $p['first_name'] ) : '';
+	$last      = isset( $p['last_name'] ) ? sanitize_text_field( $p['last_name'] ) : '';
+	if ( '' === $first && '' !== $full_name ) {
+		$parts = preg_split( '/\s+/', trim( $full_name ), 2 );
+		$first = $parts[0] ?? '';
+		$last  = '' !== $last ? $last : ( $parts[1] ?? '' );
+	}
+	$display = trim( $first . ' ' . $last );
+	if ( '' === $display ) {
+		$display = $full_name;
+	}
+
 	// --- Find or create the WP user ---
 	$user     = get_user_by( 'email', $email );
 	$existing = (bool) $user;
 
 	if ( ! $user ) {
-		$full_name = isset( $p['name'] ) ? sanitize_text_field( $p['name'] ) : '';
-		$parts     = preg_split( '/\s+/', trim( $full_name ), 2 );
-		$first     = $parts[0] ?? '';
-		$last      = $parts[1] ?? '';
-
 		$base = sanitize_user( current( explode( '@', $email ) ), true );
 		if ( '' === $base ) {
 			$base = 'pulse_user';
@@ -180,13 +191,28 @@ function pulse_handle_enroll( WP_REST_Request $request ) {
 			'user_pass'    => wp_generate_password( 24 ),
 			'first_name'   => $first,
 			'last_name'    => $last,
-			'display_name' => $full_name ? $full_name : $username,
+			'display_name' => $display ? $display : $username,
 			'role'         => 'subscriber',
 		) );
 		if ( is_wp_error( $user_id ) ) {
 			return new WP_Error( 'pulse_user_create_failed', $user_id->get_error_message(), array( 'status' => 500 ) );
 		}
 		$user = get_user_by( 'id', $user_id );
+	} elseif ( '' !== $first ) {
+		// Existing account with no usable name (e.g. created before name
+		// confirmation existed, or display name is just the username):
+		// backfill so their certificate renders correctly. Never overwrite a
+		// name the user already has.
+		$cur_first = (string) get_user_meta( $user->ID, 'first_name', true );
+		$cur_last  = (string) get_user_meta( $user->ID, 'last_name', true );
+		if ( '' === trim( $cur_first . $cur_last ) ) {
+			wp_update_user( array(
+				'ID'           => $user->ID,
+				'first_name'   => $first,
+				'last_name'    => $last,
+				'display_name' => $display ? $display : $user->display_name,
+			) );
+		}
 	}
 
 	// --- Enroll in course(s) + remember the Pulse send for completion reporting ---
@@ -266,9 +292,6 @@ add_action( 'init', function () {
 
 add_action( 'learndash_course_completed', function ( $data ) {
 	$secret = pulse_get_secret();
-	if ( '' === $secret ) {
-		return;
-	}
 	$user   = isset( $data['user'] ) ? $data['user'] : null;
 	$course = isset( $data['course'] ) ? $data['course'] : null;
 	if ( ! $user instanceof WP_User || ! $course instanceof WP_Post ) {
@@ -280,6 +303,17 @@ add_action( 'learndash_course_completed', function ( $data ) {
 	$certificate = '';
 	if ( function_exists( 'learndash_get_course_certificate_link' ) ) {
 		$certificate = learndash_get_course_certificate_link( $course->ID, $user->ID );
+	}
+
+	// H.I.S. Cornerstone completion email — for regular (non-Pulse-sponsored)
+	// learners only. Pulse-sponsored learners get Pulse's congrats email via the
+	// webhook below, so this skip prevents double-emailing them.
+	if ( ! $ce_send_id && '1' === get_option( 'pulse_hisc_completion_email', '1' ) ) {
+		pulse_send_hisc_completion_email( $user, $course, $certificate );
+	}
+
+	if ( '' === $secret ) {
+		return;
 	}
 
 	$body = wp_json_encode( array(
@@ -307,6 +341,67 @@ add_action( 'learndash_course_completed', function ( $data ) {
 		'blocking' => false, // fire-and-forget; never slow down the learner
 	) );
 }, 10, 1 );
+
+/* -------------------------------------------------------------------------
+ * H.I.S. Cornerstone completion email (non-Pulse learners)
+ * ---------------------------------------------------------------------- */
+
+function pulse_send_hisc_completion_email( WP_User $user, WP_Post $course, $certificate_url ) {
+	$first = $user->first_name ? $user->first_name : $user->display_name;
+	$course_name = $course->post_title;
+	$request_url = home_url( '/free-ce/?src=completion' );
+
+	$cert_block = $certificate_url
+		? '<p style="margin:0 0 8px;"><a href="' . esc_url( $certificate_url ) . '" style="display:inline-block;background:#4E818B;color:#ffffff;text-decoration:none;padding:13px 30px;border-radius:8px;font-size:15px;font-weight:700;">View Your Certificate</a></p>
+		   <p style="margin:0 0 24px;font-size:13px;color:#585858;">Your certificate is also available anytime in your account.</p>'
+		: '<p style="margin:0 0 24px;font-size:14px;color:#383B3C;">Your certificate is available in your account.</p>';
+
+	$html = '<!DOCTYPE html>
+<html><head><meta charset="utf-8"/></head>
+<body style="margin:0;padding:0;background:#f7f9fa;font-family:Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px;"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;text-align:left;">
+<tr><td style="background:#4E818B;padding:18px 28px;">
+  <span style="color:#ffffff;font-size:16px;font-weight:700;">H.I.S. Cornerstone Continuing Education</span>
+</td></tr>
+<tr><td style="padding:28px;">
+  <p style="margin:0 0 16px;font-size:15px;color:#383B3C;line-height:1.6;">Hi ' . esc_html( $first ) . ',</p>
+  <p style="margin:0 0 20px;font-size:15px;color:#383B3C;line-height:1.6;">
+    Congratulations on completing <strong style="color:#4E818B;">' . esc_html( $course_name ) . '</strong>!
+    Your dedication to continuing education is what quality care is built on.
+  </p>
+  ' . $cert_block . '
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#DDE9EE;border-radius:10px;"><tr><td style="padding:20px 22px;">
+    <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#383B3C;">Need more CE hours?</p>
+    <p style="margin:0 0 14px;font-size:14px;color:#383B3C;line-height:1.6;">
+      Local hospice, home health, and rehab organizations sponsor accredited H.I.S. Cornerstone
+      courses for healthcare professionals in their communities &mdash; at no cost to you.
+      Tell us what you need and a local sponsor can pick it up.
+    </p>
+    <a href="' . esc_url( $request_url ) . '" style="display:inline-block;background:#4E818B;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;">Request a Sponsored Course</a>
+  </td></tr></table>
+  <p style="margin:24px 0 0;font-size:12px;color:#585858;">
+    H.I.S. Cornerstone Continuing Education<br/>
+    <em>Quality Education is the Cornerstone for Quality Care</em>
+  </p>
+</td></tr>
+<tr><td style="background:#4E818B;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
+</table>
+</td></tr></table>
+</body></html>';
+
+	$headers = array(
+		'Content-Type: text/html; charset=UTF-8',
+		'From: H.I.S. Cornerstone <' . apply_filters( 'pulse_hisc_from_email', 'no-reply@' . wp_parse_url( home_url(), PHP_URL_HOST ) ) . '>',
+	);
+
+	wp_mail(
+		$user->user_email,
+		sprintf( 'Congratulations — you\'ve completed %s!', $course_name ),
+		$html,
+		$headers
+	);
+}
 
 /* -------------------------------------------------------------------------
  * Free CE request form — [pulse_ce_request_form] shortcode + public relay
@@ -339,7 +434,12 @@ function pulse_handle_public_ce_request( WP_REST_Request $request ) {
 	}
 	set_transient( $rlkey, $count + 1, HOUR_IN_SECONDS );
 
-	$name       = isset( $p['name'] ) ? sanitize_text_field( $p['name'] ) : '';
+	$first_name = isset( $p['first_name'] ) ? sanitize_text_field( $p['first_name'] ) : '';
+	$last_name  = isset( $p['last_name'] ) ? sanitize_text_field( $p['last_name'] ) : '';
+	$name       = trim( $first_name . ' ' . $last_name );
+	if ( '' === $name && isset( $p['name'] ) ) {
+		$name = sanitize_text_field( $p['name'] ); // back-compat
+	}
 	$email      = isset( $p['email'] ) ? sanitize_email( $p['email'] ) : '';
 	$discipline = isset( $p['discipline'] ) ? sanitize_text_field( $p['discipline'] ) : '';
 	$city       = isset( $p['city'] ) ? sanitize_text_field( $p['city'] ) : '';
@@ -348,8 +448,8 @@ function pulse_handle_public_ce_request( WP_REST_Request $request ) {
 	$topic      = isset( $p['topic'] ) ? sanitize_text_field( $p['topic'] ) : '';
 	$hours      = isset( $p['hours'] ) ? max( 1, min( 30, (int) $p['hours'] ) ) : 1;
 
-	if ( '' === $name || ! is_email( $email ) || '' === $discipline || '' === $city || strlen( $state ) !== 2 ) {
-		return new WP_Error( 'pulse_bad_request', 'Please fill in your name, email, discipline, city, and state.', array( 'status' => 400 ) );
+	if ( '' === $first_name || '' === $last_name || ! is_email( $email ) || '' === $discipline || '' === $city || strlen( $state ) !== 2 ) {
+		return new WP_Error( 'pulse_bad_request', 'Please fill in your first and last name, email, discipline, city, and state.', array( 'status' => 400 ) );
 	}
 	if ( pulse_get_secret() === '' ) {
 		return new WP_Error( 'pulse_not_configured', 'This form is not configured yet.', array( 'status' => 500 ) );
@@ -427,9 +527,11 @@ add_shortcode( 'pulse_ce_request_form', function () {
 		<h3>Request a Sponsored CE Course</h3>
 		<p class="pulse-cer-sub">Tell us what you need — local healthcare partners sponsor accredited CE courses for professionals in their area at no cost to you.</p>
 		<div class="pulse-cer-row">
-			<div><label for="pcer-name">Full name *</label><input id="pcer-name" name="name" type="text" required autocomplete="name" /></div>
-			<div><label for="pcer-email">Email *</label><input id="pcer-email" name="email" type="email" required autocomplete="email" /></div>
+			<div><label for="pcer-first">First name *</label><input id="pcer-first" name="first_name" type="text" required autocomplete="given-name" /></div>
+			<div><label for="pcer-last">Last name *</label><input id="pcer-last" name="last_name" type="text" required autocomplete="family-name" /></div>
 		</div>
+		<label for="pcer-email">Email *</label>
+		<input id="pcer-email" name="email" type="email" required autocomplete="email" />
 		<label for="pcer-disc">Discipline *</label>
 		<select id="pcer-disc" name="discipline" required><option value="">Select your discipline…</option><?php echo $disc_opts; // phpcs:ignore ?></select>
 		<div class="pulse-cer-row">
@@ -486,6 +588,7 @@ add_action( 'admin_init', function () {
 	register_setting( 'pulse_connect', 'pulse_shared_secret', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 	register_setting( 'pulse_connect', 'pulse_webhook_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
 	register_setting( 'pulse_connect', 'pulse_api_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
+	register_setting( 'pulse_connect', 'pulse_hisc_completion_email', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 } );
 
 function pulse_render_settings_page() {
@@ -557,6 +660,18 @@ function pulse_render_settings_page() {
 							class="regular-text code"
 							placeholder="https://pulsereferrals.com" />
 						<p class="description">Used by the CE request form shortcode. Leave blank for the default (recommended).</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row">Completion email</th>
+					<td>
+						<label>
+							<input type="checkbox" name="pulse_hisc_completion_email" value="1"
+								<?php checked( '1', get_option( 'pulse_hisc_completion_email', '1' ) ); ?> />
+							Send the H.I.S. Cornerstone congratulations email when a learner completes a course
+						</label>
+						<p class="description">Includes their certificate link and the sponsored-course request link.
+							Pulse-sponsored learners are excluded automatically (they receive Pulse&#39;s email instead).</p>
 					</td>
 				</tr>
 			</table>
