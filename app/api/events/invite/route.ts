@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
     try {
       await resend.emails.send({
-        from: `${repName} via Pulse <noreply@pulsereferrals.com>`,
+        from: `${repName} via Pulse <hello@pulsereferrals.com>`,
         to: toEmail,
         subject: `You're invited: ${event.title} — ${eventDate}`,
         html: `

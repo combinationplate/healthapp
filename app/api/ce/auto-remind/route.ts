@@ -143,7 +143,7 @@ export async function GET(request: Request) {
 
     try {
       const fromAddress =
-        process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+        process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
 
       const { error: sendErr } = await resend.emails.send({
         from: `${repName} via Pulse <${fromAddress}>`,

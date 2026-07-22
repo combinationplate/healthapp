@@ -78,7 +78,7 @@ export default async function AppPage() {
         : "Healthcare Professional";
 
       await resend.emails.send({
-        from: "Pulse Alerts <noreply@pulsereferrals.com>",
+        from: "Pulse Alerts <hello@pulsereferrals.com>",
         to: "hello@pulsereferrals.com",
         subject: `New signup: ${profile.full_name || user.email} (${roleLabel})`,
         html: `

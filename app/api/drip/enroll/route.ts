@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     const roleLabel =
       role === "rep" ? "Sales Rep" : role === "manager" ? "Manager" : "Healthcare Professional";
     await resend.emails.send({
-      from: "Pulse Alerts <noreply@pulsereferrals.com>",
+      from: "Pulse Alerts <hello@pulsereferrals.com>",
       to: "hello@pulsereferrals.com",
       subject: `New signup: ${fullName || email} (${roleLabel})`,
       html: `

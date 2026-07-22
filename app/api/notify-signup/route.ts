@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "Pulse Alerts <noreply@pulsereferrals.com>",
+      from: "Pulse Alerts <hello@pulsereferrals.com>",
       to: ALERT_TO,
       subject: `New signup: ${fullName || email} (${roleLabel})`,
       html: `

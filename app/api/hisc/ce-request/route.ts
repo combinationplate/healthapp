@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
-      const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+      const fromAddress = process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
       const firstName = name.split(/\s+/)[0];
 
       try {

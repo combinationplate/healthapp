@@ -102,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     const fromAddress =
-      process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+      process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",

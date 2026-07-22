@@ -5,11 +5,7 @@ function wrap(body: string): string {
 <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0b1222;">
   <div style="padding:32px;">
     <div style="margin-bottom:24px;">
-      <svg width="32" height="32" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect width="56" height="56" rx="14" fill="#0b1222"/>
-        <path d="M10 28 L17 28 L21 16 L26 40 L31 22 L35 32 L38 28 L46 28" stroke="url(#g)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        <defs><linearGradient id="g" x1="10" y1="28" x2="46" y2="28"><stop stop-color="#6B8AFF"/><stop offset="1" stop-color="#5EEAD4"/></linearGradient></defs>
-      </svg>
+      <img src="${APP_URL}/logo-email.png" width="32" height="32" alt="Pulse" style="display:block;border:0;outline:none;" />
     </div>
     ${body}
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid rgba(11,18,34,0.08);font-size:12px;color:#7a8ba8;">

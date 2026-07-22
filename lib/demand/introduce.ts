@@ -62,7 +62,7 @@ export async function introduceOnRedemption(admin: SupabaseClient, ceSendId: str
     const resendKey = process.env.RESEND_API_KEY;
     if (!resendKey) return;
     const resend = new Resend(resendKey);
-    const from = "Pulse <noreply@pulsereferrals.com>";
+    const from = "Pulse <hello@pulsereferrals.com>";
     const proFirst = (contact.name || "there").split(/\s+/)[0];
     const repFirst = repName.split(/\s+/)[0];
     const orgLine = orgName ? ` at ${orgName}` : "";

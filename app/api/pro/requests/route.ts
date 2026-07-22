@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         const alertResend = new Resend(alertKey);
         const loc = [prof?.city, prof?.state].filter(Boolean).join(", ");
         await alertResend.emails.send({
-          from: "Pulse Alerts <noreply@pulsereferrals.com>",
+          from: "Pulse Alerts <hello@pulsereferrals.com>",
           to: process.env.SIGNUP_ALERT_EMAIL || "hello@pulsereferrals.com",
           subject: `New CE request: ${topic} (${hours} hrs)`,
           html: `
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
       const resendKey = process.env.RESEND_API_KEY;
       if (resendKey) {
         const resend = new Resend(resendKey);
-        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <noreply@pulsereferrals.com>";
+        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "Pulse <hello@pulsereferrals.com>";
 
         const { data: proProfile } = await admin
           .from("profiles")

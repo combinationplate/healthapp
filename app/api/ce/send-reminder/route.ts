@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     const accessUrl = sendRow.coupon_code ? courseAccessUrl(sendRow.coupon_code) : "https://hiscornerstone.com/";
 
     const resendKey = process.env.RESEND_API_KEY;
-    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
 
     if (resendKey) {
       const resend = new Resend(resendKey);

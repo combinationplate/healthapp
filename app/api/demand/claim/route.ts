@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
-      const from = "Pulse <noreply@pulsereferrals.com>";
+      const from = "Pulse <hello@pulsereferrals.com>";
 
       // 1) Notify admin (internal — may include professional details).
       try {

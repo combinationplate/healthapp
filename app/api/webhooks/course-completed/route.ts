@@ -45,7 +45,7 @@ async function sendCompletionCongrats(
     const firstName = (pro.name ?? "there").split(/\s+/)[0];
     const ctaUrl =
       "https://pulsereferrals.com/signup?utm_source=pulse&utm_medium=email&utm_campaign=ce-completed";
-    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "noreply@pulsereferrals.com";
+    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
 
     const certBlock = certificateUrl
       ? `<p style="margin:0 0 20px;">

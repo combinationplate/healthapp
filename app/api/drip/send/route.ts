@@ -98,7 +98,7 @@ export async function GET(request: Request) {
     try {
       const html = getEmailHtml(step.template, { name: userName ?? undefined, email: userEmail });
       await resend.emails.send({
-        from: "Pulse <noreply@pulsereferrals.com>",
+        from: "Pulse <hello@pulsereferrals.com>",
         to: userEmail,
         subject: step.subject,
         html,
