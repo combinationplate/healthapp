@@ -19,13 +19,28 @@ export async function GET() {
     .eq("id", user.id)
     .single();
 
-  // Get professionals seeking CE, optionally filtered by state
+  // Discoverable = opted in (seeking_ce) OR has an open pending request —
+  // someone with an open request is, by definition, seeking CE.
+  const { data: pendingReqRows } = await admin
+    .from("ce_requests")
+    .select("professional_id")
+    .eq("status", "pending");
+  const pendingProIds = [
+    ...new Set(
+      (pendingReqRows ?? [])
+        .map((r: { professional_id: string }) => r.professional_id)
+        .filter(Boolean)
+    ),
+  ];
+
   let query = admin
     .from("profiles")
     .select("id, full_name, discipline, city, state, facility, email")
-    .eq("seeking_ce", true)
     .eq("role", "professional")
     .neq("id", user.id);
+  query = pendingProIds.length
+    ? query.or(`seeking_ce.eq.true,id.in.(${pendingProIds.join(",")})`)
+    : query.eq("seeking_ce", true);
 
   // House account (Pulse Team) has no territory — it fulfills nationwide.
   const HOUSE_EMAIL = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();

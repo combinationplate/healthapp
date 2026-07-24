@@ -1184,7 +1184,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <SectionCard>
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Professionals Seeking CEs</h2>
-              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals in your area looking for CE courses</p>
+              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE courses — newest requests first. Send a course to introduce yourself.</p>
             </div>
             {discoverCities.length > 0 && (
               <div className="flex gap-2 flex-wrap mb-4">
@@ -1287,7 +1287,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       <div style={{marginTop:'8px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
                         {pro.requests.map((r, i) => (
                           <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'rgba(217,119,6,0.08)',color:'#92670A'}}>
-                            Needs: {r.topic} · {r.hours} hrs{r.created_at ? ` · ${timeAgo(r.created_at)}` : ""}
+                            Needs: {r.topic} · {r.hours} hrs{r.created_at ? ` · Requested ${timeAgo(r.created_at)}` : ""}
                           </span>
                         ))}
                       </div>
