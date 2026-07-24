@@ -39,7 +39,7 @@ export async function GET() {
   const proIds = (professionals ?? []).map((p: { id: string }) => p.id);
 
   // Get their pending requests
-  let requests: { professional_id: string; topic: string; hours: number; deadline: string }[] = [];
+  let requests: { professional_id: string; topic: string; hours: number; deadline: string; created_at: string }[] = [];
   // Get the set of professional IDs this rep has already sent a CE to (unlocks email)
   let unlockedIds = new Set<string>();
 
@@ -56,7 +56,7 @@ export async function GET() {
     const [{ data: ceRequests }, { data: ceSends }] = await Promise.all([
       admin
         .from("ce_requests")
-        .select("professional_id, topic, hours, deadline")
+        .select("professional_id, topic, hours, deadline, created_at")
         .in("professional_id", proIds)
         .eq("status", "pending"),
       admin
@@ -87,6 +87,11 @@ export async function GET() {
     facility: p.facility,
     requests: requests.filter((r) => r.professional_id === p.id),
   }));
+
+  // Most recent open request first; profiles with no open request sink to the bottom.
+  const latestTs = (reqs: { created_at: string }[]) =>
+    reqs.length ? Math.max(...reqs.map((r) => new Date(r.created_at).getTime())) : 0;
+  result.sort((a, b) => latestTs(b.requests) - latestTs(a.requests));
 
   return NextResponse.json({
     professionals: result,

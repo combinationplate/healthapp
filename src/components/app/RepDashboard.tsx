@@ -55,6 +55,18 @@ const DISCIPLINE_MAP: Record<string, string> = {
   "ST": "ST",
 };
 
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / 86400000);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks} wk${weeks > 1 ? "s" : ""} ago`;
+  const months = Math.floor(days / 30);
+  return `${months} mo ago`;
+}
+
 function mapDiscipline(discipline: string | null | undefined): string | null {
   if (!discipline) return null;
   return DISCIPLINE_MAP[discipline] ?? discipline;
@@ -277,7 +289,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     city: string | null;
     state: string | null;
     facility: string | null;
-    requests: { professional_id: string; topic: string; hours: number; deadline: string }[];
+    requests: { professional_id: string; topic: string; hours: number; deadline: string; created_at?: string }[];
   }[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(true);
   const [discoverCityFilter, setDiscoverCityFilter] = useState("All");
@@ -1209,6 +1221,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     borderRadius:'12px',
                     border: inNetwork ? '1px solid rgba(13,148,136,0.15)' : '1px solid rgba(11,18,34,0.08)',
                     background: inNetwork ? 'rgba(13,148,136,0.03)' : 'white',
+                    opacity: pro.requests.length === 0 ? 0.6 : 1,
                     transition: 'box-shadow 0.2s',
                   }}>
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',gap:'12px',marginBottom:'8px'}}>
@@ -1274,7 +1287,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       <div style={{marginTop:'8px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
                         {pro.requests.map((r, i) => (
                           <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'rgba(217,119,6,0.08)',color:'#92670A'}}>
-                            Needs: {r.topic} · {r.hours} hrs
+                            Needs: {r.topic} · {r.hours} hrs{r.created_at ? ` · ${timeAgo(r.created_at)}` : ""}
                           </span>
                         ))}
                       </div>
