@@ -275,15 +275,16 @@ export async function POST(request: Request) {
     // the recipient's email) so fulfillment actually lands.
     const candidateIds = new Set<string>([professionalId, ceSendProId]);
     if (pro.email) {
-      const { data: matchingProfiles } = await admin
-        .from("profiles")
-        .select("id")
-        .ilike("email", pro.email);
+      const [{ data: matchingProfiles }, { data: matchingUsers }] = await Promise.all([
+        admin.from("profiles").select("id").ilike("email", pro.email),
+        admin.from("users").select("id").ilike("email", pro.email),
+      ]);
       for (const mp of matchingProfiles ?? []) candidateIds.add(mp.id);
+      for (const mu of matchingUsers ?? []) candidateIds.add(mu.id);
     }
     const { data: pendingRequest } = await admin
       .from("ce_requests")
-      .select("id")
+      .select("id, hours, created_at")
       .in("professional_id", [...candidateIds])
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -291,12 +292,26 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (pendingRequest) {
-      const { error: fulfillError } = await admin
-        .from("ce_requests")
-        .update({ status: "fulfilled" })
-        .eq("id", pendingRequest.id);
-      if (fulfillError) {
-        console.warn("Could not mark ce_request as fulfilled:", fulfillError.message);
+      // Only close the request once the hours sent (since it was made) cover
+      // the hours asked — a 1-hr course must not silently close a 6-hr request.
+      const requestedHours = Number(pendingRequest.hours) || 0;
+      const { data: sendsSince } = await admin
+        .from("ce_sends")
+        .select("course_hours")
+        .eq("professional_id", ceSendProId)
+        .gte("created_at", pendingRequest.created_at);
+      const sentHours = (sendsSince ?? []).reduce(
+        (sum, row) => sum + (Number(row.course_hours) || 0),
+        0
+      );
+      if (sentHours >= Math.max(requestedHours, 1)) {
+        const { error: fulfillError } = await admin
+          .from("ce_requests")
+          .update({ status: "fulfilled" })
+          .eq("id", pendingRequest.id);
+        if (fulfillError) {
+          console.warn("Could not mark ce_request as fulfilled:", fulfillError.message);
+        }
       }
     }
 
