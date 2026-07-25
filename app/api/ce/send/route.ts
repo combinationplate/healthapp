@@ -270,14 +270,25 @@ export async function POST(request: Request) {
     }
 
     // Mark one pending CE request fulfilled (if any)
+    // Requests from signed-up professionals store their AUTH id, while sends
+    // store the network-contact id — match across both (plus any profile with
+    // the recipient's email) so fulfillment actually lands.
+    const candidateIds = new Set<string>([professionalId, ceSendProId]);
+    if (pro.email) {
+      const { data: matchingProfiles } = await admin
+        .from("profiles")
+        .select("id")
+        .ilike("email", pro.email);
+      for (const mp of matchingProfiles ?? []) candidateIds.add(mp.id);
+    }
     const { data: pendingRequest } = await admin
       .from("ce_requests")
       .select("id")
-      .eq("professional_id", ceSendProId)
+      .in("professional_id", [...candidateIds])
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (pendingRequest) {
       const { error: fulfillError } = await admin
