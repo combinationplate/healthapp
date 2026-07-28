@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { topic, hours, deadline, visible, inviteEmail } = body;
+    const { topic, hours, deadline, visible, inviteEmail, facility } = body;
 
     if (!topic || !hours || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -109,6 +109,15 @@ export async function POST(request: Request) {
       }
     } catch (e) {
       console.error("CE request admin notify failed:", e);
+    }
+
+    // Save facility to the profile when provided (asked in the request modal
+    // for professionals whose profile is missing it — improves rep lead quality).
+    if (facility && typeof facility === "string" && facility.trim()) {
+      await admin
+        .from("profiles")
+        .update({ facility: facility.trim().slice(0, 120) })
+        .eq("id", user.id);
     }
 
     if (visible) {

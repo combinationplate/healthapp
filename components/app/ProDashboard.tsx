@@ -41,6 +41,8 @@ export function ProDashboard({ userName, userId }: { userName?: string | null; u
   const [myCoursesExpanded, setMyCoursesExpanded] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
 const [needsOnboarding, setNeedsOnboarding] = useState(false);
+const [profileFacility, setProfileFacility] = useState<string | null>(null);
+const [requestFacility, setRequestFacility] = useState("");
 const [onboardingForm, setOnboardingForm] = useState({
   discipline: "",
   state: "",
@@ -109,6 +111,9 @@ const [networkLoading, setNetworkLoading] = useState(true);
         if (data.profile && !data.profile.discipline) {
           setNeedsOnboarding(true);
         }
+        if (data.profile) {
+          setProfileFacility((data.profile.facility ?? "").trim() || null);
+        }
         setProfileLoading(false);
       });
   }, []);
@@ -172,13 +177,17 @@ const [networkLoading, setNetworkLoading] = useState(true);
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(requestForm),
+      body: JSON.stringify({
+        ...requestForm,
+        facility: !profileFacility && requestFacility.trim() ? requestFacility.trim() : undefined,
+      }),
     });
     setRequestSaving(false);
     if (res.ok) {
       setRequestSuccess(true);
       const data = await res.json();
       if (data.request) setMyRequests((prev) => [data.request, ...prev]);
+      if (!profileFacility && requestFacility.trim()) setProfileFacility(requestFacility.trim());
       setTimeout(() => {
         setRequestOpen(false);
         setRequestSuccess(false);
@@ -598,6 +607,13 @@ const [networkLoading, setNetworkLoading] = useState(true);
               <input type="date" required value={requestForm.deadline} onChange={e => setRequestForm(f => ({...f, deadline: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
             </div>
           </div>
+          {!profileFacility && (
+            <div>
+              <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Your facility</label>
+              <input type="text" required value={requestFacility} onChange={e => setRequestFacility(e.target.value)} placeholder="St. Luke's Hospital" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+              <p style={{margin:'6px 0 0',fontSize:'11px',color:'var(--ink-muted)'}}>Reps prioritize requests that include a facility — it helps the right local sponsor find you.</p>
+            </div>
+          )}
           {connectedReps.length > 0 && (
             <div>
               <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Request from specific rep (optional)</label>
