@@ -115,7 +115,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to fetch unbilled sends" }, { status: 500 });
     }
 
-    if (!unbilledSends || unbilledSends.length === 0) {
+    // House/admin accounts (Pulse Team) give CEs away free — their sends are
+    // NEVER invoiced, and we mark them billed so they can't resurface later.
+    const HOUSE_EMAILS = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const houseIds = new Set<string>();
+    for (const he of HOUSE_EMAILS) {
+      const [{ data: hp }, { data: hu }] = await Promise.all([
+        admin.from("profiles").select("id").ilike("email", he),
+        admin.from("users").select("id").ilike("email", he),
+      ]);
+      for (const r of hp ?? []) houseIds.add(r.id);
+      for (const r of hu ?? []) houseIds.add(r.id);
+    }
+    const houseSends = (unbilledSends ?? []).filter((se: any) => houseIds.has(se.rep_id));
+    const billableSends = (unbilledSends ?? []).filter((se: any) => !houseIds.has(se.rep_id));
+    if (houseSends.length > 0 && !isDryRun) {
+      await admin
+        .from("ce_sends")
+        .update({ billed: true })
+        .in("id", houseSends.map((se: any) => se.id));
+    }
+
+    if (!billableSends || billableSends.length === 0) {
       return NextResponse.json({
         message: "No unbilled CE redemptions for this period",
         periodStart: periodStart.toISOString().split("T")[0],
@@ -125,7 +149,7 @@ export async function POST(request: Request) {
     }
 
     // Get rep profiles to determine billing entities
-    const repIds = [...new Set(unbilledSends.map((s: any) => s.rep_id))];
+    const repIds = [...new Set(billableSends.map((s: any) => s.rep_id))];
     const { data: repProfiles } = await admin
       .from("profiles")
       .select("id, full_name, org_id")
@@ -143,7 +167,7 @@ export async function POST(request: Request) {
       sends: any[];
     }>();
 
-    for (const send of unbilledSends) {
+    for (const send of billableSends) {
       const profile = profileMap.get(send.rep_id);
       const orgId = profile?.org_id ?? null;
       // Group by org if available, otherwise by rep
