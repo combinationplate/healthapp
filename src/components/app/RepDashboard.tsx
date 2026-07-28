@@ -2922,11 +2922,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
                     {billingUsage ? `${billingUsage.periodStart} — ${billingUsage.periodEnd}` : ""}
                   </p>
                 </div>
-                <span style={{
-                  background: 'rgba(36,85,255,0.08)', color: '#2455ff',
-                  padding: '5px 12px', borderRadius: '8px',
-                  fontSize: '11px', fontWeight: 700,
-                }}>🚀 Early Access</span>
               </div>
 
               {billingUsageLoading ? (
@@ -2946,13 +2941,6 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       </div>
                       <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '3px' }}>Estimated cost</div>
                     </div>
-                  </div>
-                  <div style={{
-                    padding: '12px 14px', borderRadius: '10px',
-                    background: 'rgba(36,85,255,0.04)', border: '1px solid rgba(36,85,255,0.08)',
-                    fontSize: '12px', color: '#3b4963',
-                  }}>
-                    🚀 <strong>Early access</strong> — no charges during launch. Usage is tracked so you can see the value.
                   </div>
                 </>
               ) : null}
@@ -3000,7 +2988,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </h2>
               {billingInvoices.length === 0 ? (
                 <p style={{ color: '#7a8ba8', fontSize: '13px', textAlign: 'center', padding: '24px 0' }}>
-                  No invoices yet. Usage is tracked during early access — invoices appear here once billing is active.
+                  No invoices yet. Your first invoice will appear here after the end of the month.
                 </p>
               ) : (
                 <div style={{ overflowX: 'auto' }}>

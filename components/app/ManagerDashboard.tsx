@@ -359,11 +359,6 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                     {usage ? `${usage.periodStart} — ${usage.periodEnd}` : "Loading…"}
                   </p>
                 </div>
-                <span style={{
-                  background: "rgba(36,85,255,0.08)", color: "#2455ff",
-                  padding: "6px 14px", borderRadius: "8px",
-                  fontSize: "12px", fontWeight: 700,
-                }}>🚀 Early Access</span>
               </div>
 
               {usageLoading ? (
@@ -385,13 +380,6 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 </div>
               ) : null}
 
-              <div style={{
-                marginTop: "16px", padding: "12px 16px", borderRadius: "10px",
-                background: "rgba(36,85,255,0.04)", border: "1px solid rgba(36,85,255,0.08)",
-                fontSize: "13px", color: "#3b4963",
-              }}>
-                🚀 <strong>Early access:</strong> No charges during launch period. Usage is tracked so you can see the value Pulse provides.
-              </div>
             </div>
 
             {/* Usage Breakdown */}
@@ -449,7 +437,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 <p style={{ color: "#7a8ba8", fontSize: "14px" }}>Loading…</p>
               ) : pastInvoices.length === 0 ? (
                 <p style={{ color: "#7a8ba8", fontSize: "14px", textAlign: "center", padding: "24px 0" }}>
-                  No invoices yet. Usage is tracked during early access — invoices will appear here once billing is active.
+                  No invoices yet. Your first invoice will appear here after the end of the month.
                 </p>
               ) : (
                 <div style={{ overflowX: "auto" }}>

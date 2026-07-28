@@ -755,22 +755,8 @@ export default function HowItWorksPage() {
               </p>
             </div>
 
-            {/* Early access badge */}
             <div style={{ textAlign: "center" }}>
-              <span
-                style={{
-                  display: "inline-block",
-                  background: "rgba(36,85,255,0.08)",
-                  color: ds.blue,
-                  padding: "8px 20px",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  fontWeight: 700,
-                }}
-              >
-                🚀 Early access — get started with complimentary CE sends
-              </span>
-              <div style={{ marginTop: "28px" }}>
+              <div style={{ marginTop: "8px" }}>
                 <a
                   href="/login"
                   style={{
@@ -820,7 +806,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="How do sales teams pay?"
-              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE. Your company receives a monthly invoice based on actual usage. During early access, all CE sends are complimentary."
+              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE. Your company receives a monthly invoice based on actual usage."
             />
             <FaqItem
               q="Can I use this for my whole team?"

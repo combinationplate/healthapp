@@ -44,13 +44,14 @@ export async function POST(request: Request) {
           .select("role")
           .eq("id", user.id)
           .single();
-        // Allow managers/admins to trigger manually
-        if (profile?.role === "manager" || profile?.role === "admin") {
+        // Only the platform admin may trigger manually (the cron uses the secret).
+        const ADMIN_EMAILS = ["ztaylor120@gmail.com"];
+        if (
+          profile?.role === "admin" ||
+          ADMIN_EMAILS.includes((user.email ?? "").toLowerCase())
+        ) {
           isAuthorized = true;
         }
-        // For testing: allow any authenticated user
-        // TODO: Remove this in production
-        isAuthorized = true;
       }
     }
 
@@ -61,6 +62,17 @@ export async function POST(request: Request) {
     const { searchParams } = new URL(request.url);
     const isTest = searchParams.get("test") === "true";
     const isDryRun = searchParams.get("dry") === "true";
+
+    // Early-access kill switch: REAL invoices are only generated when the
+    // BILLING_MODE env var is set to "live". Dry runs and test runs always
+    // work. Going live later = flip the env var in Vercel, no code change.
+    const billingLive = (process.env.BILLING_MODE ?? "off").toLowerCase() === "live";
+    if (!billingLive && !isDryRun && !isTest) {
+      return NextResponse.json({
+        billing: "off",
+        message: "BILLING_MODE is not 'live' — no invoices generated. Use ?dry=true to preview.",
+      });
+    }
 
     const stripe = getStripe();
     const admin = createServiceClient(
