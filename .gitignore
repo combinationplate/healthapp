@@ -28,3 +28,6 @@ npm-debug.log*
 
 # types
 next-env.d.ts
+
+# scratch: files Claude retired; safe to delete, never commit
+_to_delete/

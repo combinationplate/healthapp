@@ -1,6 +1,5 @@
 import { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
-import { STATE_REQUIREMENTS, VERIFIED_STATE_SLUGS } from "@/lib/seo/state-requirements";
 import { getLiveDisciplines, getPublishableRequirements } from "@/lib/ce-requirements";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -28,13 +27,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  const stateReqs: MetadataRoute.Sitemap = VERIFIED_STATE_SLUGS.map((slug) => ({
-    url: `${base}/ce-requirements/${slug}`,
-    lastModified: STATE_REQUIREMENTS[slug].lastReviewed ? new Date(STATE_REQUIREMENTS[slug].lastReviewed.slice(0, 10)) : lastModified,
-    changeFrequency: "yearly",
-    priority: 0.6,
-  }));
-
   // /free-ce/[discipline]/[state] — verified states only (getPublishableRequirements
   // filters out entries with lastVerified: null, matching page generation).
   const freeCe: MetadataRoute.Sitemap = getLiveDisciplines().flatMap((discipline) => [
@@ -52,5 +44,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   ]);
 
-  return [...staticPages, ...freeCe, ...stateReqs, ...posts];
+  return [...staticPages, ...freeCe, ...posts];
 }

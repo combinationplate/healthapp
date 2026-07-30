@@ -34,13 +34,14 @@ export const RN_REQUIREMENTS: StateRequirement[] = [
   },
   {
     state: "Arizona", stateCode: "AZ", slug: "arizona", discipline: "rn",
-    requirementType: "none", contactHours: null, cycleYears: null,
-    summary: "Arizona has no mandatory CE requirement for RN license renewal.",
-    details: "RNs renew based on licensure requirements without a contact-hour mandate. Free CE still helps with certifications, compact-state moves, and professional development.",
+    requirementType: "none", contactHours: null, cycleYears: 4,
+    summary: "Arizona requires no CE contact hours for RN renewal, but you must show continued competency every 4 years — 960 practice hours in the past 5 years, a recent qualifying nursing degree, or a Board-approved refresher program.",
+    details: "Arizona RN and LPN licenses renew every 4 years on or before April 1. There is no contact-hour CE mandate, but under A.A.C. R4-19-312 the Board may not renew a license unless you meet the Practice Requirement, which is satisfied by any one of: at least 960 hours of nursing practice in the 5 years before your application (note the lookback is longer than the 4-year license cycle); completing a nursing education program and earning a degree or advanced practice certificate within the past 5 years (LPN-to-RN, RN-to-BSN, master's and doctoral programs all count); or completing an Arizona Board-approved refresher program. Practice counts broadly — paid or volunteer work as a licensed nurse, any position whose job description requires or recommends that level of licensure, and clinical hours completed inside a qualifying degree program. CE contact hours are not an accepted substitute for the practice requirement, so accredited CE will not cure an hours shortfall; a Board-approved refresher program is the path, and the Board can issue a temporary license so you can practice during its clinical portion. Arizona mandates no CE topics for RNs — the 3-hour opioid, substance use disorder or addiction CE under A.R.S. § 32-3248.02 applies only to prescribers holding a DEA registration, which in nursing means APRNs. Late fees apply after May 1 and the license expires August 1; practicing on an expired license violates the Nurse Practice Act. Confirm your own renewal date at Nursys.com or through the Arizona Nurse Portal.",
     acceptsNationalAccreditation: true,
+    accreditationNote: "Arizona accepts accredited CE, but no amount of CE satisfies renewal on its own. If you are short of the 960 practice hours, only a Board-approved refresher program — not CE contact hours — restores your eligibility to renew.",
     boardName: "Arizona State Board of Nursing",
-    sourceUrl: "https://www.azbn.gov/",
-    lastVerified: null,
+    sourceUrl: "https://azbn.gov/licenses-and-certifications/renew-your-license",
+    lastVerified: "2026-07-30",
   },
   {
     state: "Arkansas", stateCode: "AR", slug: "arkansas", discipline: "rn",
@@ -215,11 +216,17 @@ export const RN_REQUIREMENTS: StateRequirement[] = [
   {
     state: "Massachusetts", stateCode: "MA", slug: "massachusetts", discipline: "rn",
     requirementType: "hours", contactHours: 15, cycleYears: 2,
-    summary: "Massachusetts RNs must complete 15 contact hours every 2 years.",
+    summary: "Massachusetts RNs must complete 15 contact hours every 2 years, renewing on their birthday in even-numbered years — with no CE required for their very first renewal.",
+    mandatoryTopics: [
+      { topic: "Cognitive impairment, including Alzheimer's disease and dementia", frequency: "one-time; counts within the 15. Applies to RNs who serve adult populations. No set number of hours." },
+      { topic: "Domestic violence and sexual violence training", frequency: "one-time, as a condition of renewal. No set number of hours, and the board has not stated whether it counts within the 15." },
+    ],
+    details: "RN licenses expire at 11:59 PM on your birthday in even-numbered years (LPNs renew in odd-numbered years), and the 15 contact hours must fall in the two years immediately preceding renewal under 244 CMR 5.02. Nurses renewing for the first time after initial licensure are exempt — the board states plainly that you do not have to complete any CE requirements for your first renewal — and nurses in active military service within 90 days of a renewal deadline are excused for that cycle. Beyond the 15 hours, Massachusetts imposes two one-time trainings. A course on the diagnosis, treatment and care of patients with cognitive impairments including Alzheimer's disease and dementia is required by M.G.L. c. 112 § 74 for RNs who serve adult populations, and the statute folds it into the CE requirement rather than adding it on top. A domestic violence and sexual violence course is separately required as a condition of licensure and renewal under 244 CMR 8.07; once completed you need not repeat it, and the board has not published an hour value or said whether it offsets the 15. Neither training has a board-specified number of hours. Massachusetts has no CE mandate in implicit bias, cultural competency, human trafficking or end-of-life care, and the opioid training under M.G.L. c. 94C § 18(e) applies only to nurses who prescribe controlled substances. Keep authenticated completion records for two consecutive registration periods — four years — and produce them if the board audits you.",
     acceptsNationalAccreditation: true,
+    accreditationNote: "Massachusetts runs no CE provider-approval program at all. The board does not maintain a list of approved CE programs and makes each nurse responsible for choosing one that meets the criteria in 244 CMR 5.04, so nationally accredited coursework needs no separate Massachusetts approval. Employer in-services, new-employee orientation, agency policy training and CPR recertification never count.",
     boardName: "Massachusetts Board of Registration in Nursing",
-    sourceUrl: "https://www.mass.gov/orgs/board-of-registration-in-nursing",
-    lastVerified: null,
+    sourceUrl: "https://www.mass.gov/info-details/mandatory-continuing-education-for-nurses",
+    lastVerified: "2026-07-30",
   },
   {
     state: "Michigan", stateCode: "MI", slug: "michigan", discipline: "rn",
@@ -306,15 +313,24 @@ export const RN_REQUIREMENTS: StateRequirement[] = [
     lastVerified: null,
   },
   {
+    // HOLD — do not set lastVerified until the two board pages below are opened by hand.
+    // N.J.A.C. 13:37-5.3 text is HIGH confidence (two independent verbatim-matching
+    // reproductions), but njconsumeraffairs.gov returns 403 to every automated fetcher,
+    // so the board's own CE page was never read, and a bias-training rule proposed
+    // 2024-07-15 for perinatal providers may have been adopted since. Check:
+    //   https://www.njconsumeraffairs.gov/nur/pages/continuingeducation.aspx
+    //   https://www.njconsumeraffairs.gov/nur/pages/continuing-education-faq.aspx
     state: "New Jersey", stateCode: "NJ", slug: "new-jersey", discipline: "rn",
     requirementType: "hours", contactHours: 30, cycleYears: 2,
-    summary: "New Jersey RNs must complete 30 contact hours every 2 years.",
+    summary: "New Jersey RNs must complete 30 contact hours every 2 years, including at least 1 hour on prescription opioid drugs.",
     mandatoryTopics: [
-      { topic: "Organ and tissue donation/recovery", hours: 1, frequency: "one-time — verify" },
+      { topic: "Prescription opioid drugs — including alternatives for managing pain and the risks and signs of opioid abuse, addiction and diversion", hours: 1, frequency: "every renewal; counts within the 30" },
     ],
+    details: "The 30 hours are required of both registered professional nurses and licensed practical nurses during each biennial renewal period, and you attest to completion at renewal (N.J.A.C. 13:37-5.3). At least one of the 30 must address prescription opioid drugs — the rule says the 30 hours shall include that hour, so it is not an extra hour on top. If you complete more than 30 hours in a period you may carry up to 15 of the extra hours into the next biennium. Separately, a one-time one-credit-hour course on organ and tissue donation and recovery is required by statute (N.J.S.A. 45:11-26.1) as a condition of relicensure, but only for nurses licensed in New Jersey before the 2008 Hero Act who did not receive that instruction as part of their nursing program — nurses whose curriculum covered it are not subject to it, which is most nurses educated in New Jersey since roughly 2011. Vendors often market this as a universal recurring New Jersey requirement; it is not. Advanced practice nurses must meet the RN 30 hours plus their national certifying agency's CE, including two credits in end-of-life care.",
     acceptsNationalAccreditation: true,
+    accreditationNote: "N.J.A.C. 13:37-5.3(d)(2) awards credit for courses approved by, or offered by entities accredited by, the American Nurses Credentialing Center, and 13:37-5.3(d)(1) independently covers NCCA-accredited and IACET Authorized Provider courses. There is no separate New Jersey provider approval number. A single course counts only once even if it qualifies under more than one category.",
     boardName: "New Jersey Board of Nursing",
-    sourceUrl: "https://www.njconsumeraffairs.gov/nur/",
+    sourceUrl: "https://www.njconsumeraffairs.gov/nur/pages/continuingeducation.aspx",
     lastVerified: null,
   },
   {
@@ -473,24 +489,29 @@ export const RN_REQUIREMENTS: StateRequirement[] = [
   {
     state: "Virginia", stateCode: "VA", slug: "virginia", discipline: "rn",
     requirementType: "options", contactHours: 30, cycleYears: 2,
-    summary: "Virginia RNs must meet one of several continued-competency options every 2 years — 30 contact hours of CE is one path; 15 hours plus 640 practice hours is another.",
+    summary: "Virginia RNs must satisfy one of nine continued-competency options every 2 years — 30 contact hours of CE is the most common path, or 15 contact hours plus 640 hours of active practice.",
+    details: "Virginia does not impose a flat CE requirement. Under 18VAC90-19-160 you must complete at least one of nine qualifying activities each renewal cycle: hold current specialty certification from a national certifying organization; complete at least three credit hours of post-licensure academic coursework relevant to nursing at a regionally accredited college or university; complete a board-approved refresher course; complete a nursing-related evidence-based practice project or research study; publish as author or co-author during the cycle; teach or develop a nursing-related course worth at least three semester hours, a 15-week course, or specialty certification; teach or develop nursing CE courses for up to 30 contact hours; complete 15 contact hours plus 640 hours of active nursing practice; or complete 30 contact hours. A contact hour in Virginia is 50 minutes. Licenses renew biennially by the last day of your birth month, in even-numbered years if you were born in an even-numbered year and odd-numbered years if you were born in an odd-numbered year — so your renewal year follows your birth year, not a fixed schedule. You are exempt from continued competency for your first renewal after initial licensure by exam or endorsement. RNs who also hold an active nurse practitioner license follow 18VAC90-30-105 instead (plus 18VAC90-40-55 with prescriptive authority). Keep your documentation for two years after renewal and produce it within 30 days if the board audits you. Virginia currently mandates no specific CE subject for RNs, though the 2026 General Assembly directed the board to adopt a bias-reduction training requirement of up to two hours, counted within the existing total; that rule is not yet in effect and the board has not amended 18VAC90-19-160 or designated a subject area.",
     acceptsNationalAccreditation: true,
+    accreditationNote: "For the contact-hour pathways, 18VAC90-19-160(B) lists thirteen recognized approvers, and the American Nurses Credentialing Center is first among them. Virginia runs no separate state provider-approval program, so ANCC-accredited coursework needs no additional Virginia approval.",
     boardName: "Virginia Board of Nursing",
-    sourceUrl: "https://www.dhp.virginia.gov/nursing/",
-    lastVerified: null,
+    sourceUrl: "https://www.dhp.virginia.gov/Boards/Nursing/PractitionerResources/ContinuedCompetency/RNLPN/",
+    lastVerified: "2026-07-30",
   },
   {
     state: "Washington", stateCode: "WA", slug: "washington", discipline: "rn",
-    requirementType: "hours", contactHours: 45, cycleYears: 3,
-    summary: "Washington RNs must complete 45 contact hours every 3 years plus 531 active practice hours, with additional one-time and recurring topic mandates.",
+    requirementType: "hours", contactHours: 8, cycleYears: 1,
+    summary: "Washington RNs renew every year on their birthday and must complete 8 contact hours of continuing education plus 96 hours of active nursing practice in the preceding 12 months.",
     mandatoryTopics: [
-      { topic: "Suicide prevention", hours: 6, frequency: "one-time" },
-      { topic: "Health equity", hours: 2, frequency: "every 4 years — verify" },
+      { topic: "Health equity", hours: 2, frequency: "every year, at every renewal; counts within the 8" },
+      { topic: "Suicide assessment, treatment and management", hours: 6, frequency: "one-time, by the end of your first full year of licensure; counts within the 8. CRNAs are exempt. Must come from a Washington DOH Model List program." },
+      { topic: "Telemedicine training", frequency: "one-time, and only for nurses providing clinical services by telemedicine. No hour count is set by statute or rule." },
     ],
+    details: "Washington moved to an annual cycle in June 2021, so the older 24-or-45-hour multi-year figures still circulating online are out of date. Your license expires on your birthday every year, and at each renewal you attest that you completed at least 8 hours of continuing nursing education and at least 96 hours of active nursing practice during the preceding 12 months (WAC 246-840-220). Hours cannot be rolled over from one year to the next. Active nursing practice is defined broadly — paid, unpaid or volunteer work requiring substantial nursing knowledge, judgment and skill, including administrator, quality manager, policy, educator, consultant and regulator roles, not just direct care. Two of your 8 hours must be health equity training every single year; that counts inside the 8, and while the course need not come from a state list it must meet the content standards in WAC 246-12-830, including implicit bias content and either an end-of-course assessment or an attendance attestation. Separately, every RN except those holding an active CRNA license must complete a one-time 6-hour training in suicide assessment, treatment and management by the end of their first full year of licensure; it also counts inside the 8, but it must come from a program on the Washington Department of Health Model List. Nurses who deliver clinical services by telemedicine must additionally complete training under RCW 43.70.495 and retain a signed attestation. Nurses enrolled in an advanced nursing education program are exempt from continuing competency for that review period. Note that the 30 CE hours plus 15 pharmacology hours often cited for Washington apply to ARNPs on a two-year cycle, not to RNs.",
     acceptsNationalAccreditation: true,
-    boardName: "Washington State Nursing Care Quality Assurance Commission",
-    sourceUrl: "https://nursing.wa.gov/",
-    lastVerified: null,
+    accreditationNote: "Washington requires no formal accreditation for general CE — the Board of Nursing states that the laws and rules do not require continuing education hours to have formal CEUs or CNEs, so accredited coursework qualifies but is not mandatory. The exception is the one-time 6-hour suicide prevention training, which must come from a program on the Washington DOH Model List; national accreditation alone does not satisfy that one.",
+    boardName: "Washington State Board of Nursing",
+    sourceUrl: "https://nursing.wa.gov/licensing/maintain-license/continuing-competency",
+    lastVerified: "2026-07-30",
   },
   {
     state: "West Virginia", stateCode: "WV", slug: "west-virginia", discipline: "rn",

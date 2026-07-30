@@ -81,7 +81,10 @@ export default async function FreeCeStatePage({ params }: Props) {
           ? "No general requirement"
           : `${r.contactHours ?? "—"} contact hours${r.requirementType === "options" ? " (one qualifying option)" : ""}`,
     },
-    { label: "Renewal cycle", value: r.cycleYears ? `Every ${r.cycleYears} years` : "See board rules" },
+    {
+      label: "Renewal cycle",
+      value: r.cycleYears ? (r.cycleYears === 1 ? "Every year" : `Every ${r.cycleYears} years`) : "See board rules",
+    },
     { label: "Licensing board", value: r.boardName },
   ];
 
@@ -157,10 +160,17 @@ export default async function FreeCeStatePage({ params }: Props) {
         <h2 style={S.h2}>Does nationally accredited CE count in {r.state}?</h2>
         <div style={S.card}>
           <p style={S.body}>
-            {r.acceptsNationalAccreditation
-              ? `Yes — ${r.state} accepts continuing education from nationally accredited providers, so courses from an accredited provider like the ones on Pulse count toward your renewal.`
-              : `${r.state} has its own provider-approval rules, so national accreditation alone may not be enough. Check the board's approved-provider requirements before counting a course toward renewal.`}
+            {!r.acceptsNationalAccreditation
+              ? `${r.state} has its own provider-approval rules, so national accreditation alone may not be enough. Check the board's approved-provider requirements before counting a course toward renewal.`
+              : r.requirementType === "none"
+                ? `${r.state} doesn't require CE contact hours for renewal, so there's no state hour total for an accredited course to count toward. Accredited CE is still what national certification boards and employers ask for.`
+                : `Yes — ${r.state} accepts continuing education from nationally accredited providers, so courses from an accredited provider like the ones on Pulse count toward your renewal.`}
           </p>
+          {r.accreditationNote && (
+            <p style={{ ...S.body, fontSize: 14, marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(11,18,34,0.06)" }}>
+              <b style={{ color: "#0b1222" }}>One caveat:</b> {r.accreditationNote}
+            </p>
+          )}
         </div>
 
         <h2 style={S.h2}>Official source</h2>

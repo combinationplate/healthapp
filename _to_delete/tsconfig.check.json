@@ -1,4 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["next-env.d.ts", "types/**/*.d.ts", "app/(auth)/login/page.tsx"]
-}

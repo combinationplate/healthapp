@@ -47,6 +47,13 @@ export interface StateRequirement {
    * copy — confirm against Hiscornerstone's actual accreditations before rendering.
    */
   acceptsNationalAccreditation: boolean;
+  /**
+   * Optional caveat rendered directly under the national-accreditation answer.
+   * Use when "accepts national accreditation" is true but incomplete — e.g. WA
+   * accepts any nursing-related CE yet requires its suicide-prevention training to
+   * come from the state DOH Model List, or AZ where no CE is required at all.
+   */
+  accreditationNote?: string;
   /** Official board name, e.g. "Texas Board of Nursing" */
   boardName: string;
   /** Official board URL for CE/renewal requirements — link this on the page ("Source"). */
