@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { STATE_REQUIREMENTS, VERIFIED_STATE_SLUGS } from "@/lib/seo/state-requirements";
+import { getLiveDisciplines, getPublishableRequirements } from "@/lib/ce-requirements";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
@@ -34,5 +35,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...stateReqs, ...posts];
+  // /free-ce/[discipline]/[state] — verified states only (getPublishableRequirements
+  // filters out entries with lastVerified: null, matching page generation).
+  const freeCe: MetadataRoute.Sitemap = getLiveDisciplines().flatMap((discipline) => [
+    {
+      url: `${base}/free-ce/${discipline}`,
+      lastModified,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    ...getPublishableRequirements(discipline).map((r) => ({
+      url: `${base}/free-ce/${discipline}/${r.slug}`,
+      lastModified: r.lastVerified ? new Date(r.lastVerified) : lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+  ]);
+
+  return [...staticPages, ...freeCe, ...stateReqs, ...posts];
 }
