@@ -6,6 +6,8 @@
     "types/**/*",
     "app/free-ce/**/*",
     "app/sitemap.ts",
-    "lib/ce-requirements/**/*"
+    "lib/ce-requirements/**/*",
+    "components/landing/Footer.tsx",
+    "components/landing/DisciplineLinks.tsx"
   ]
 }

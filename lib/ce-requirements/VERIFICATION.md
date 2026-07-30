@@ -1,7 +1,17 @@
 # CE Requirements Dataset — Verification Workflow
 
+## Status (2026-07-30)
+- **8 states verified and live:** TX, FL, PA, IL, OH, MI, GA, NC — researched against
+  official board/statute pages and owner-approved 2026-07-30.
+- **CA and NY intentionally REMOVED from the dataset** (not just unverified) to avoid
+  provider-approval issues: California requires a BRN CEP provider number (ANCC alone
+  doesn't count for courses offered in-state), and New York's only mandated trainings
+  (infection control, child abuse) require NYSED-approved providers. Re-add them from
+  the project notes if Hiscornerstone obtains CA CEP approval or a NY strategy emerges.
+- 41 entries remain pre-filled and unverified.
+
 ## Why this exists
-All 51 RN entries in `rn-data.ts` are pre-filled from general knowledge and marked
+Remaining RN entries in `rn-data.ts` are pre-filled from general knowledge and marked
 `lastVerified: null`. **No state renders publicly until you verify it** —
 `getPublishableRequirements()` filters unverified entries out of page generation,
 the sitemap, and the lookup tool. Wrong CE numbers on a CE company's site is a

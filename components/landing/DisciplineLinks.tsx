@@ -4,6 +4,7 @@ const LINKS = [
   { href: "/free-ce-for-nurses", label: "Free CE for Nurses" },
   { href: "/free-ce-for-social-workers", label: "Free CE for Social Workers" },
   { href: "/free-ce-for-case-managers", label: "Free CE for Case Managers" },
+  { href: "/free-ce/rn", label: "RN CE Requirements by State" },
 ];
 
 export default function DisciplineLinks() {

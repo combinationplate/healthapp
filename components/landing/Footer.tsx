@@ -74,6 +74,7 @@ export default function Footer() {
               <li className="mb-2"><Link href="/free-ce-for-nurses" className="text-[14px] text-white/65 hover:text-white">CE for Nurses</Link></li>
               <li className="mb-2"><Link href="/free-ce-for-social-workers" className="text-[14px] text-white/65 hover:text-white">CE for Social Workers</Link></li>
               <li className="mb-2"><Link href="/free-ce-for-case-managers" className="text-[14px] text-white/65 hover:text-white">CE for Case Managers</Link></li>
+              <li className="mb-2"><Link href="/free-ce/rn" className="text-[14px] text-white/65 hover:text-white">RN CE Requirements by State</Link></li>
               <li className="mb-2"><Link href="/accreditation" className="text-[14px] text-white/65 hover:text-white">Accreditation</Link></li>
             </ul>
           </div>
