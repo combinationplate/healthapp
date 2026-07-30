@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useState, type FormEvent } from "react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import React, { Suspense, useRef, useState, type FormEvent } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 
 function LoginForm() {
   const router = useRouter();
@@ -36,17 +36,41 @@ function LoginForm() {
   const [resetEmail, setResetEmail] = useState("");
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [resetCaptchaToken, setResetCaptchaToken] = useState<string | null>(null);
+  const resetCaptchaRef = useRef<TurnstileInstance | undefined>(undefined);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function handleForgotPassword() {
-    if (!resetEmail) return;
+    setResetError("");
+    if (!resetEmail) {
+      setResetError("Enter the email address on your account.");
+      return;
+    }
+    // Supabase captcha protection applies to EVERY auth endpoint, including
+    // /recover. Without a token the request 400s and no email is ever sent.
+    if (!resetCaptchaToken) {
+      setResetError("Please complete the verification check below, then try again.");
+      return;
+    }
     setResetLoading(true);
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin}/reset-password`,
+      captchaToken: resetCaptchaToken,
     });
     setResetLoading(false);
-    if (!error) setResetSent(true);
+    if (error) {
+      console.error("[reset] resetPasswordForEmail failed:", error.status, error.message);
+      setResetError(
+        error.message || "We couldn't send the reset email. Please try again in a minute."
+      );
+      // Turnstile tokens are single-use — a retry needs a fresh one.
+      resetCaptchaRef.current?.reset();
+      setResetCaptchaToken(null);
+      return;
+    }
+    setResetSent(true);
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -151,11 +175,24 @@ function LoginForm() {
                     onChange={(e) => setResetEmail(e.target.value)}
                     className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm mb-2 focus:border-[var(--blue)] focus:outline-none"
                   />
+                  <div className="mb-2">
+                    <Turnstile
+                      ref={resetCaptchaRef}
+                      siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                      onSuccess={(token) => setResetCaptchaToken(token)}
+                      onExpire={() => setResetCaptchaToken(null)}
+                      onError={() => setResetCaptchaToken(null)}
+                      options={{ size: "flexible", theme: "light" }}
+                    />
+                  </div>
+                  {resetError && (
+                    <p className="mb-2 text-sm text-[var(--coral)]">{resetError}</p>
+                  )}
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={handleForgotPassword}
-                      disabled={resetLoading}
+                      disabled={resetLoading || !resetCaptchaToken}
                       className="text-sm rounded-[var(--r)] bg-[var(--blue)] text-white px-4 py-2 font-semibold hover:bg-[var(--blue-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {resetLoading ? "Sending…" : "Send reset link"}
