@@ -7,12 +7,14 @@
 
 import type { Discipline, StateRequirement } from "./types";
 import { RN_REQUIREMENTS } from "./rn-data";
+import { SW_REQUIREMENTS } from "./sw-data";
 
 export type { Discipline, StateRequirement, RequirementType, MandatoryTopic } from "./types";
 
-/** All datasets, keyed by discipline. Add social-work etc. here as they're built. */
+/** All datasets, keyed by discipline. Add case-management etc. here as they're built. */
 const DATASETS: Record<string, StateRequirement[]> = {
   rn: RN_REQUIREMENTS,
+  "social-work": SW_REQUIREMENTS,
 };
 
 /** Display names for discipline slugs (used in titles, headings, metadata). */

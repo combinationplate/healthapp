@@ -3,11 +3,11 @@ import { StateApprovals } from "@/src/components/StateApprovals";
 export const metadata = {
   title: "Accreditation & CE Approvals — Pulse",
   description:
-    "Pulse CE courses are accredited for Nursing, Social Work, Case Management, PT, OT, and SLP. Browse state-by-state approvals for each discipline.",
+    "Pulse CE courses are provided by H.I.S. Cornerstone Continuing Education — ANCC accredited, ASWB ACE provider #2082, offering accredited CE since 2007. Browse approvals by discipline and state.",
   alternates: { canonical: "https://pulsereferrals.com/accreditation" },
   openGraph: {
     title: "Accreditation & CE Approvals — Pulse",
-    description: "Pulse CE courses are accredited for Nursing, Social Work, Case Management, PT, OT, and SLP.",
+    description: "Pulse CE courses are provided by H.I.S. Cornerstone — ANCC accredited, ASWB ACE provider #2082, since 2007.",
     url: "https://pulsereferrals.com/accreditation",
     siteName: "Pulse",
     type: "website",
@@ -38,7 +38,7 @@ const DISCIPLINES = [
     color: "#2455ff",
     bg: "rgba(36,85,255,0.07)",
     icon: "🏥",
-    detail: "Courses meet ANCC standards and are accepted by all state boards of nursing for license renewal.",
+    detail: "Provided under ANCC-accredited nursing continuing professional development. Accepted by state boards of nursing in most states for license renewal — see the state pages below for your board's rules.",
   },
   {
     name: "Social Work",
@@ -49,51 +49,51 @@ const DISCIPLINES = [
     color: "#0d9488",
     bg: "rgba(13,148,136,0.07)",
     icon: "🤝",
-    detail: "Approved for ACE/ASWB CE credit, accepted by social work licensing boards in all 50 states.",
+    detail: "Provided under ASWB ACE provider #2082. ACE credit is accepted by social work licensing boards in most states — see the state pages below for your board's rules.",
   },
   {
     name: "Case Management",
     shortName: "CCM / ACM",
-    accreditor: "CCMC",
-    accreditorFull: "Commission for Case Manager Certification",
+    accreditor: "ACMA · CCMC",
+    accreditorFull: "Via ANCC-accredited CE + the ACMA–CCMC reciprocity agreement",
     hours: "CE Hours",
     color: "#92670A",
     bg: "rgba(146,103,10,0.07)",
     icon: "📋",
-    detail: "Approved for CCM re-certification. Accepted by ACMA and NAHC case management boards.",
+    detail: "Courses qualify as ACMA-accepted CE because the provider holds ANCC accreditation — and under the ACMA–CCMC reciprocity agreement (in effect since July 2020), CE accepted by either organization can be applied to both ACM and CCM renewal.",
   },
   {
     name: "Physical Therapy",
     shortName: "PT / PTA",
-    accreditor: "APTA",
-    accreditorFull: "American Physical Therapy Association",
+    accreditor: "TPTA",
+    accreditorFull: "Texas Physical Therapy Association (Texas approval)",
     hours: "CE Hours",
     color: "#e8604c",
     bg: "rgba(232,96,76,0.07)",
     icon: "💪",
-    detail: "Texas-approved through TPTA (Texas Physical Therapy Association). Expanding to additional states via reciprocity.",
+    detail: "Approved through the Texas Physical Therapy Association. Many state PT boards accept Texas-approved CE via reciprocity — confirm with your board before counting hours.",
   },
   {
     name: "Occupational Therapy",
     shortName: "OT / COTA",
-    accreditor: "AOTA",
-    accreditorFull: "American Occupational Therapy Association",
+    accreditor: "TX OT Board",
+    accreditorFull: "Texas Board of Occupational Therapy Examiners (Texas approval)",
     hours: "PDUs",
     color: "#7c3aed",
     bg: "rgba(139,92,246,0.07)",
     icon: "✋",
-    detail: "Texas-approved through the Texas OT Board. PDUs accepted for NBCOT re-certification.",
+    detail: "Texas-approved through the Texas OT Board. Other state boards may accept Texas-approved CE via reciprocity — confirm with your board before counting hours.",
   },
   {
     name: "Speech-Language Pathology",
     shortName: "SLP / SLPA",
-    accreditor: "ASHA",
-    accreditorFull: "American Speech-Language-Hearing Association",
+    accreditor: "TX SLP Board",
+    accreditorFull: "Texas State Board of Examiners for Speech-Language Pathology and Audiology (Texas approval)",
     hours: "CEUs",
     color: "#059669",
     bg: "rgba(16,185,129,0.07)",
     icon: "🗣️",
-    detail: "Texas-approved through the Texas SLP Board. CEUs accepted for ASHA certification maintenance.",
+    detail: "Texas-approved through the Texas SLP Board. Other state boards may accept Texas-approved CE via reciprocity — confirm with your board before counting hours.",
   },
 ];
 
@@ -224,7 +224,8 @@ export default function AccreditationPage() {
             maxWidth: "580px",
             margin: "0 auto 32px",
           }}>
-            Every Pulse course is accredited through a nationally recognized body for each discipline.
+            Every Pulse course is provided by H.I.S. Cornerstone Continuing Education — an
+            ANCC-accredited provider and ASWB ACE provider #2082, offering accredited CE since 2007.
             Free for healthcare professionals — paid for by the reps who invite them.
           </p>
           <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
@@ -270,7 +271,7 @@ export default function AccreditationPage() {
               { label: "6 Disciplines", sub: "all major healthcare professions" },
               { label: "Free to Clinicians", sub: "paid for by sponsoring reps" },
               { label: "Instant Certificate", sub: "emailed on completion" },
-              { label: "Nationally Accredited", sub: "ANCC, ACE/ASWB, CCMC & more" },
+              { label: "Accredited Provider", sub: "ANCC · ASWB ACE #2082 · since 2007" },
             ].map((item) => (
               <div key={item.label} style={{ textAlign: "center" }}>
                 <div style={{ fontWeight: 800, fontSize: "15px", color: ds.ink }}>{item.label}</div>
@@ -280,6 +281,72 @@ export default function AccreditationPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Provider section ────────────────────────────────── */}
+      <section id="provider" style={{ padding: "64px 0 8px", scrollMarginTop: "80px" }}>
+        <div style={{ ...container, maxWidth: "860px" }}>
+          <div style={{ textAlign: "center", marginBottom: "28px" }}>
+            <div style={{
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: ds.teal,
+              marginBottom: "12px",
+            }}>
+              Who Provides the Courses
+            </div>
+            <h2 style={{
+              fontFamily: ds.fontDisplay,
+              fontSize: "clamp(24px, 4vw, 34px)",
+              fontWeight: 800,
+              color: ds.ink,
+              margin: "0 0 14px",
+              letterSpacing: "-0.02em",
+            }}>
+              H.I.S. Cornerstone Continuing Education
+            </h2>
+            <p style={{ fontSize: "15px", color: ds.inkSoft, lineHeight: 1.7, maxWidth: "620px", margin: "0 auto" }}>
+              Every course on Pulse is developed and delivered by{" "}
+              <a href="https://hiscornerstone.com" target="_blank" rel="noopener" style={{ color: ds.blue, fontWeight: 700, textDecoration: "none" }}>
+                H.I.S. Cornerstone Continuing Education
+              </a>
+              , an accredited CE provider founded in 2007. Their official accreditation statements:
+            </p>
+          </div>
+          <div style={{
+            borderRadius: "16px",
+            border: `1px solid ${ds.border}`,
+            background: "white",
+            padding: "24px 28px",
+            boxShadow: "0 2px 10px rgba(11,18,34,0.04)",
+          }}>
+            <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, margin: "0 0 14px" }}>
+              <strong style={{ color: ds.ink }}>Nurses —</strong> HIS Cornerstone is accredited as a provider of
+              nursing continuing professional development by the American Nurses Credentialing Center&rsquo;s
+              Commission on Accreditation.
+            </p>
+            <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, margin: "0 0 14px" }}>
+              <strong style={{ color: ds.ink }}>Social Workers —</strong> HIS Cornerstone, provider #2082, is
+              approved as an ACE provider to offer social work continuing education by the Association of Social
+              Work Boards (ASWB) Approved Continuing Education (ACE) program.
+            </p>
+            <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, margin: 0 }}>
+              <strong style={{ color: ds.ink }}>Case Managers —</strong> HIS Cornerstone CE courses fit the
+              description of ACMA-approved CEs, because HIS Cornerstone is a provider of nursing continuing
+              professional development by the American Nurses Credentialing Center&rsquo;s Commission on
+              Accreditation.
+            </p>
+            <p style={{ fontSize: "12px", color: ds.inkMuted, lineHeight: 1.6, margin: "16px 0 0", paddingTop: "14px", borderTop: `1px solid ${ds.border}` }}>
+              Verify accreditation details any time at{" "}
+              <a href="https://hiscornerstone.com" target="_blank" rel="noopener" style={{ color: ds.blue, fontWeight: 600, textDecoration: "none" }}>
+                hiscornerstone.com
+              </a>
+              . Pulse handles course sponsorship and delivery; H.I.S. Cornerstone is the accredited provider of record.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* ── Discipline cards ────────────────────────────────── */}
       <section id="disciplines" style={{ padding: "72px 0", scrollMarginTop: "80px" }}>
@@ -312,7 +379,8 @@ export default function AccreditationPage() {
               margin: "0 auto",
               lineHeight: 1.6,
             }}>
-              Pulse courses are individually accredited for each profession — not a one-size-fits-all approach.
+              Each profession's acceptance basis is listed plainly below — national accreditation where it
+              exists, state approval and reciprocity where it doesn&rsquo;t.
             </p>
           </div>
 
@@ -467,7 +535,11 @@ export default function AccreditationPage() {
             <span style={{ fontFamily: ds.fontDisplay, fontWeight: 800, fontSize: "18px", color: ds.ink }}>Pulse</span>
           </div>
           <div style={{ fontSize: "12px", color: ds.inkMuted }}>
-            © {new Date().getFullYear()} Pulse Referrals, Inc. · All CE courses are provided by accredited providers.
+            © {new Date().getFullYear()} Pulse Referrals, Inc. · All CE courses provided by{" "}
+            <a href="https://hiscornerstone.com" target="_blank" rel="noopener" style={{ color: ds.inkMuted, fontWeight: 600 }}>
+              H.I.S. Cornerstone Continuing Education
+            </a>{" "}
+            — accredited CE since 2007.
           </div>
         </div>
       </footer>
