@@ -4,7 +4,7 @@
  * Description: Bridge between pulsereferrals.com and Hiscornerstone. Provides an HMAC-signed
  *              enrollment endpoint (find-or-create user + LearnDash enroll + one-time magic
  *              login link) and reports LearnDash course completions back to Pulse.
- * Version:     1.3.0
+ * Version:     1.4.0
  * Author:      Pulse
  *
  * INSTALL (easy way): WP Admin → Plugins → Add New Plugin → Upload Plugin →
@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PULSE_CONNECT_VERSION', '1.3.0' );
+define( 'PULSE_CONNECT_VERSION', '1.4.0' );
 define( 'PULSE_TOKEN_TTL', 15 * MINUTE_IN_SECONDS );
 define( 'PULSE_TS_TOLERANCE', 300 ); // seconds of clock drift allowed on signed requests
 
@@ -305,13 +305,6 @@ add_action( 'learndash_course_completed', function ( $data ) {
 		$certificate = learndash_get_course_certificate_link( $course->ID, $user->ID );
 	}
 
-	// H.I.S. Cornerstone completion email — for regular (non-Pulse-sponsored)
-	// learners only. Pulse-sponsored learners get Pulse's congrats email via the
-	// webhook below, so this skip prevents double-emailing them.
-	if ( ! $ce_send_id && '1' === get_option( 'pulse_hisc_completion_email', '1' ) ) {
-		pulse_send_hisc_completion_email( $user, $course, $certificate );
-	}
-
 	if ( '' === $secret ) {
 		return;
 	}
@@ -341,67 +334,6 @@ add_action( 'learndash_course_completed', function ( $data ) {
 		'blocking' => false, // fire-and-forget; never slow down the learner
 	) );
 }, 10, 1 );
-
-/* -------------------------------------------------------------------------
- * H.I.S. Cornerstone completion email (non-Pulse learners)
- * ---------------------------------------------------------------------- */
-
-function pulse_send_hisc_completion_email( WP_User $user, WP_Post $course, $certificate_url ) {
-	$first = $user->first_name ? $user->first_name : $user->display_name;
-	$course_name = $course->post_title;
-	$request_url = home_url( '/free-ce/?src=completion' );
-
-	$cert_block = $certificate_url
-		? '<p style="margin:0 0 8px;"><a href="' . esc_url( $certificate_url ) . '" style="display:inline-block;background:#4E818B;color:#ffffff;text-decoration:none;padding:13px 30px;border-radius:8px;font-size:15px;font-weight:700;">View Your Certificate</a></p>
-		   <p style="margin:0 0 24px;font-size:13px;color:#585858;">Your certificate is also available anytime in your account.</p>'
-		: '<p style="margin:0 0 24px;font-size:14px;color:#383B3C;">Your certificate is available in your account.</p>';
-
-	$html = '<!DOCTYPE html>
-<html><head><meta charset="utf-8"/></head>
-<body style="margin:0;padding:0;background:#f7f9fa;font-family:Helvetica,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 16px;"><tr><td align="center">
-<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;text-align:left;">
-<tr><td style="background:#4E818B;padding:18px 28px;">
-  <span style="color:#ffffff;font-size:16px;font-weight:700;">H.I.S. Cornerstone Continuing Education</span>
-</td></tr>
-<tr><td style="padding:28px;">
-  <p style="margin:0 0 16px;font-size:15px;color:#383B3C;line-height:1.6;">Hi ' . esc_html( $first ) . ',</p>
-  <p style="margin:0 0 20px;font-size:15px;color:#383B3C;line-height:1.6;">
-    Congratulations on completing <strong style="color:#4E818B;">' . esc_html( $course_name ) . '</strong>!
-    Your dedication to continuing education is what quality care is built on.
-  </p>
-  ' . $cert_block . '
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#DDE9EE;border-radius:10px;"><tr><td style="padding:20px 22px;">
-    <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#383B3C;">Need more CE hours?</p>
-    <p style="margin:0 0 14px;font-size:14px;color:#383B3C;line-height:1.6;">
-      Local hospice, home health, and rehab organizations sponsor accredited H.I.S. Cornerstone
-      courses for healthcare professionals in their communities &mdash; at no cost to you.
-      Tell us what you need and a local sponsor can pick it up.
-    </p>
-    <a href="' . esc_url( $request_url ) . '" style="display:inline-block;background:#4E818B;color:#ffffff;text-decoration:none;padding:12px 26px;border-radius:8px;font-size:14px;font-weight:700;">Request a Sponsored Course</a>
-  </td></tr></table>
-  <p style="margin:24px 0 0;font-size:12px;color:#585858;">
-    H.I.S. Cornerstone Continuing Education<br/>
-    <em>Quality Education is the Cornerstone for Quality Care</em>
-  </p>
-</td></tr>
-<tr><td style="background:#4E818B;height:6px;font-size:0;line-height:0;">&nbsp;</td></tr>
-</table>
-</td></tr></table>
-</body></html>';
-
-	$headers = array(
-		'Content-Type: text/html; charset=UTF-8',
-		'From: H.I.S. Cornerstone <' . apply_filters( 'pulse_hisc_from_email', 'no-reply@' . wp_parse_url( home_url(), PHP_URL_HOST ) ) . '>',
-	);
-
-	wp_mail(
-		$user->user_email,
-		sprintf( 'Congratulations — you\'ve completed %s!', $course_name ),
-		$html,
-		$headers
-	);
-}
 
 /* -------------------------------------------------------------------------
  * Free CE request form — [pulse_ce_request_form] shortcode + public relay
@@ -588,7 +520,6 @@ add_action( 'admin_init', function () {
 	register_setting( 'pulse_connect', 'pulse_shared_secret', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 	register_setting( 'pulse_connect', 'pulse_webhook_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
 	register_setting( 'pulse_connect', 'pulse_api_url', array( 'sanitize_callback' => 'esc_url_raw' ) );
-	register_setting( 'pulse_connect', 'pulse_hisc_completion_email', array( 'sanitize_callback' => 'sanitize_text_field' ) );
 } );
 
 function pulse_render_settings_page() {
@@ -660,18 +591,6 @@ function pulse_render_settings_page() {
 							class="regular-text code"
 							placeholder="https://pulsereferrals.com" />
 						<p class="description">Used by the CE request form shortcode. Leave blank for the default (recommended).</p>
-					</td>
-				</tr>
-				<tr>
-					<th scope="row">Completion email</th>
-					<td>
-						<label>
-							<input type="checkbox" name="pulse_hisc_completion_email" value="1"
-								<?php checked( '1', get_option( 'pulse_hisc_completion_email', '1' ) ); ?> />
-							Send the H.I.S. Cornerstone congratulations email when a learner completes a course
-						</label>
-						<p class="description">Includes their certificate link and the sponsored-course request link.
-							Pulse-sponsored learners are excluded automatically (they receive Pulse&#39;s email instead).</p>
 					</td>
 				</tr>
 			</table>
