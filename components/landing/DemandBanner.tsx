@@ -22,7 +22,7 @@ export default function DemandBanner() {
           See who&apos;s asking for CE in your market
         </h2>
         <p style={{ fontSize: 16, lineHeight: 1.55, margin: "12px auto 0", maxWidth: 620, opacity: 0.95 }}>
-          Licensed nurses, social workers, and case managers request free accredited CE. Sponsor
+          Licensed nurses, social workers, case managers, and therapists request free accredited CE. Sponsor
           one and earn the introduction — no account needed to look.
         </p>
         <Link

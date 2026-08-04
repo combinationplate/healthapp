@@ -39,9 +39,9 @@ export default function Footer() {
               Pulse
             </div>
             <p className="text-[14px] leading-[1.7] text-white/45">
-              Free, nationally accredited CE courses for healthcare
-              professionals. Referral-building distribution tools for hospice,
-              home health, and rehab sales teams.
+              Free, accredited CE courses for nurses, social workers, case
+              managers, and therapists. Referral-building distribution tools
+              for hospice, home health, and rehab sales teams.
             </p>
           </div>
           <div>

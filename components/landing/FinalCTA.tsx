@@ -35,10 +35,10 @@ export default function FinalCTA() {
           <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
             <span className="mb-3 block text-[40px]">🧑‍⚕️</span>
             <h3 className="text-[20px] font-extrabold">
-              Nurses, Social Workers &amp; Therapists
+              Nurses, Social Workers, Case Managers &amp; Therapists
             </h3>
             <p className="mb-6 text-[14px] leading-[1.6] text-ink-soft">
-              Free, nationally accredited CE courses in ethics, palliative care,
+              Free, accredited CE courses in ethics, palliative care,
               mental health, and more. Matched to your discipline and state. No
               cost, ever.
             </p>

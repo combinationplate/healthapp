@@ -12,14 +12,14 @@ import FinalCTA from "@/components/landing/FinalCTA";
 import Footer from "@/components/landing/Footer";
 import DisciplineLinks from "@/components/landing/DisciplineLinks";
 export const metadata: Metadata = {
-  title: "Free CE for Nurses, Social Workers & Case Managers | Pulse",
+  title: "Free CE for Nurses, Social Workers, Case Managers & Therapists | Pulse",
   description:
-    "Free, nationally accredited CE for nurses, social workers, and case managers — no credit card, all 50 states. Sponsored by local hospice, home health, and rehab teams.",
+    "Free accredited CE for nurses, social workers, case managers, and PT/OT/SLP therapists — no credit card, no cost. Sponsored by local hospice, home health, and rehab teams.",
   alternates: { canonical: "https://pulsereferrals.com" },
   openGraph: {
-    title: "Free CE for Nurses, Social Workers & Case Managers | Pulse",
+    title: "Free CE for Nurses, Social Workers, Case Managers & Therapists | Pulse",
     description:
-      "Free, nationally accredited CE for healthcare professionals, sponsored by local sales teams.",
+      "Free accredited CE for healthcare professionals, sponsored by local sales teams.",
     url: "https://pulsereferrals.com",
     siteName: "Pulse",
     type: "website",

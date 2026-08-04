@@ -4,8 +4,8 @@ const cards = [
   {
     accent: "teal",
     icon: "🎓",
-    title: "Free, Nationally Accredited CEs",
-    desc: "Accredited continuing education courses in ethics, palliative care, mental health, chronic disease management, and more — free for nurses, social workers, case managers, PTs, OTs, and SLPs. Approved across all 50 states.",
+    title: "Free, Accredited CEs",
+    desc: "Accredited continuing education courses in ethics, palliative care, mental health, chronic disease management, and more — free for nurses, social workers, case managers, PTs, OTs, and SLPs. National accreditation where it exists, state approval and reciprocity where it doesn't.",
     tag: "Core Feature",
     tagClass: "bg-[var(--teal-glow)] text-teal",
   },
@@ -72,8 +72,9 @@ export default function Toolkit() {
           Two Audiences. One Platform.
         </h2>
         <p className="section-sub mx-auto mb-16 max-w-[640px] text-center text-[18px] text-ink-soft">
-          Professionals get free, nationally accredited CEs. Sales teams get the
-          referral relationships that come from providing them. Everybody wins.
+          Nurses, social workers, case managers, and therapists get free,
+          accredited CEs. Sales teams get the referral relationships that come
+          from providing them. Everybody wins.
         </p>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((c) => (

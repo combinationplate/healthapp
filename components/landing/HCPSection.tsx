@@ -5,8 +5,12 @@ import Container from "@/components/ui/Container";
 
 const benefits = [
   {
-    title: "Nationally Accredited CE Courses — Free",
-    desc: "Access accredited courses in ethics, palliative care, mental health, chronic disease management, and more. Approved for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs across all 50 states. Completely free.",
+    title: "Accredited CE Courses — Free",
+    desc: "Access accredited courses in ethics, palliative care, mental health, chronic disease management, and more — for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs. National accreditation where it exists (ANCC, ASWB ACE), state approval and reciprocity where it doesn't. Completely free.",
+  },
+  {
+    title: "Built for Rehab Therapists Too",
+    desc: "PT, OT, and SLP courses count toward your license renewal — approved through the Texas boards, with many other state boards accepting them via reciprocity. See our Accreditation page for the details for your state.",
   },
   {
     title: "100% Online, Self-Paced",
@@ -36,7 +40,7 @@ export default function HCPSection() {
           For Nurses, Social Workers, Case Managers &amp; Therapists
         </p>
         <h2 className="section-title mt-3 text-center font-serif text-[clamp(30px,4vw,44px)] font-extrabold tracking-[-.02em]">
-          Free, Nationally Accredited CE Courses
+          Free, Accredited CE Courses
         </h2>
         <p className="section-sub mx-auto mb-16 max-w-[640px] text-center text-[18px] text-ink-soft">
           Every licensed healthcare professional needs continuing education credits
@@ -66,7 +70,7 @@ export default function HCPSection() {
             <div className="mb-3.5 text-[52px]">🎓</div>
             <h3 className="text-[26px] font-extrabold">100% Free. Always.</h3>
             <p className="mt-2.5 mb-6 text-[15px] leading-[1.6] text-ink-soft">
-              Register and start getting free, nationally accredited CE courses
+              Register and start getting free, accredited CE courses
               matched to your discipline and state.
             </p>
             <Link

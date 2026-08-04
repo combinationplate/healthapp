@@ -6,10 +6,10 @@ import React from "react";
 const BADGES = [
   { label: "ANCC", full: "Nursing", color: "#2455ff", bg: "rgba(36,85,255,0.08)" },
   { label: "ACE/ASWB", full: "Social Work", color: "#0d9488", bg: "rgba(13,148,136,0.08)" },
-  { label: "CCMC", full: "Case Mgmt", color: "#92670A", bg: "rgba(146,103,10,0.08)" },
+  { label: "ACMA · CCMC", full: "Case Mgmt", color: "#92670A", bg: "rgba(146,103,10,0.08)" },
   { label: "TPTA", full: "PT (TX)", color: "#e8604c", bg: "rgba(232,96,76,0.08)" },
-  { label: "AOTA", full: "OT", color: "#7c3aed", bg: "rgba(139,92,246,0.08)" },
-  { label: "ASHA", full: "SLP", color: "#059669", bg: "rgba(16,185,129,0.08)" },
+  { label: "TX OT Board", full: "OT (TX)", color: "#7c3aed", bg: "rgba(139,92,246,0.08)" },
+  { label: "TX SLP Board", full: "SLP (TX)", color: "#059669", bg: "rgba(16,185,129,0.08)" },
 ];
 
 /* ── Badge pill (text only) ───────────────────────────────────────── */
@@ -113,7 +113,7 @@ export function AccreditationStrip() {
               fontFamily: "'DM Sans', system-ui, sans-serif",
             }}
           >
-            CE Credits Approved By
+            CE Credits Recognized By
           </span>
           <span
             style={{
@@ -150,7 +150,7 @@ export function AccreditationStrip() {
             fontFamily: "'DM Sans', system-ui, sans-serif",
           }}
         >
-          Nationally accredited for Nursing, Social Work, Case Management, PT, OT &amp; SLP.{" "}
+          Nationally accredited for nursing (ANCC) and social work (ASWB ACE), accepted for case management via ACMA–CCMC reciprocity, and Texas-approved for PT, OT &amp; SLP with reciprocity in many other states.{" "}
           <a
             href="/accreditation"
             style={{
@@ -190,7 +190,7 @@ export function AccreditationInline() {
           whiteSpace: "nowrap",
         }}
       >
-        CE credits approved by:
+        CE credits recognized by:
       </span>
       {BADGES.map((b) => (
         <BadgePill key={b.label} {...b} size="sm" />

@@ -82,7 +82,7 @@ export default function ProblemSolution() {
               Pulse Puts Everything Your Sales Team Needs in One Place
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
-              Send free, nationally accredited CE courses in seconds — via email,
+              Send free, accredited CE courses in seconds — via email,
               QR code, or bulk send. Build your referral network, discover
               professionals seeking CEs, track every touchpoint, and give
               managers full team visibility.

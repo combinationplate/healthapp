@@ -16,7 +16,7 @@ export default function DisciplineLinks() {
           Free CE by profession
         </h2>
         <p style={{ fontSize: 15, color: "#3b4963", margin: "8px auto 0", maxWidth: 560, lineHeight: 1.55 }}>
-          Nationally accredited continuing education, sponsored for you — no credit card, all 50 states.
+          Accredited continuing education, sponsored for you — no credit card, no cost.
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginTop: 22 }}>
           {LINKS.map((l) => (
