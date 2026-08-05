@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/free-ce-for-nurses`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-social-workers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-case-managers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/free-ce-for-therapists`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/how-it-works`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/accreditation`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/demand`, lastModified, changeFrequency: "daily", priority: 0.8 },

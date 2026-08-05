@@ -8,6 +8,7 @@
 import type { Discipline, StateRequirement } from "./types";
 import { RN_REQUIREMENTS } from "./rn-data";
 import { SW_REQUIREMENTS } from "./sw-data";
+import { PT_REQUIREMENTS } from "./pt-data";
 
 export type { Discipline, StateRequirement, RequirementType, MandatoryTopic } from "./types";
 
@@ -15,6 +16,7 @@ export type { Discipline, StateRequirement, RequirementType, MandatoryTopic } fr
 const DATASETS: Record<string, StateRequirement[]> = {
   rn: RN_REQUIREMENTS,
   "social-work": SW_REQUIREMENTS,
+  pt: PT_REQUIREMENTS,
 };
 
 /** Display names for discipline slugs (used in titles, headings, metadata). */
@@ -23,6 +25,10 @@ export const DISCIPLINE_LABELS: Record<Discipline, { singular: string; plural: s
   "social-work": { singular: "Social Worker", plural: "Social Workers", audience: "LMSWs and LCSWs" },
   "case-management": { singular: "Case Manager", plural: "Case Managers", audience: "case managers" },
   therapy: { singular: "Therapist", plural: "Therapists", audience: "PTs, OTs, and SLPs" },
+  // "therapy" stays as the umbrella label used by the marketing landing pages.
+  // "pt" is the dataset-backed discipline for /free-ce/pt/[state]. OT and SLP get
+  // their own datasets and entries here in later batches.
+  pt: { singular: "Physical Therapist", plural: "Physical Therapists", audience: "PTs and PTAs" },
 };
 
 /** Every entry for a discipline, verified or not. Internal/admin use only. */

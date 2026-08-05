@@ -2,7 +2,7 @@
 // Shared types for the state CE requirements dataset.
 // Powers: /free-ce/[discipline]/[state] pages, discipline hubs, and the lookup tool.
 
-export type Discipline = "rn" | "social-work" | "case-management" | "therapy";
+export type Discipline = "rn" | "social-work" | "case-management" | "therapy" | "pt";
 
 export type RequirementType =
   /** A fixed number of contact hours per renewal cycle. */
@@ -45,6 +45,13 @@ export interface StateRequirement {
    * Whether the board accepts CE from nationally accredited providers (e.g. ANCC
    * accredited providers for nursing). Drives the "our courses count in your state"
    * copy — confirm against Hiscornerstone's actual accreditations before rendering.
+   *
+   * ⚠️ PT ONLY: there is no national accreditor for physical therapy CE the way ANCC
+   * covers nursing. H.I.S. Cornerstone's PT courses are approved through the TEXAS
+   * board via TPTA's Continuing Competence Approval Program (CCAP), and APTA is NOT
+   * an accreditor of them. In pt-data.ts this flag therefore means specifically:
+   * "this board accepts CE approved by another state's PT board or APTA chapter —
+   * i.e. a TPTA/CCAP approval is recognized here." See the header of pt-data.ts.
    */
   acceptsNationalAccreditation: boolean;
   /**

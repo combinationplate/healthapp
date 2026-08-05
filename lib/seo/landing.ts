@@ -97,6 +97,41 @@ export const LANDINGS: Record<string, LandingConfig> = {
       { q: "Which states are covered?", a: "Continuing education for case managers is available in all 50 states. Acceptance for recertification follows your certifying body's rules for ANCC-accredited CE." },
     ],
   },
+  therapists: {
+    slug: "free-ce-for-therapists",
+    disciplineLabel: "therapists",
+    professions: ["PT", "OT", "ST", "SLP"],
+    title: "Free CE for Therapists — PT, OT & SLP | Pulse",
+    description:
+      "Free continuing education for physical therapists, occupational therapists, and speech-language pathologists. No credit card, certificate issued instantly. Texas-approved therapy CE — sponsored for you.",
+    h1: "Free CE for Therapists",
+    subhead:
+      "Free continuing education for PTs, OTs, and SLPs — no credit card, certificate issued instantly, approved through the Texas boards.",
+    firstParagraph:
+      "Get free CE for physical therapists, occupational therapists, and speech-language pathologists that counts toward license renewal. Every therapy course on Pulse is accredited continuing education provided by an established CE provider, approved through the Texas boards for PT, OT, and SLP, with your certificate of completion issued the moment you finish. There is no credit card, no trial, and no catch — a local healthcare sponsor covers the cost so you can complete your CE hours for free.",
+    accreditationTitle: "Approved for PT, OT & SLP",
+    accreditationBody:
+      "Therapy courses are provided by H.I.S. Cornerstone Continuing Education, serving healthcare professionals since 2007. Physical therapy courses are approved through the Texas Physical Therapy Association (TPTA), occupational therapy courses through the Texas OT Board, and speech-language pathology courses through the Texas SLP Board. Other state boards may accept CE approved in another state via reciprocity — always confirm acceptance with your own state licensing board before relying on a course for renewal.",
+    note:
+      "Therapy CE is approved in Texas, and other state boards may accept Texas-approved CE via reciprocity. Check your board's reciprocity rules before counting a course toward renewal — or ask us at hello@pulsereferrals.com and we'll help you find out.",
+    faqs: [
+      {
+        q: "Are free CEUs for therapists legitimate?",
+        a: "Yes. All courses are provided by H.I.S. Cornerstone Continuing Education, an established CE provider serving healthcare professionals since 2007. Therapy courses are approved through the Texas boards for PT, OT, and SLP. Free simply means a sponsor covers the cost — the approval and certificate are identical to paid CE.",
+      },
+      {
+        q: "Do these courses count for PT, OT, or SLP license renewal?",
+        a: "Physical therapy courses are approved through the TPTA, occupational therapy courses through the Texas OT Board, and speech-language pathology courses through the Texas SLP Board — Texas licensees can apply them directly. Other state boards may accept CE approved in another state via reciprocity; confirm with your board before relying on a course for renewal.",
+      },
+      {
+        q: "Which states are covered?",
+        a: "Therapy courses are approved in Texas today. Many state boards have reciprocity provisions that accept CE approved in another state — check your board's rules. If your state isn't covered for a course you need, create a free account and request it through Pulse.",
+      },
+      { q: "Who pays for the courses, and why?", a: WHO_PAYS },
+      { q: "How fast do I get my certificate?", a: CERT_SPEED },
+      { q: "Do I need a credit card to sign up?", a: "No. There is no credit card required and no payment information collected. Create a free account and start a course." },
+    ],
+  },
 };
 
 export const LANDING_SLUGS = Object.values(LANDINGS).map((c) => c.slug);

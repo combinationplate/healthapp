@@ -81,7 +81,7 @@ export function DisciplineLanding({ config, courses }: { config: LandingConfig; 
           </div>
         ) : (
           <div className="seo-fallback">
-            New nationally accredited courses for {config.disciplineLabel} are added regularly.{" "}
+            New accredited courses for {config.disciplineLabel} are added regularly.{" "}
             <Link href="/signup?type=hcp" style={{ color: "#2455ff", fontWeight: 700 }}>Create your free account</Link>{" "}
             to browse the current catalog.
           </div>
@@ -117,7 +117,7 @@ export function DisciplineLanding({ config, courses }: { config: LandingConfig; 
 
       <div className="seo-finalcta">
         <h2>Start your free CE in under a minute</h2>
-        <p>No credit card, no trial — create your account and complete nationally accredited continuing education for free.</p>
+        <p>No credit card, no trial — create your account and complete accredited continuing education for free.</p>
         <Link href="/signup?type=hcp">Create your free account</Link>
       </div>
 

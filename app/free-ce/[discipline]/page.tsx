@@ -20,8 +20,9 @@ export function generateStaticParams() {
   return getLiveDisciplines().map((discipline) => ({ discipline }));
 }
 
+const SHORT_LABELS: Partial<Record<Discipline, string>> = { rn: "RN", pt: "PT" };
 function shortLabel(discipline: Discipline): string {
-  return discipline === "rn" ? "RN" : DISCIPLINE_LABELS[discipline].singular;
+  return SHORT_LABELS[discipline] ?? DISCIPLINE_LABELS[discipline].singular;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

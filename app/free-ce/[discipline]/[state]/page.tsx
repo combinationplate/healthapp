@@ -31,11 +31,15 @@ const PROFESSIONS: Record<Discipline, string[]> = {
   "social-work": ["Social Work"],
   "case-management": ["Case Management", "Case Mgmt"],
   therapy: [],
+  // lib/seo/landing.ts groups therapy as ["PT","OT","ST","SLP"]; the /free-ce/pt
+  // dataset is PT-specific, so match only the "PT" course_professions label.
+  pt: ["PT"],
 };
 
 /** Short credential label used in headings/titles ("RN" reads better than "Nurse"). */
+const SHORT_LABELS: Partial<Record<Discipline, string>> = { rn: "RN", pt: "PT" };
 function shortLabel(discipline: Discipline): string {
-  return discipline === "rn" ? "RN" : DISCIPLINE_LABELS[discipline].singular;
+  return SHORT_LABELS[discipline] ?? DISCIPLINE_LABELS[discipline].singular;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -157,14 +161,26 @@ export default async function FreeCeStatePage({ params }: Props) {
           </>
         )}
 
-        <h2 style={S.h2}>Does nationally accredited CE count in {r.state}?</h2>
+        {/* PT has no national accreditor the way nursing has ANCC — our PT courses are
+            approved through the Texas board via TPTA's CCAP, and other states accept them
+            only through their own out-of-state provisions. Keep the two wordings separate
+            so the PT pages never imply a national accreditation that doesn't exist. */}
+        <h2 style={S.h2}>
+          {r.discipline === "pt"
+            ? `Does our Texas-approved CE count in ${r.state}?`
+            : `Does nationally accredited CE count in ${r.state}?`}
+        </h2>
         <div style={S.card}>
           <p style={S.body}>
-            {!r.acceptsNationalAccreditation
-              ? `${r.state} has its own provider-approval rules, so national accreditation alone may not be enough. Check the board's approved-provider requirements before counting a course toward renewal.`
-              : r.requirementType === "none"
-                ? `${r.state} doesn't require CE contact hours for renewal, so there's no state hour total for an accredited course to count toward. Accredited CE is still what national certification boards and employers ask for.`
-                : `Yes — ${r.state} accepts continuing education from nationally accredited providers, so courses from an accredited provider like the ones on Pulse count toward your renewal.`}
+            {r.discipline === "pt"
+              ? r.acceptsNationalAccreditation
+                ? `Yes — ${r.state} recognizes continuing education approved by another state's physical therapy board or APTA chapter, so our courses (approved through the Texas Physical Therapy Association) can count toward your renewal. Read the caveat below before you rely on it.`
+                : `Not on our Texas approval alone. ${r.state} runs its own course- or provider-approval process, so a course has to clear that process before it counts toward your renewal here.`
+              : !r.acceptsNationalAccreditation
+                ? `${r.state} has its own provider-approval rules, so national accreditation alone may not be enough. Check the board's approved-provider requirements before counting a course toward renewal.`
+                : r.requirementType === "none"
+                  ? `${r.state} doesn't require CE contact hours for renewal, so there's no state hour total for an accredited course to count toward. Accredited CE is still what national certification boards and employers ask for.`
+                  : `Yes — ${r.state} accepts continuing education from nationally accredited providers, so courses from an accredited provider like the ones on Pulse count toward your renewal.`}
           </p>
           {r.accreditationNote && (
             <p style={{ ...S.body, fontSize: 14, marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(11,18,34,0.06)" }}>
@@ -197,7 +213,9 @@ export default async function FreeCeStatePage({ params }: Props) {
         <p style={S.body}>
           {r.requirementType === "none"
             ? `Even without a state mandate, free accredited CE helps with national certifications, compact-state moves, and professional growth. On Pulse, local healthcare organizations cover the cost — you pay nothing.`
-            : `Pulse offers free, accredited CE for ${labels.audience}. Local healthcare organizations cover the cost — you pay nothing, and the hours apply toward your ${r.state} requirement (subject to the board rules above).`}
+            : r.acceptsNationalAccreditation
+              ? `Pulse offers free CE for ${labels.audience}. Local healthcare organizations cover the cost — you pay nothing, and the hours apply toward your ${r.state} requirement (subject to the board rules above).`
+              : `Pulse offers free CE for ${labels.audience}, covered by local healthcare organizations — you pay nothing. ${r.state} approves courses through its own process, so check the board rules above before counting a course toward this state's requirement.`}
         </p>
         {courses.length > 0 ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))", gap: 14, marginTop: 18 }}>
