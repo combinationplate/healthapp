@@ -4,14 +4,14 @@ import { getLiveDisciplines, getPublishableRequirements } from "@/lib/ce-require
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
-  const lastModified = new Date();
+  // Fixed date for static pages — bump manually when a static page meaningfully changes.
+  const lastModified = new Date("2026-08-07");
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified, changeFrequency: "weekly", priority: 1.0 },
     { url: `${base}/free-ce-for-nurses`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-social-workers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-case-managers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${base}/free-ce-for-therapists`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/how-it-works`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/accreditation`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/demand`, lastModified, changeFrequency: "daily", priority: 0.8 },
@@ -29,21 +29,29 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // /free-ce/[discipline]/[state] — verified states only (getPublishableRequirements
-  // filters out entries with lastVerified: null, matching page generation).
-  const freeCe: MetadataRoute.Sitemap = getLiveDisciplines().flatMap((discipline) => [
-    {
-      url: `${base}/free-ce/${discipline}`,
-      lastModified,
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    ...getPublishableRequirements(discipline).map((r) => ({
-      url: `${base}/free-ce/${discipline}/${r.slug}`,
-      lastModified: r.lastVerified ? new Date(r.lastVerified) : lastModified,
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
-  ]);
+  // filters lastVerified: null, matching page generation). Hub lastmod = newest
+  // verification date in that discipline.
+  const freeCe: MetadataRoute.Sitemap = getLiveDisciplines().flatMap((discipline) => {
+    const states = getPublishableRequirements(discipline);
+    const newest = states.reduce(
+      (max, r) => (r.lastVerified && r.lastVerified > max ? r.lastVerified : max),
+      "2026-07-30"
+    );
+    return [
+      {
+        url: `${base}/free-ce/${discipline}`,
+        lastModified: new Date(newest),
+        changeFrequency: "weekly" as const,
+        priority: 0.8,
+      },
+      ...states.map((r) => ({
+        url: `${base}/free-ce/${discipline}/${r.slug}`,
+        lastModified: r.lastVerified ? new Date(r.lastVerified) : lastModified,
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      })),
+    ];
+  });
 
   return [...staticPages, ...freeCe, ...posts];
 }
