@@ -137,6 +137,33 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
         ${btn("Request a CE Course →", `${APP_URL}/app`, "#0d9488")}
       `);
 
+    // Personal, plain-text-style re-engagement emails (deliberately unbranded —
+    // serif font, no logo, reply-driven). Only sent to reps with no CE sends.
+    case "rep-reengage-14":
+      return `
+<div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
+  <p>Hi ${firstName},</p>
+  <p>It's been a couple of weeks since you set up your Pulse account, and I noticed you haven't sent your first CE yet.</p>
+  <p>No guilt trip — I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
+  <p><strong>Not sure which course to send?</strong> Start with ethics — every license needs it, so it's never the wrong pick.</p>
+  <p><strong>Don't have a nurse's email handy?</strong> Skip it — generate your QR flyer and let them come to you at your next facility visit.</p>
+  <p><strong>Just busy?</strong> Fair. It takes about 60 seconds whenever you're ready: <a href="${APP_URL}/app" style="color:#2455ff;">pulsereferrals.com/app</a></p>
+  <p>And if it's something else — something confusing, something that didn't work — just hit reply and tell me. I read every response.</p>
+  <p>— Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+</div>`;
+
+    case "rep-reengage-21":
+      return `
+<div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
+  <p>Hi ${firstName},</p>
+  <p>This is the last email in this series, so I'll keep it short.</p>
+  <p>Reps who send CEs get remembered. When a case manager gets free CE hours from you, you stop being another rep in the lobby — you're the one who helped with their license renewal. That's the whole play, and it starts with one send.</p>
+  <p>If now isn't the right time, no hard feelings — your account stays open and free, and everything will be right where you left it.</p>
+  <p>But if you've got 60 seconds today: add one nurse, pick one course, hit send.</p>
+  <p style="margin:24px 0;"><a href="${APP_URL}/app" style="display:inline-block;background:#2455ff;color:#fff;font-weight:700;padding:14px 32px;border-radius:10px;font-size:15px;text-decoration:none;font-family:'DM Sans',system-ui,sans-serif;">Send one CE →</a></p>
+  <p>— Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+</div>`;
+
     default:
       return wrap(`
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">

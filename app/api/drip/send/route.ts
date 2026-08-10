@@ -100,6 +100,7 @@ export async function GET(request: Request) {
       await resend.emails.send({
         from: "Pulse <hello@pulsereferrals.com>",
         to: userEmail,
+        replyTo: "zmanjr@gmail.com",
         subject: step.subject,
         html,
       });

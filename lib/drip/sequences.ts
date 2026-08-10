@@ -16,6 +16,8 @@ export const SEQUENCES: Record<string, DripSequence> = {
       { delaySeconds: 86400, subject: "Your QR code is ready — print it for tomorrow", template: "rep-welcome-1" },
       { delaySeconds: 259200, subject: "3 ways to use Pulse at your next facility visit", template: "rep-welcome-2" },
       { delaySeconds: 604800, subject: "Need help getting started?", template: "rep-welcome-3", condition: "no_ce_sent" },
+      { delaySeconds: 604800, subject: "What got in the way?", template: "rep-reengage-14", condition: "no_ce_sent" },
+      { delaySeconds: 604800, subject: "Last one from me", template: "rep-reengage-21", condition: "no_ce_sent" },
     ],
   },
 
