@@ -101,7 +101,7 @@ export async function GET(request: Request) {
       await resend.emails.send({
         from: "Pulse <hello@pulsereferrals.com>",
         to: userEmail,
-        replyTo: "zmanjr@gmail.com",
+        replyTo: process.env.REPLY_TO_EMAIL ?? "hello@hiscornerstone.com",
         subject: step.subject,
         html,
       });
