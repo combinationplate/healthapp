@@ -117,6 +117,8 @@ type CeHistoryRow = {
   source: string | null;
   created_at: string;
   clicked_at: string | null;
+  opened_at: string | null;
+  is_test: boolean;
 };
 
 function initials(name: string): string {
@@ -235,6 +237,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeSaving, setSendCeSaving] = useState(false);
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
+  const [sendCeTestMode, setSendCeTestMode] = useState(false);
+  const [repEmail, setRepEmail] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewData, setPreviewData] = useState<{ subject: string; html: string; from: string } | null>(null);
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
   const [courseTopicFilter, setCourseTopicFilter] = useState("All");
   const [courseSearch, setCourseSearch] = useState("");
@@ -279,6 +286,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
       .then((data) => {
         if (data.requests) setRepRequests(data.requests);
       });
+  }, []);
+
+  // Own email — used for test sends and to hide the self "network contact"
+  // that a test send creates.
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setRepEmail(data.user?.email ?? null));
   }, []);
 
   const [discoverPros, setDiscoverPros] = useState<{
@@ -873,8 +887,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
       .eq("rep_id", repId)
       .order("created_at", { ascending: false });
     setLoading(false);
-    if (!error) setProfessionals((data as ProfessionalRow[]) ?? []);
-  }, [repId]);
+    if (!error) {
+      // Hide the self row created by "send yourself a test CE" — it's not a
+      // real network contact.
+      const rows = ((data as ProfessionalRow[]) ?? []).filter(
+        (p) => !repEmail || (p.email ?? "").toLowerCase() !== repEmail.toLowerCase()
+      );
+      setProfessionals(rows);
+    }
+  }, [repId, repEmail]);
 
   useEffect(() => {
     fetchProfessionals();
@@ -886,7 +907,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     const supabase = createClient();
     const { data, error } = await supabase
       .from("ce_sends")
-      .select("id, professional_id, course_name, course_hours, coupon_code, source, created_at, clicked_at, recipient_email, professionals(name)")
+      .select("id, professional_id, course_name, course_hours, coupon_code, source, created_at, clicked_at, opened_at, is_test, recipient_email, professionals(name)")
       .eq("rep_id", repId)
       .order("created_at", { ascending: false });
     setCeHistoryLoading(false);
@@ -902,6 +923,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
         source: r.source as string | null,
         created_at: r.created_at as string,
         clicked_at: r.clicked_at as string | null,
+        opened_at: (r.opened_at as string | null) ?? null,
+        is_test: (r.is_test as boolean | null) ?? false,
       })));
     }
   }, [repId]);
@@ -1104,8 +1127,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
     fetchProfessionals();
   }
 
-  async function openSendCeModal(pro: ProfessionalRow | null) {
-    const resolvedPro = pro ?? (professionals.length === 1 ? professionals[0] : null);
+  async function openSendCeModal(pro: ProfessionalRow | null, testMode = false) {
+    const resolvedPro = testMode ? null : pro ?? (professionals.length === 1 ? professionals[0] : null);
+    setSendCeTestMode(testMode);
     setSendCePro(resolvedPro);
     setSendCeCourses([]);
     setSendCeDiscount(CE_DISCOUNTS[0]);
@@ -1137,8 +1161,83 @@ export function RepDashboard({ repId }: { repId?: string }) {
     }
   }
 
+  async function handlePreviewEmail() {
+    if (sendCeCourses.length === 0) {
+      setSendCeError("Select at least one course to preview.");
+      return;
+    }
+    setPreviewLoading(true);
+    setSendCeError(null);
+    try {
+      const res = await fetch("/api/ce/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          courseIds: sendCeCourses,
+          recipientName: sendCeTestMode ? undefined : sendCePro?.name,
+          personalMessage: sendCeMessage.trim() || undefined,
+          discount: sendCeDiscount,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSendCeError(data.error ?? "Could not load preview");
+        return;
+      }
+      setPreviewData(data);
+      setPreviewOpen(true);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
   async function handleSendCe(e: React.FormEvent) {
     e.preventDefault();
+
+    // Test mode — the rep sends the real email to their own inbox.
+    if (sendCeTestMode) {
+      if (sendCeCourses.length === 0) {
+        setSendCeError("Please select at least one course.");
+        return;
+      }
+      if (!repId) {
+        setSendCeError("Not signed in.");
+        return;
+      }
+      setSendCeSaving(true);
+      setSendCeError(null);
+      try {
+        const res = await fetch("/api/ce/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            repId,
+            courseIds: sendCeCourses,
+            discount: sendCeDiscount,
+            personalMessage: sendCeMessage.trim() || undefined,
+            isTest: true,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setSendCeError(data.error ?? "Failed to send test");
+          return;
+        }
+        setSendCeSuccess(true);
+        fetchCeHistory();
+        setTimeout(() => {
+          setSendCeOpen(false);
+          setSendCeSuccess(false);
+          setSendCeTestMode(false);
+        }, 2500);
+      } finally {
+        setSendCeSaving(false);
+      }
+      return;
+    }
+
     if (professionals.length > 1 && !sendCePro) {
       setSendCeError("Select a professional.");
       return;
@@ -1272,10 +1371,12 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
         {/* Onboarding checklist — shown for new reps */}
         {(() => {
+          // QR flyer first — it's the zero-friction path (no email addresses
+          // needed; nurses scan and claim on the spot).
           const onboardingSteps = [
+            { id: "qr", label: "Generate your QR flyer — leave it at your next facility visit", done: hasOpenedQr, action: () => { setTab("distribute"); setQrOpen(true); setHasOpenedQr(true); } },
             { id: "network", label: "Add your first professional", done: professionals.length > 0, action: () => { setTab("network"); setAddOpen(true); } },
             { id: "send", label: "Send your first CE", done: repStats.cesSentAllTime > 0, action: () => { if (professionals.length > 0) openSendCeModal(null); else { setTab("network"); setAddOpen(true); } } },
-            { id: "qr", label: "Generate a QR code", done: hasOpenedQr, action: () => { setTab("distribute"); setQrOpen(true); setHasOpenedQr(true); } },
           ];
           const onboardingComplete = onboardingSteps.filter(s => s.done).length;
           const showOnboarding = !onboardingDismissed && onboardingComplete < 3 && !repOnboarding;
@@ -1308,7 +1409,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               }}>Welcome to Pulse!</h3>
             </div>
             <p style={{ fontSize: '13px', color: '#7a8ba8', marginBottom: '20px', marginLeft: '36px' }}>
-              Get set up in 3 steps. You&apos;ll be sending free CE courses to professionals in minutes.
+              Start with the flyer — nurses scan it and claim a free CE on the spot, no email addresses needed.
             </p>
 
             <div style={{
@@ -1361,6 +1462,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </div>
               ))}
             </div>
+
+            <p style={{ fontSize: '12px', color: '#7a8ba8', marginLeft: '36px', marginTop: '14px', marginBottom: 0 }}>
+              Wondering what a professional actually receives?{' '}
+              <button
+                type="button"
+                onClick={() => openSendCeModal(null, true)}
+                style={{
+                  background: 'none', border: 'none', padding: 0,
+                  fontSize: '12px', fontWeight: 600, color: '#2455ff',
+                  cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: '2px',
+                  fontFamily: "'DM Sans', system-ui, sans-serif",
+                }}
+              >
+                Send yourself a test CE first →
+              </button>
+            </p>
           </div>
           );
         })()}
@@ -3076,12 +3193,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
         {tab === "ce-history" && (() => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const totalSent = ceHistory.length;
-          const totalAccessed = ceHistory.filter((r) => r.clicked_at).length;
-          const thisMonth = ceHistory.filter((r) => r.created_at >= monthStart).length;
-          const manualCount = ceHistory.filter((r) => (r.source ?? "manual") === "manual").length;
-          const qrCount = ceHistory.filter((r) => r.source === "qr").length;
-          const bulkCount = ceHistory.filter((r) => r.source === "bulk").length;
+          // Test sends stay visible in the list (badged) but never inflate stats.
+          const realHistory = ceHistory.filter((r) => !r.is_test);
+          const totalSent = realHistory.length;
+          const totalAccessed = realHistory.filter((r) => r.clicked_at).length;
+          const thisMonth = realHistory.filter((r) => r.created_at >= monthStart).length;
+          const manualCount = realHistory.filter((r) => (r.source ?? "manual") === "manual").length;
+          const qrCount = realHistory.filter((r) => r.source === "qr").length;
+          const bulkCount = realHistory.filter((r) => r.source === "bulk").length;
 
           const filtered = ceHistoryFilter === "all"
             ? ceHistory
@@ -3089,6 +3208,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
           const sourceBadge = (source: string | null) => {
             const s = source ?? "manual";
+            if (s === "test") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#FEF3C7", color: "#92400E" }}>Test</span>;
             if (s === "qr") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(36,85,255,0.14)", color: "#2455ff" }}>QR</span>;
             if (s === "bulk") return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#EDE9FE", color: "#6D28D9" }}>Bulk</span>;
             return <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f0efeb", color: "#3b4963" }}>Manual</span>;
@@ -3205,7 +3325,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                 <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(13,148,136,0.12)", color: "#0d9488" }}>Accessed ✓</span>
                               ) : (
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                  <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f6f5f0", color: "#7a8ba8" }}>Sent</span>
+                                  {row.opened_at ? (
+                                    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "rgba(36,85,255,0.10)", color: "#2455ff" }}>Opened 👀</span>
+                                  ) : (
+                                    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 8px", borderRadius: "999px", fontSize: "11px", fontWeight: 700, background: "#f6f5f0", color: "#7a8ba8" }}>Sent</span>
+                                  )}
                                   <button
                                     type="button"
                                     disabled={reminderSending === row.id}
@@ -3437,14 +3561,19 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !sendCeSaving && setSendCeOpen(false)}>
             <div className="w-[92%] max-w-[520px] rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">Send CE Course</h3>
+                <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">{sendCeTestMode ? "Send Yourself a Test CE" : "Send CE Course"}</h3>
                 <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !sendCeSaving && setSendCeOpen(false)} aria-label="Close">×</button>
               </div>
               {sendCeSuccess ? (
-                <p className="py-4 font-semibold text-[var(--green)]">CE sent successfully.</p>
+                <p className="py-4 font-semibold text-[var(--green)]">{sendCeTestMode ? "Test sent — check your inbox. That's exactly what a professional receives." : "CE sent successfully."}</p>
               ) : (
                 <form onSubmit={handleSendCe} className="grid gap-4">
-                  {!sendCePro && professionals.length > 1 && (
+                  {sendCeTestMode && (
+                    <p className="text-[13px] text-[var(--ink-muted)] leading-relaxed">
+                      This sends the real CE email to <strong className="text-[var(--ink)]">your inbox{repEmail ? ` (${repEmail})` : ""}</strong> so you can see exactly what a professional gets — course link and all. It doesn&apos;t count toward your stats or billing.
+                    </p>
+                  )}
+                  {!sendCeTestMode && !sendCePro && professionals.length > 1 && (
                     <div>
                       <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Send to</label>
                       <select
@@ -3460,7 +3589,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       </select>
                     </div>
                   )}
-                  {sendCePro && (
+                  {!sendCeTestMode && sendCePro && (
                     <p className="text-[13px] text-[var(--ink-muted)]">
                       To: <strong className="text-[var(--ink)]">{sendCePro.name}</strong> ({sendCePro.email})
                       {sendCePro.discipline && (
@@ -3666,11 +3795,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>Free to professional</div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>{sendCeTestMode ? "Test send" : "Free to professional"}</div>
                         <div style={{ fontSize: '11px', color: '#7a8ba8', marginTop: '2px' }}>
-                          {sendCeCourses.length > 0
-                            ? `${sendCeCourses.length} course${sendCeCourses.length !== 1 ? "s" : ""} selected · billed to your company`
-                            : "Course cost billed to your company"}
+                          {sendCeTestMode
+                            ? "Not billed, not counted — just for your eyes"
+                            : sendCeCourses.length > 0
+                              ? `${sendCeCourses.length} course${sendCeCourses.length !== 1 ? "s" : ""} selected · billed to your company`
+                              : "Course cost billed to your company"}
                         </div>
                       </div>
                       <span style={{
@@ -3686,6 +3817,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <div>
                     <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Personal message (optional)</label>
                     <textarea value={sendCeMessage} onChange={(e) => setSendCeMessage(e.target.value)} placeholder="Add a note for the professional…" rows={3} className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm resize-none" />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                      <span style={{ fontSize: '11px', color: '#7a8ba8' }}>
+                        Sends as you — replies go straight to your email
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handlePreviewEmail}
+                        disabled={previewLoading || sendCeCourses.length === 0}
+                        style={{
+                          background: 'none', border: 'none', padding: 0,
+                          fontSize: '12px', fontWeight: 600,
+                          color: sendCeCourses.length === 0 ? '#a8aeb9' : '#2455ff',
+                          cursor: sendCeCourses.length === 0 ? 'default' : 'pointer',
+                          textDecoration: 'underline', textUnderlineOffset: '2px',
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
+                        }}
+                      >
+                        {previewLoading ? "Loading preview…" : "Preview the exact email →"}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Add to network checkbox — shown when sending to someone not already in network */}
@@ -3724,10 +3875,43 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   {sendCeError && <p className="text-sm text-[var(--coral)]">{sendCeError}</p>}
                   <div className="flex gap-2 justify-end pt-1">
                     <button type="button" className={BTN_SECONDARY} onClick={() => !sendCeSaving && setSendCeOpen(false)}>Cancel</button>
-                    <button type="submit" disabled={sendCeSaving || sendCeCourses.length === 0} className={`${BTN_PRIMARY} disabled:opacity-60`}>{sendCeSaving ? "Sending…" : sendCeCourses.length > 1 ? `Send ${sendCeCourses.length} CEs` : "Send CE"}</button>
+                    <button type="submit" disabled={sendCeSaving || sendCeCourses.length === 0} className={`${BTN_PRIMARY} disabled:opacity-60`}>{sendCeSaving ? "Sending…" : sendCeTestMode ? "Send test to my inbox" : sendCeCourses.length > 1 ? `Send ${sendCeCourses.length} CEs` : "Send CE"}</button>
                   </div>
                 </form>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Email preview modal — the exact email the professional receives */}
+        {previewOpen && previewData && (
+          <div className="fixed inset-0 z-[400] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => setPreviewOpen(false)}>
+            <div className="w-[92%] max-w-[600px] rounded-xl border border-[var(--border)] bg-white shadow-lg max-h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(11,18,34,0.08)' }}>
+                <div className="flex justify-between items-start">
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#7a8ba8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '6px' }}>
+                      Exactly what they&apos;ll receive
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#0b1222', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {previewData.subject}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '2px' }}>
+                      From: {previewData.from}
+                    </div>
+                  </div>
+                  <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)] flex-shrink-0 ml-3" onClick={() => setPreviewOpen(false)} aria-label="Close">×</button>
+                </div>
+              </div>
+              <iframe
+                title="Email preview"
+                sandbox=""
+                srcDoc={previewData.html}
+                style={{ width: '100%', flex: 1, minHeight: '420px', border: 'none', background: '#ffffff' }}
+              />
+              <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(11,18,34,0.08)', fontSize: '12px', color: '#7a8ba8' }}>
+                It comes from you, not from us — your name, your company, and replies land in your inbox.
+              </div>
             </div>
           </div>
         )}

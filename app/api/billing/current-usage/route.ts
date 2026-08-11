@@ -54,6 +54,7 @@ export async function GET() {
         courses(price)
       `)
       .in("rep_id", repIds)
+      .eq("is_test", false)
       .not("redeemed_at", "is", null)
       .gte("redeemed_at", periodStart.toISOString())
       .lte("redeemed_at", periodEnd.toISOString())

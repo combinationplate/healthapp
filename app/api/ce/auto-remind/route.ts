@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     `,
     )
     .is("clicked_at", null)
+    .eq("is_test", false)
     .lt("reminder_count", 3)
     .order("created_at", { ascending: true })
     .limit(100);

@@ -50,14 +50,16 @@ function generateCouponCode(repName: string): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { professionalId, repId, courseId, courseIds, discount, personalMessage, recipient } = body as {
-      professionalId: string;
+    const { professionalId, repId, courseId, courseIds, discount, personalMessage, recipient, isTest } = body as {
+      professionalId?: string;
       repId: string;
       courseId?: string;
       courseIds?: string[];
       discount: string;
       personalMessage?: string;
       recipient?: { name: string; email: string; discipline?: string; city?: string; state?: string; facility?: string };
+      /** Rep sends the real email to themselves to preview the experience. */
+      isTest?: boolean;
     };
 
     // Accept a single courseId (back-compat) OR an array of courseIds (multi-send).
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
         ? [courseId]
         : [];
 
-    if (!professionalId || !repId || courseIdList.length === 0 || !discount) {
+    if ((!professionalId && !isTest) || !repId || courseIdList.length === 0 || !discount) {
       return NextResponse.json(
         { error: "Missing professionalId, repId, course(s), or discount" },
         { status: 400 }
@@ -121,16 +123,40 @@ export async function POST(request: Request) {
       repOrgName = org?.name ?? "";
     }
 
-    // 1. Try existing professionals table
-    const { data: proFromProfessionals } = await supabase
-      .from("professionals")
-      .select("id, name, email")
-      .eq("id", professionalId)
-      .eq("rep_id", repId)
-      .single();
+    let pro: { id: string; name: string; email: string } | null = null;
+    let ceSendProId: string = professionalId ?? "";
 
-    let pro: { id: string; name: string; email: string } | null = proFromProfessionals ?? null;
-    let ceSendProId: string = professionalId;
+    if (isTest) {
+      // Test send — the rep receives the exact email a professional would.
+      // We upsert a network row for their own email (ce_sends requires one);
+      // the dashboard hides it from the network list.
+      const selfEmail = (user.email ?? "").trim().toLowerCase();
+      if (!selfEmail) {
+        return NextResponse.json({ error: "Your account has no email address." }, { status: 400 });
+      }
+      const { data: selfPro, error: selfProError } = await admin
+        .from("professionals")
+        .upsert(
+          { rep_id: repId, name: repName, email: selfEmail },
+          { onConflict: "rep_id,email" }
+        )
+        .select("id")
+        .single();
+      if (selfProError || !selfPro) {
+        return NextResponse.json({ error: "Could not set up the test send." }, { status: 500 });
+      }
+      ceSendProId = selfPro.id;
+      pro = { id: selfPro.id, name: repName, email: selfEmail };
+    } else {
+      // 1. Try existing professionals table
+      const { data: proFromProfessionals } = await supabase
+        .from("professionals")
+        .select("id, name, email")
+        .eq("id", professionalId)
+        .eq("rep_id", repId)
+        .single();
+      pro = proFromProfessionals ?? null;
+    }
 
     // 2. If not found AND we have recipient data from frontend, upsert directly
     if (!pro && recipient?.email) {
@@ -156,7 +182,7 @@ export async function POST(request: Request) {
     }
 
     // 3. Last resort — try profiles + auth lookup
-    if (!pro) {
+    if (!pro && professionalId) {
       const { data: profile } = await admin
         .from("profiles")
         .select("id, full_name, discipline, city, state, facility")
@@ -201,7 +227,7 @@ export async function POST(request: Request) {
       const productIdForDb = course.product_id;
 
       const expiryDate = new Date();
-      expiryDate.setDate(expiryDate.getDate() + 90);
+      expiryDate.setDate(expiryDate.getDate() + (isTest ? 7 : 90));
 
       const wooResult = await createWooCoupon({
         code: couponCode,
@@ -210,7 +236,7 @@ export async function POST(request: Request) {
         productIds: [productIdForDb],
         dateExpires: expiryDate.toISOString().split("T")[0],
         usageLimit: 1,
-        description: `Pulse CE: ${course.name} (${discount})`,
+        description: `Pulse CE${isTest ? " TEST" : ""}: ${course.name} (${discount})`,
       });
 
       if (wooResult.error) {
@@ -231,6 +257,7 @@ export async function POST(request: Request) {
           personal_message: personalMessage?.trim() || null,
           product_id: productIdForDb,
           recipient_email: pro.email,
+          ...(isTest ? { is_test: true, source: "test" } : {}),
         })
         .select("id")
         .single();
@@ -242,16 +269,18 @@ export async function POST(request: Request) {
       }
       insertedSendIds.push(insertedSend.id);
 
-      const { error: touchError } = await admin.from("touchpoints").insert({
-        rep_id: repId,
-        professional_id: ceSendProId,
-        type: "ce_send",
-        notes: `${course.name} (${couponCode})`,
-        points: 5,
-      });
-      if (touchError) {
-        // Log but don't fail; ce_send was recorded
-        console.warn("Touchpoint insert failed:", touchError);
+      if (!isTest) {
+        const { error: touchError } = await admin.from("touchpoints").insert({
+          rep_id: repId,
+          professional_id: ceSendProId,
+          type: "ce_send",
+          notes: `${course.name} (${couponCode})`,
+          points: 5,
+        });
+        if (touchError) {
+          // Log but don't fail; ce_send was recorded
+          console.warn("Touchpoint insert failed:", touchError);
+        }
       }
 
       sentCourses.push({
@@ -269,11 +298,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Mark one pending CE request fulfilled (if any)
+    // Mark one pending CE request fulfilled (if any) — never for test sends.
     // Requests from signed-up professionals store their AUTH id, while sends
     // store the network-contact id — match across both (plus any profile with
     // the recipient's email) so fulfillment actually lands.
-    const candidateIds = new Set<string>([professionalId, ceSendProId]);
+    if (!isTest) {
+    const candidateIds = new Set<string>([...(professionalId ? [professionalId] : []), ceSendProId]);
     if (pro.email) {
       const [{ data: matchingProfiles }, { data: matchingUsers }] = await Promise.all([
         admin.from("profiles").select("id").ilike("email", pro.email),
@@ -314,6 +344,7 @@ export async function POST(request: Request) {
         }
       }
     }
+    }
 
     const resendKey = process.env.RESEND_API_KEY;
     const fromAddress =
@@ -321,6 +352,8 @@ export async function POST(request: Request) {
     const fromEmail = `${repName} via Pulse <${fromAddress}>`;
 
     let emailErrorMsg: string | null = null;
+    let resendEmailId: string | null = null;
+    const subjectPrefix = isTest ? "[Test] " : "";
 
     if (resendKey) {
       const resend = new Resend(resendKey);
@@ -340,16 +373,18 @@ export async function POST(request: Request) {
           repOrgName,
           personalMessage: personalMessage?.trim(),
         };
-        const { error: emailError } = await resend.emails.send({
+        const { data: emailData, error: emailError } = await resend.emails.send({
           from: fromEmail,
           to: pro.email,
-          subject: buildCeEmailSubject(emailParams),
+          subject: subjectPrefix + buildCeEmailSubject(emailParams),
           html: buildCeEmailHtml(emailParams),
           text: buildCeEmailText(emailParams),
         });
         if (emailError) {
           console.error("Resend error (single send):", emailError);
           emailErrorMsg = emailError.message ?? "Email send failed";
+        } else {
+          resendEmailId = emailData?.id ?? null;
         }
       } else {
         // Multiple courses — one combined email listing them all
@@ -362,16 +397,18 @@ export async function POST(request: Request) {
           courses: sentCourses,
           discount,
         };
-        const { error: emailError } = await resend.emails.send({
+        const { data: emailData, error: emailError } = await resend.emails.send({
           from: fromEmail,
           to: pro.email,
-          subject: buildCeMultiEmailSubject(multiParams),
+          subject: subjectPrefix + buildCeMultiEmailSubject(multiParams),
           html: buildCeMultiEmailHtml(multiParams),
           text: buildCeMultiEmailText(multiParams),
         });
         if (emailError) {
           console.error("Resend error (multi send):", emailError);
           emailErrorMsg = emailError.message ?? "Email send failed";
+        } else {
+          resendEmailId = emailData?.id ?? null;
         }
       }
     } else {
@@ -379,13 +416,17 @@ export async function POST(request: Request) {
     }
 
     // Record delivery outcome so failures are visible, not silent.
+    // resend_email_id lets the Resend webhook map open/click events back here.
     if (insertedSendIds.length > 0) {
       await admin
         .from("ce_sends")
         .update(
           emailErrorMsg
             ? { email_error: emailErrorMsg }
-            : { email_sent_at: new Date().toISOString() }
+            : {
+                email_sent_at: new Date().toISOString(),
+                ...(resendEmailId ? { resend_email_id: resendEmailId } : {}),
+              }
         )
         .in("id", insertedSendIds);
     }

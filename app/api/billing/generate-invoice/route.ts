@@ -106,6 +106,7 @@ export async function POST(request: Request) {
       `)
       .not("redeemed_at", "is", null)
       .eq("billed", false)
+      .eq("is_test", false)
       .gte("redeemed_at", periodStart.toISOString())
       .lte("redeemed_at", periodEnd.toISOString())
       .order("redeemed_at");

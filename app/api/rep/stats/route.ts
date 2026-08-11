@@ -27,13 +27,16 @@ export async function GET() {
     admin.from("ce_sends")
       .select("id", { count: "exact" })
       .eq("rep_id", user.id)
+      .eq("is_test", false)
       .not("clicked_at", "is", null),
     admin.from("ce_sends")
       .select("id", { count: "exact" })
-      .eq("rep_id", user.id),
+      .eq("rep_id", user.id)
+      .eq("is_test", false),
     admin.from("ce_sends")
       .select("id", { count: "exact" })
       .eq("rep_id", user.id)
+      .eq("is_test", false)
       .not("redeemed_at", "is", null),
     admin.from("professionals")
       .select("id")

@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     const { data: ceSend } = await admin
       .from("ce_sends")
-      .select("id, coupon_code, product_id, course_id, discount, clicked_at, redeemed_at, professional_id")
+      .select("id, coupon_code, product_id, course_id, discount, clicked_at, redeemed_at, professional_id, is_test")
       .eq("coupon_code", code)
       .single();
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         redeemed_at: ceSend.redeemed_at ?? now,
       })
       .eq("id", ceSend.id);
-    if (firstClick) {
+    if (firstClick && !ceSend.is_test) {
       after(introduceOnRedemption(admin, ceSend.id));
     }
 

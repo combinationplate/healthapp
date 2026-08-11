@@ -75,7 +75,8 @@ export async function GET(request: Request) {
       const { count } = await admin
         .from("ce_sends")
         .select("id", { count: "exact", head: true })
-        .eq("rep_id", enrollment.user_id);
+        .eq("rep_id", enrollment.user_id)
+        .eq("is_test", false);
 
       if ((count ?? 0) > 0) {
         const nextStep = enrollment.current_step + 1;
