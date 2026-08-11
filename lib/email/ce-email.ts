@@ -68,7 +68,7 @@ export function buildCeEmailHtml(p: CeEmailParams): string {
 
   ${isFree
     ? `<p style="margin:0 0 8px;font-size:13px;color:#7a8ba8;line-height:1.5;">
-    Click the button above and you&#39;ll be taken straight into your course on HISCornerstone.com &mdash; no account setup or checkout needed. The course is 100% online and self-paced.
+    Click the button above and you&#39;ll be taken straight into your course on HISCornerstone.com. No account setup or checkout needed. The course is 100% online and self-paced.
   </p>
 
   <p style="margin:0 0 24px;font-size:12px;color:#a8aeb9;line-height:1.5;">
@@ -110,7 +110,7 @@ export function buildCeEmailText(p: CeEmailParams): string {
     `Access your course: ${p.accessUrl}`,
     ``,
     isFree
-      ? `Click the link and you'll be taken straight into your course on HISCornerstone.com — no account setup or checkout needed.`
+      ? `Click the link and you'll be taken straight into your course on HISCornerstone.com. No account setup or checkout needed.`
       : `Coupon code: ${p.couponCode}`,
     ``,
     isFree
@@ -196,7 +196,7 @@ export function buildCeMultiEmailHtml(p: CeMultiEmailParams): string {
 
   <p style="margin:16px 0 24px;font-size:13px;color:#7a8ba8;line-height:1.5;">
     ${isFree
-      ? "Click each course&#39;s button and you&#39;ll be taken straight into it on HISCornerstone.com &mdash; no account setup or checkout needed. Each course is 100% online and self-paced."
+      ? "Click each course&#39;s button and you&#39;ll be taken straight into it on HISCornerstone.com. No account setup or checkout needed. Each course is 100% online and self-paced."
       : `For each course, click its button, then complete checkout on HISCornerstone.com with your ${escapeHtml((p.discount ?? "").toLowerCase())} discount applied. Each course is 100% online and self-paced.`}
   </p>
 
@@ -237,7 +237,7 @@ export function buildCeMultiEmailText(p: CeMultiEmailParams): string {
   });
   lines.push(
     isFree
-      ? `Click each link and you'll be taken straight into the course on HISCornerstone.com — no account setup or checkout needed.`
+      ? `Click each link and you'll be taken straight into the course on HISCornerstone.com. No account setup or checkout needed.`
       : `For each course, click the link, then complete checkout on HISCornerstone.com with your ${(p.discount ?? "").toLowerCase()} discount applied.`,
     ``,
     `${p.repName}`

@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse, after } from "next/server";
+import { Resend } from "resend";
 import { introduceOnRedemption } from "@/lib/demand/introduce";
 import { enrollOnHiscornerstone } from "@/lib/hiscornerstone/enroll";
 
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
 
     const { data: ceSend } = await admin
       .from("ce_sends")
-      .select("id, coupon_code, product_id, course_id, discount, clicked_at, redeemed_at, professional_id, is_test")
+      .select("id, coupon_code, product_id, course_id, discount, clicked_at, redeemed_at, professional_id, is_test, rep_id, course_name")
       .eq("coupon_code", code)
       .single();
 
@@ -55,6 +56,10 @@ export async function POST(request: Request) {
       .eq("id", ceSend.id);
     if (firstClick && !ceSend.is_test) {
       after(introduceOnRedemption(admin, ceSend.id));
+      // The ONE rep notification per send — fired at the moment of value,
+      // when the professional opens the CE. (Email-open pixel events only
+      // stamp the dashboard status; they never email the rep.)
+      after(notifyRepStarted(admin, ceSend));
     }
 
     // Resolve the Woo product ID (older rows may only carry course_id).
@@ -125,5 +130,82 @@ export async function POST(request: Request) {
   } catch (e) {
     console.error("[redeem] error:", e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+/**
+ * The single rep notification per send: "«Name» just opened the CE you sent."
+ * Fires once (first Start press = real value moment), never for test sends.
+ * Best-effort — must never break redemption.
+ */
+async function notifyRepStarted(
+  admin: ReturnType<typeof createServiceClient>,
+  ceSend: { id: string; rep_id: string; course_name: string; professional_id: string | null }
+): Promise<void> {
+  try {
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey || !ceSend.rep_id) return;
+
+    const { data: repAuth } = await admin.auth.admin.getUserById(ceSend.rep_id);
+    const repEmail = repAuth?.user?.email;
+    if (!repEmail) return;
+
+    const { data: repProfile } = await admin
+      .from("profiles")
+      .select("full_name")
+      .eq("id", ceSend.rep_id)
+      .maybeSingle();
+    const repFirst =
+      (repProfile?.full_name ?? repAuth?.user?.user_metadata?.full_name ?? "there")
+        .split(/\s+/)[0];
+
+    let proName = "Your contact";
+    if (ceSend.professional_id) {
+      const { data: pro } = await admin
+        .from("professionals")
+        .select("name")
+        .eq("id", ceSend.professional_id)
+        .maybeSingle();
+      if (pro?.name) proName = pro.name;
+    }
+    const proFirst = proName.split(/\s+/)[0];
+
+    const esc = (s: string) =>
+      s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsereferrals.com").replace(/\/$/, "");
+
+    const html = `
+<div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
+  <p>Hi ${esc(repFirst)},</p>
+  <p><strong>${esc(proName)}</strong> just opened <strong>${esc(ceSend.course_name)}</strong>. They're in the course, and your name is on the sponsorship.</p>
+  <p>Congrats, this is the whole play working. You gave ${esc(proFirst)} something they actually need, and they know exactly who it came from.</p>
+  <p>Keep an eye on your <a href="${appUrl}/app" style="color:#2455ff;">dashboard</a>. Professionals who take a CE often come back to request their next one, and answering a request is the easiest send you'll ever make.</p>
+  <p>Pulse<br/><span style="color:#7a8ba8;font-size:14px;">pulsereferrals.com</span></p>
+</div>`;
+
+    const text = [
+      `Hi ${repFirst},`,
+      ``,
+      `${proName} just opened ${ceSend.course_name}. They're in the course, and your name is on the sponsorship.`,
+      ``,
+      `Congrats, this is the whole play working. You gave ${proFirst} something they actually need, and they know exactly who it came from.`,
+      ``,
+      `Keep an eye on your dashboard. Professionals who take a CE often come back to request their next one, and answering a request is the easiest send you'll ever make.`,
+      `${appUrl}/app`,
+      ``,
+      `Pulse`,
+    ].join("\n");
+
+    const fromAddress = process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
+    const resend = new Resend(resendKey);
+    await resend.emails.send({
+      from: `Pulse <${fromAddress}>`,
+      to: repEmail,
+      subject: `${proFirst} just opened the CE you sent 🎉`,
+      html,
+      text,
+    });
+  } catch (e) {
+    console.warn("[redeem] rep started-notification failed:", e);
   }
 }

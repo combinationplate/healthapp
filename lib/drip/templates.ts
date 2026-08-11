@@ -31,9 +31,9 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
           Here's how to send your first CE in 60 seconds:
         </p>
         <ol style="font-size:14px;color:#3b4963;line-height:2;padding-left:20px;">
-          <li><strong>Add a professional</strong> — a nurse, social worker, or case manager you work with</li>
-          <li><strong>Pick a course</strong> — ethics, palliative care, mental health, and more</li>
-          <li><strong>Hit send</strong> — they get a free CE course by email instantly</li>
+          <li><strong>Add a professional</strong>: a nurse, social worker, or case manager you work with</li>
+          <li><strong>Pick a course</strong>: ethics, palliative care, mental health, and more</li>
+          <li><strong>Hit send</strong>: they get a free CE course by email instantly</li>
         </ol>
         ${btn("Open Your Dashboard →", `${APP_URL}/app`)}
         <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
@@ -45,7 +45,7 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Your QR Code Is Ready</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          Hi ${firstName} — heading to a facility soon? Generate a QR code flyer from your dashboard.
+          Hi ${firstName}, heading to a facility soon? Generate a QR code flyer from your dashboard.
           When a nurse scans it, they enter their email and get a free CE course instantly.
           No app needed, takes 10 seconds.
         </p>
@@ -60,12 +60,12 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">3 Ways to Use Pulse at Your Next Visit</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          Hi ${firstName} — here are the ways reps are using Pulse in the field:
+          Hi ${firstName}, here are the ways reps are using Pulse in the field:
         </p>
         <div style="background:#f6f5f0;border-radius:12px;padding:20px;margin:16px 0;">
-          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>1. Direct Send</strong> — know the nurse's email? Send them a free CE right from your dashboard. Takes 10 seconds.</p>
-          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>2. QR Code</strong> — show the QR on your phone or leave a printed flyer. Nurses scan, enter email, get their CE.</p>
-          <p style="font-size:14px;color:#0b1222;margin:0;"><strong>3. Bulk Send</strong> — got a list of contacts? Upload a CSV or select from your network and send to everyone at once.</p>
+          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>1. Direct Send</strong>: know the nurse's email? Send them a free CE right from your dashboard. Takes 10 seconds.</p>
+          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>2. QR Code</strong>: show the QR on your phone or leave a printed flyer. Nurses scan, enter email, get their CE.</p>
+          <p style="font-size:14px;color:#0b1222;margin:0;"><strong>3. Bulk Send</strong>: got a list of contacts? Upload a CSV or select from your network and send to everyone at once.</p>
         </div>
         ${btn("Go to Dashboard →", `${APP_URL}/app`)}
       `);
@@ -74,7 +74,7 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Need Help Getting Started?</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          Hi ${firstName} — I noticed you haven't sent your first CE yet. No pressure —
+          Hi ${firstName}, I noticed you haven't sent your first CE yet. No pressure,
           just wanted to make sure everything's working for you.
         </p>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
@@ -91,17 +91,17 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Welcome to Pulse, ${firstName}!</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          You now have access to free, nationally accredited CE courses — no cost, no catch.
+          You now have access to free, nationally accredited CE courses. No cost, no catch.
           Here's how it works:
         </p>
         <ol style="font-size:14px;color:#3b4963;line-height:2;padding-left:20px;">
-          <li><strong>Request a CE</strong> — tell us the topic and hours you need</li>
-          <li><strong>A local rep sponsors it</strong> — hospice, home health, and rehab teams cover the cost</li>
-          <li><strong>You complete it free</strong> — accredited, online, self-paced, certificate issued instantly</li>
+          <li><strong>Request a CE</strong>: tell us the topic and hours you need</li>
+          <li><strong>A local rep sponsors it</strong>: hospice, home health, and rehab teams cover the cost</li>
+          <li><strong>You complete it free</strong>: accredited, online, self-paced, certificate issued instantly</li>
         </ol>
         ${btn("Request Your First CE →", `${APP_URL}/app`, "#0d9488")}
         <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
-          Courses cover ethics, palliative care, mental health, chronic disease management, and more —
+          Courses cover ethics, palliative care, mental health, chronic disease management, and more,
           approved for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs.
         </p>
       `);
@@ -110,9 +110,9 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Your First Free CE Is One Request Away</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          Hi ${firstName} — need CE hours before your next renewal? Open your dashboard,
+          Hi ${firstName}, need CE hours before your next renewal? Open your dashboard,
           tap <strong>Request CE</strong>, and tell us the topic and hours you need.
-          A local rep sponsors the course and you complete it free — accredited,
+          A local rep sponsors the course and you complete it free: accredited,
           online, and self-paced.
         </p>
         ${btn("Request a Free CE →", `${APP_URL}/app`, "#0d9488")}
@@ -125,13 +125,13 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return wrap(`
         <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Know a Rep? Get Your CE Faster</h1>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          Hi ${firstName} — when you request a CE, you can invite a rep you already work with —
+          Hi ${firstName}, when you request a CE, you can invite a rep you already work with:
           a hospice, home health, or rehab rep who visits your facility. They'll get an email,
           join Pulse free, and sponsor your course. You get your CE faster, and they get to
           be the one who helped.
         </p>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          No rep in mind? Just submit the request — open requests are visible to local
+          No rep in mind? Just submit the request. Open requests are visible to local
           sponsors looking for professionals to support.
         </p>
         ${btn("Request a CE Course →", `${APP_URL}/app`, "#0d9488")}
@@ -144,12 +144,12 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
 <div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
   <p>Hi ${firstName},</p>
   <p>It's been a couple of weeks since you set up your Pulse account, and I noticed you haven't sent your first CE yet.</p>
-  <p>No guilt trip — I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
-  <p><strong>Not sure which course to send?</strong> Start with ethics — every license needs it, so it's never the wrong pick.</p>
-  <p><strong>Don't have a nurse's email handy?</strong> Skip it — generate your QR flyer and let them come to you at your next facility visit.</p>
+  <p>No guilt trip. I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
+  <p><strong>Not sure which course to send?</strong> Start with ethics. Every license needs it, so it's never the wrong pick.</p>
+  <p><strong>Don't have a nurse's email handy?</strong> Skip it. Generate your QR flyer and let them come to you at your next facility visit.</p>
   <p><strong>Just busy?</strong> Fair. It takes about 60 seconds whenever you're ready: <a href="${APP_URL}/app" style="color:#2455ff;">pulsereferrals.com/app</a></p>
-  <p>And if it's something else — something confusing, something that didn't work — just hit reply and tell me. I read every response.</p>
-  <p>— Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+  <p>And if it's something else, something confusing or something that didn't work, just hit reply and tell me. I read every response.</p>
+  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
 </div>`;
 
     case "rep-reengage-21":
@@ -157,11 +157,11 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
 <div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
   <p>Hi ${firstName},</p>
   <p>This is the last email in this series, so I'll keep it short.</p>
-  <p>Reps who send CEs get remembered. When a case manager gets free CE hours from you, you stop being another rep in the lobby — you're the one who helped with their license renewal. That's the whole play, and it starts with one send.</p>
-  <p>If now isn't the right time, no hard feelings — your account stays open and free, and everything will be right where you left it.</p>
+  <p>Reps who send CEs get remembered. When a case manager gets free CE hours from you, you stop being another rep in the lobby. You're the one who helped with their license renewal. That's the whole play, and it starts with one send.</p>
+  <p>If now isn't the right time, no hard feelings. Your account stays open and free, and everything will be right where you left it.</p>
   <p>But if you've got 60 seconds today: add one nurse, pick one course, hit send.</p>
   <p style="margin:24px 0;"><a href="${APP_URL}/app" style="display:inline-block;background:#2455ff;color:#fff;font-weight:700;padding:14px 32px;border-radius:10px;font-size:15px;text-decoration:none;font-family:'DM Sans',system-ui,sans-serif;">Send one CE →</a></p>
-  <p>— Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
 </div>`;
 
     default:
