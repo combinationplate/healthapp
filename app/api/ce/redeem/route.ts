@@ -1,4 +1,4 @@
-import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { createClient as createServiceClient, type SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, after } from "next/server";
 import { Resend } from "resend";
 import { introduceOnRedemption } from "@/lib/demand/introduce";
@@ -139,7 +139,8 @@ export async function POST(request: Request) {
  * Best-effort — must never break redemption.
  */
 async function notifyRepStarted(
-  admin: ReturnType<typeof createServiceClient>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  admin: SupabaseClient<any, any, any, any, any>,
   ceSend: { id: string; rep_id: string; course_name: string; professional_id: string | null }
 ): Promise<void> {
   try {
