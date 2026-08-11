@@ -305,7 +305,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       });
   }, []);
 
-  useEffect(() => {
+  const fetchRepProfile = useCallback(() => {
     fetch("/api/rep/profile", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
@@ -316,10 +316,16 @@ export function RepDashboard({ repId }: { repId?: string }) {
           setRepProfile({
             full_name: data.profile.full_name ?? "",
             org_name: data.profile.org_name ?? null,
+            org_logo_url: data.profile.org_logo_url ?? null,
+            email: data.profile.email ?? null,
           });
         }
       });
   }, []);
+
+  useEffect(() => {
+    fetchRepProfile();
+  }, [fetchRepProfile]);
 
   const fetchRepStats = useCallback(async () => {
     const res = await fetch("/api/rep/stats", { credentials: "include" });
@@ -351,10 +357,15 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [touchpointSaving, setTouchpointSaving] = useState(false);
   const [touchpointError, setTouchpointError] = useState<string | null>(null);
   const [touchpointSuccess, setTouchpointSuccess] = useState(false);
-  const [repProfile, setRepProfile] = useState<{ full_name: string; org_name: string | null } | null>(null);
+  const [repProfile, setRepProfile] = useState<{ full_name: string; org_name: string | null; org_logo_url: string | null; email: string | null } | null>(null);
   const [flyerSize, setFlyerSize] = useState<"print" | "social">("print");
   const [flyerGenerating, setFlyerGenerating] = useState(false);
   const flyerRef = useRef<HTMLDivElement>(null);
+  const [brandSaving, setBrandSaving] = useState(false);
+  const [brandError, setBrandError] = useState<string | null>(null);
+  const [brandNameDraft, setBrandNameDraft] = useState("");
+  const [brandNameEditing, setBrandNameEditing] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [hasOpenedQr, setHasOpenedQr] = useState(false);
   const [qrMode, setQrMode] = useState<"any" | "specific">("any");
@@ -432,25 +443,58 @@ export function RepDashboard({ repId }: { repId?: string }) {
     setQrCapSaving(false);
   }
 
-  async function downloadFlyer(size: "print" | "social", qrUrl: string) {
+  async function downloadFlyer(size: "print" | "social", _qrUrl: string) {
     if (!flyerRef.current) return;
     setFlyerGenerating(true);
     try {
-      // Fetch QR image as a blob and convert to data URL to avoid CORS issues
-      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(qrUrl)}`;
-      const response = await fetch(qrImageUrl);
-      const blob = await response.blob();
-      const dataUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(blob);
-      });
+      // Convert EVERY remote image inside the flyer (QR service + uploaded logo)
+      // to a data URL so html2canvas can capture them without CORS taint.
+      // Do NOT use querySelector("img") here — with a logo present, the first
+      // img is no longer the QR code.
+      const imgs = Array.from(flyerRef.current.querySelectorAll<HTMLImageElement>("img"));
+      const originals: { img: HTMLImageElement; src: string }[] = [];
+      for (const img of imgs) {
+        const src = img.getAttribute("src") || "";
+        if (!src || src.startsWith("data:")) continue;
+        try {
+          const response = await fetch(src, { cache: "no-store" });
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          originals.push({ img, src });
+          img.src = dataUrl;
+        } catch {
+          // Leave this image as-is; capture may still succeed.
+        }
+      }
 
-      // Swap the img src to the local data URL before capturing
-      const qrImg = flyerRef.current.querySelector("img");
-      if (qrImg) qrImg.src = dataUrl;
+      // Same for background-image elements (the logo chip)
+      const bgEls = Array.from(flyerRef.current.querySelectorAll<HTMLElement>("[data-flyer-bg]"));
+      const bgOriginals: { el: HTMLElement; bg: string }[] = [];
+      for (const el of bgEls) {
+        const bg = el.style.backgroundImage || "";
+        const m = bg.match(/url\(["']?(.*?)["']?\)/);
+        const src = m?.[1] || "";
+        if (!src || src.startsWith("data:")) continue;
+        try {
+          const response = await fetch(src, { cache: "no-store" });
+          const blob = await response.blob();
+          const dataUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          bgOriginals.push({ el, bg });
+          el.style.backgroundImage = `url("${dataUrl}")`;
+        } catch {
+          // Leave as-is; capture may still succeed.
+        }
+      }
 
-      // Brief pause to let the image render
+      // Brief pause to let the images render
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const canvas = await html2canvas(flyerRef.current, {
@@ -461,8 +505,151 @@ export function RepDashboard({ repId }: { repId?: string }) {
       link.download = `pulse-flyer-${size}-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+
+      // Restore original srcs so the hidden template stays clean
+      originals.forEach(({ img, src }) => { img.src = src; });
+      bgOriginals.forEach(({ el, bg }) => { el.style.backgroundImage = bg; });
     } finally {
       setFlyerGenerating(false);
+    }
+  }
+
+  // Normalize an uploaded logo client-side: trim transparent / near-white
+  // padding, cap dimensions, and re-encode as PNG. This is what makes ANY
+  // uploaded logo render predictably in the flyer header chip.
+  async function normalizeLogoFile(file: File): Promise<Blob> {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = url;
+      });
+      const w = img.naturalWidth;
+      const h = img.naturalHeight;
+      if (!w || !h) throw new Error("bad image");
+      const preScale = Math.min(1, 1600 / Math.max(w, h));
+      const cw = Math.max(1, Math.round(w * preScale));
+      const ch = Math.max(1, Math.round(h * preScale));
+      const canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("no canvas");
+      ctx.drawImage(img, 0, 0, cw, ch);
+      const px = ctx.getImageData(0, 0, cw, ch).data;
+      // Background = fully transparent OR near-white pixels
+      const isBg = (x: number, y: number) => {
+        const i = (y * cw + x) * 4;
+        if (px[i + 3] < 16) return true;
+        return px[i] > 243 && px[i + 1] > 243 && px[i + 2] > 243;
+      };
+      let top = 0, bottom = ch - 1, left = 0, right = cw - 1;
+      const rowBg = (y: number) => { for (let x = 0; x < cw; x++) if (!isBg(x, y)) return false; return true; };
+      const colBg = (x: number) => { for (let y = top; y <= bottom; y++) if (!isBg(x, y)) return false; return true; };
+      while (top < bottom && rowBg(top)) top++;
+      while (bottom > top && rowBg(bottom)) bottom--;
+      while (left < right && colBg(left)) left++;
+      while (right > left && colBg(right)) right--;
+      const tw = right - left + 1;
+      const th = bottom - top + 1;
+      if (tw < 8 || th < 8) throw new Error("logo looks empty");
+      // Keep a ~4% breathing margin around the trimmed artwork
+      const mx = Math.round(tw * 0.04);
+      const my = Math.round(th * 0.04);
+      const sx = Math.max(0, left - mx);
+      const sy = Math.max(0, top - my);
+      const sw = Math.min(cw - sx, tw + mx * 2);
+      const sh = Math.min(ch - sy, th + my * 2);
+      // Final size cap: 800×320 (plenty for a 3x-scale flyer capture)
+      const outScale = Math.min(1, 800 / sw, 320 / sh);
+      const ow = Math.max(1, Math.round(sw * outScale));
+      const oh = Math.max(1, Math.round(sh * outScale));
+      const out = document.createElement("canvas");
+      out.width = ow;
+      out.height = oh;
+      const octx = out.getContext("2d");
+      if (!octx) throw new Error("no canvas");
+      octx.drawImage(canvas, sx, sy, sw, sh, 0, 0, ow, oh);
+      const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, "image/png"));
+      if (!blob) throw new Error("encode failed");
+      return blob;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  async function uploadFlyerLogo(file: File) {
+    setBrandError(null);
+    if (file.size > 2 * 1024 * 1024) {
+      setBrandError("Logo must be under 2MB.");
+      return;
+    }
+    setBrandSaving(true);
+    try {
+      // Normalize (trim padding, cap size, PNG). If anything about the file
+      // resists processing, fall back to uploading it untouched.
+      let payload: Blob = file;
+      try {
+        payload = await normalizeLogoFile(file);
+      } catch {
+        payload = file;
+      }
+      const form = new FormData();
+      form.append("logo", payload, "logo.png");
+      const res = await fetch("/api/rep/branding", { method: "POST", body: form, credentials: "include" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBrandError(data.error || "Upload failed. Please try again.");
+        return;
+      }
+      fetchRepProfile();
+    } catch {
+      setBrandError("Upload failed. Please try again.");
+    } finally {
+      setBrandSaving(false);
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  }
+
+  async function removeFlyerLogo() {
+    setBrandSaving(true);
+    setBrandError(null);
+    try {
+      const res = await fetch("/api/rep/branding", { method: "DELETE", credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBrandError(data.error || "Couldn't remove the logo.");
+        return;
+      }
+      fetchRepProfile();
+    } finally {
+      setBrandSaving(false);
+    }
+  }
+
+  async function saveCompanyName() {
+    const name = brandNameDraft.trim();
+    if (!name) return;
+    setBrandSaving(true);
+    setBrandError(null);
+    try {
+      const res = await fetch("/api/rep/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ orgName: name }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBrandError(data.error || "Couldn't save the company name.");
+        return;
+      }
+      setBrandNameEditing(false);
+      fetchRepProfile();
+    } finally {
+      setBrandSaving(false);
     }
   }
 
@@ -1611,6 +1798,105 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             {/* Flyer generator section */}
                             <div>
                               <div style={{ borderTop: "1px solid rgba(11,18,34,0.08)", margin: "24px 0" }} />
+
+                              {/* ── Flyer branding (company name + logo) ── */}
+                              <div style={{ background: "#f6f5f0", borderRadius: "10px", padding: "14px", marginBottom: "16px" }}>
+                                <div style={{ fontWeight: 700, fontSize: "13px", marginBottom: "2px" }}>Your branding on this flyer</div>
+                                <div style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "10px" }}>
+                                  Your company name and logo appear at the top of the flyer.
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                  {repProfile?.org_logo_url ? (
+                                    // eslint-disable-next-line @next/next/no-img-element
+                                    <img
+                                      src={repProfile.org_logo_url}
+                                      alt="Company logo"
+                                      style={{ height: "40px", maxWidth: "130px", objectFit: "contain", background: "white", borderRadius: "8px", padding: "4px 8px", border: "1px solid rgba(11,18,34,0.08)" }}
+                                    />
+                                  ) : (
+                                    <div style={{ height: "40px", borderRadius: "8px", border: "1px dashed rgba(11,18,34,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "#7a8ba8", padding: "0 12px" }}>
+                                      No logo yet
+                                    </div>
+                                  )}
+                                  <input
+                                    ref={logoInputRef}
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    style={{ display: "none" }}
+                                    onChange={(e) => {
+                                      const f = e.target.files?.[0];
+                                      if (f) uploadFlyerLogo(f);
+                                    }}
+                                  />
+                                  <button
+                                    type="button"
+                                    className={BTN_SECONDARY}
+                                    style={{ fontSize: "12px", padding: "7px 12px" }}
+                                    disabled={brandSaving}
+                                    onClick={() => logoInputRef.current?.click()}
+                                  >
+                                    {brandSaving ? "Saving..." : repProfile?.org_logo_url ? "Replace logo" : "Upload logo (PNG)"}
+                                  </button>
+                                  {repProfile?.org_logo_url && (
+                                    <button
+                                      type="button"
+                                      style={{ fontSize: "12px", padding: "7px 8px", background: "none", border: "none", color: "#7a8ba8", cursor: "pointer", textDecoration: "underline" }}
+                                      disabled={brandSaving}
+                                      onClick={removeFlyerLogo}
+                                    >
+                                      Remove
+                                    </button>
+                                  )}
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                                  {brandNameEditing ? (
+                                    <>
+                                      <input
+                                        value={brandNameDraft}
+                                        onChange={(e) => setBrandNameDraft(e.target.value)}
+                                        placeholder="Company name"
+                                        style={{ flex: 1, minWidth: "160px", fontSize: "12px", padding: "7px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "white" }}
+                                      />
+                                      <button
+                                        type="button"
+                                        className={BTN_PRIMARY}
+                                        style={{ fontSize: "12px", padding: "7px 12px" }}
+                                        disabled={brandSaving || !brandNameDraft.trim()}
+                                        onClick={saveCompanyName}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        style={{ fontSize: "12px", padding: "7px 8px", background: "none", border: "none", color: "#7a8ba8", cursor: "pointer" }}
+                                        onClick={() => setBrandNameEditing(false)}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span style={{ fontSize: "12px", color: "#3b4963" }}>
+                                        Company name: <strong>{repProfile?.org_name || "Not set"}</strong>
+                                      </span>
+                                      <button
+                                        type="button"
+                                        style={{ fontSize: "12px", padding: "2px 4px", background: "none", border: "none", color: "#2455ff", cursor: "pointer", textDecoration: "underline" }}
+                                        onClick={() => {
+                                          setBrandNameDraft(repProfile?.org_name ?? "");
+                                          setBrandNameEditing(true);
+                                        }}
+                                      >
+                                        Edit
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                {brandError && (
+                                  <div style={{ fontSize: "12px", color: "#e0524f", marginTop: "8px" }}>{brandError}</div>
+                                )}
+                              </div>
+
                               <div style={{ marginBottom: "12px" }}>
                                 <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "4px" }}>Download Flyer</div>
                                 <div style={{ fontSize: "12px", color: "#7a8ba8", marginBottom: "12px" }}>
@@ -1678,41 +1964,76 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                       justifyContent: "space-between",
                                     }}
                                   >
-                                    <div>
-                                      <div
-                                        style={{
-                                          fontSize: flyerSize === "print" ? "11px" : "13px",
-                                          fontWeight: 600,
-                                          color: "rgba(255,255,255,0.5)",
-                                          textTransform: "uppercase" as const,
-                                          letterSpacing: "0.1em",
-                                          marginBottom: flyerSize === "print" ? "6px" : "8px",
-                                        }}
-                                      >
-                                        Compliments of
-                                      </div>
-                                      <div
-                                        style={{
-                                          fontFamily: "'Fraunces', serif",
-                                          fontSize: flyerSize === "print" ? "34px" : "40px",
-                                          fontWeight: 900,
-                                          color: "#ffffff",
-                                          letterSpacing: "-0.01em",
-                                          lineHeight: 1.1,
-                                        }}
-                                      >
-                                        {repProfile?.org_name || repProfile?.full_name || "Your Company"}
-                                      </div>
-                                      <div
-                                        style={{
-                                          fontSize: flyerSize === "print" ? "14px" : "16px",
-                                          color: "rgba(255,255,255,0.6)",
-                                          marginTop: flyerSize === "print" ? "4px" : "6px",
-                                        }}
-                                      >
-                                        {repProfile?.org_name
-                                          ? `${repProfile.full_name} · Business Development`
-                                          : "Business Development"}
+                                    <div
+                                      style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: flyerSize === "print" ? "18px" : "22px",
+                                        minWidth: 0,
+                                      }}
+                                    >
+                                      {repProfile?.org_logo_url && (
+                                        <div
+                                          style={{
+                                            background: "#ffffff",
+                                            borderRadius: flyerSize === "print" ? "12px" : "14px",
+                                            padding: flyerSize === "print" ? "10px 14px" : "12px 16px",
+                                            flexShrink: 0,
+                                          }}
+                                        >
+                                          {/* Fixed-size chip + background-size:contain — renders ANY
+                                              logo aspect ratio without clipping or distortion, and
+                                              (unlike object-fit on an <img>) html2canvas captures
+                                              background-size correctly. */}
+                                          <div
+                                            data-flyer-bg="1"
+                                            style={{
+                                              width: flyerSize === "print" ? "140px" : "168px",
+                                              height: flyerSize === "print" ? "56px" : "64px",
+                                              backgroundImage: `url("${repProfile.org_logo_url}")`,
+                                              backgroundSize: "contain",
+                                              backgroundPosition: "center",
+                                              backgroundRepeat: "no-repeat",
+                                            }}
+                                          />
+                                        </div>
+                                      )}
+                                      <div style={{ minWidth: 0 }}>
+                                        <div
+                                          style={{
+                                            fontSize: flyerSize === "print" ? "11px" : "13px",
+                                            fontWeight: 600,
+                                            color: "rgba(255,255,255,0.5)",
+                                            textTransform: "uppercase" as const,
+                                            letterSpacing: "0.1em",
+                                            marginBottom: flyerSize === "print" ? "6px" : "8px",
+                                          }}
+                                        >
+                                          Compliments of
+                                        </div>
+                                        <div
+                                          style={{
+                                            fontFamily: "'Fraunces', serif",
+                                            fontSize: flyerSize === "print" ? "34px" : "40px",
+                                            fontWeight: 900,
+                                            color: "#ffffff",
+                                            letterSpacing: "-0.01em",
+                                            lineHeight: 1.1,
+                                          }}
+                                        >
+                                          {repProfile?.org_name || repProfile?.full_name || "Your Company"}
+                                        </div>
+                                        <div
+                                          style={{
+                                            fontSize: flyerSize === "print" ? "14px" : "16px",
+                                            color: "rgba(255,255,255,0.6)",
+                                            marginTop: flyerSize === "print" ? "4px" : "6px",
+                                          }}
+                                        >
+                                          {repProfile?.org_name
+                                            ? `${repProfile.full_name} · Business Development`
+                                            : "Business Development"}
+                                        </div>
                                       </div>
                                     </div>
                                     <div
@@ -1791,7 +2112,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                           flexDirection: "column" as const,
                                           gap: flyerSize === "print" ? "16px" : "18px",
                                           flexShrink: 0,
-                                          width: flyerSize === "print" ? "248px" : "300px",
+                                          width: flyerSize === "print" ? "272px" : "336px",
                                         }}
                                       >
                                         {/* QR code */}
@@ -1808,8 +2129,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         >
                                           <img
                                             src={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(qrUrl)}`}
-                                            width={flyerSize === "print" ? 208 : 252}
-                                            height={flyerSize === "print" ? 208 : 252}
+                                            width={flyerSize === "print" ? 232 : 288}
+                                            height={flyerSize === "print" ? 232 : 288}
                                             alt="QR Code"
                                             crossOrigin="anonymous"
                                             style={{ display: "block", borderRadius: "8px" }}
@@ -1943,7 +2264,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                           display: "flex",
                                           flexDirection: "column" as const,
                                           gap: flyerSize === "print" ? "20px" : "24px",
+                                          justifyContent: "space-between",
                                           paddingTop: "4px",
+                                          paddingBottom: flyerSize === "print" ? "24px" : "28px",
                                         }}
                                       >
                                         {/* How it works */}
@@ -2144,13 +2467,38 @@ export function RepDashboard({ repId }: { repId?: string }) {
                                         Pulse
                                       </span>
                                     </div>
-                                    <div
-                                      style={{
-                                        fontSize: flyerSize === "print" ? "11px" : "12px",
-                                        color: "#7a8ba8",
-                                      }}
-                                    >
-                                      pulsereferrals.vercel.app
+                                    {repProfile?.full_name && (
+                                      <div
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "11px" : "12px",
+                                          color: "#3b4963",
+                                          textAlign: "center" as const,
+                                        }}
+                                      >
+                                        <span style={{ fontWeight: 700 }}>Questions?</span>{" "}
+                                        {repProfile.full_name}
+                                        {repProfile.email ? ` · ${repProfile.email}` : ""}
+                                      </div>
+                                    )}
+                                    <div style={{ textAlign: "right" as const }}>
+                                      <div
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "11px" : "12px",
+                                          fontWeight: 600,
+                                          color: "#3b4963",
+                                        }}
+                                      >
+                                        Courses provided by H.I.S. Cornerstone Continuing Education
+                                      </div>
+                                      <div
+                                        style={{
+                                          fontSize: flyerSize === "print" ? "10px" : "11px",
+                                          color: "#7a8ba8",
+                                          marginTop: "2px",
+                                        }}
+                                      >
+                                        pulsereferrals.com
+                                      </div>
                                     </div>
                                   </div>
                                 </div>

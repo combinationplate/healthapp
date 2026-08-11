@@ -19,16 +19,23 @@ export async function GET() {
     .single();
 
   let org_name: string | null = null;
+  let org_logo_url: string | null = null;
   if (profile?.org_id) {
+    // select("*") so this keeps working even before the logo_url migration runs
     const { data: org } = await admin
       .from("orgs")
-      .select("name")
+      .select("*")
       .eq("id", profile.org_id)
       .single();
     org_name = org?.name ?? null;
+    org_logo_url = (org as { logo_url?: string | null } | null)?.logo_url ?? null;
   }
 
-  return NextResponse.json({ profile: profile ? { ...profile, org_name } : null });
+  return NextResponse.json({
+    profile: profile
+      ? { ...profile, org_name, org_logo_url, email: user.email ?? null }
+      : null,
+  });
 }
 
 export async function POST(request: Request) {
