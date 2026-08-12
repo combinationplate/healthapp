@@ -48,11 +48,30 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { topic, hours, deadline, visible, inviteEmail, facility } = body;
+    const { hours, deadline, visible, inviteEmail, facility } = body;
 
-    if (!topic || !hours || !deadline) {
+    if (!body.topic || !hours || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    // The topic is a fixed dropdown, but browser translators (Google Translate,
+    // Edge) rewrite option text — clients without stable option values submitted
+    // the translated label verbatim ("Outro" for "Other"), which then rendered
+    // for every user on the demand map. Normalize to the canonical list here so
+    // no client variant can ever store a non-canonical topic.
+    const CANONICAL_TOPICS = [
+      "Ethics",
+      "Palliative Care",
+      "Mental Health",
+      "Chronic Disease Management",
+      "Patient Safety",
+      "Care Transitions",
+      "Other",
+    ];
+    const rawTopic = String(body.topic).trim();
+    const topic =
+      CANONICAL_TOPICS.find((c) => c.toLowerCase() === rawTopic.toLowerCase()) ??
+      "Other";
 
     const admin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

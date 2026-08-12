@@ -587,14 +587,18 @@ const [networkLoading, setNetworkLoading] = useState(true);
           <div>
             <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Topic</label>
             <select required value={requestForm.topic} onChange={e => setRequestForm(f => ({...f, topic: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+              {/* Explicit value attrs: browser translators (Google Translate etc.)
+                  rewrite option TEXT, and without a value attr the translated text
+                  is what gets submitted ("Outro" instead of "Other") and shown to
+                  everyone. Values stay canonical English; labels may translate. */}
               <option value="">Select topic...</option>
-              <option>Ethics</option>
-              <option>Palliative Care</option>
-              <option>Mental Health</option>
-              <option>Chronic Disease Management</option>
-              <option>Patient Safety</option>
-              <option>Care Transitions</option>
-              <option>Other</option>
+              <option value="Ethics">Ethics</option>
+              <option value="Palliative Care">Palliative Care</option>
+              <option value="Mental Health">Mental Health</option>
+              <option value="Chronic Disease Management">Chronic Disease Management</option>
+              <option value="Patient Safety">Patient Safety</option>
+              <option value="Care Transitions">Care Transitions</option>
+              <option value="Other">Other</option>
             </select>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
