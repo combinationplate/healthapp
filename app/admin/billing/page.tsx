@@ -43,11 +43,19 @@ export default async function AdminBillingPage() {
     .select("id, name")
     .in("id", orgIds.length > 0 ? orgIds : ["none"]);
 
-  const { data: authUsers } = await admin.auth.admin.listUsers();
+  // listUsers defaults to 50 per page — page through so emails never go
+  // missing from the CE log once the user count grows past 50.
+  const allAuthUsers: { id: string; email?: string | null }[] = [];
+  for (let page = 1; page <= 10; page++) {
+    const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 500 });
+    const users = (list?.users ?? []) as { id: string; email?: string | null }[];
+    allAuthUsers.push(...users);
+    if (users.length < 500) break;
+  }
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
   const orgMap = new Map((orgs ?? []).map((o) => [o.id, o.name]));
-  const emailMap = new Map((authUsers?.users ?? []).map((u) => [u.id, u.email]));
+  const emailMap = new Map(allAuthUsers.map((u) => [u.id, u.email]));
 
   // House account (Pulse Team) sends are demos/fulfillment — never billable.
   const HOUSE_EMAIL = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();

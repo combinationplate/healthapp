@@ -108,18 +108,49 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not create account" }, { status: 500 });
     }
 
-    // Upsert the profile so the demand map has discipline + metro to work with.
-    await admin.rpc("upsert_profile_safe", {
+    // Upsert the profile so the demand map + admin CE log have name, discipline,
+    // and metro to work with. Every step is error-checked: the old version fired
+    // an unchecked rpc + a blind UPDATE, so if the rpc failed the UPDATE matched
+    // zero rows and the lead showed up as "Unknown" with no discipline/location.
+    const { error: rpcErr } = await admin.rpc("upsert_profile_safe", {
       p_id: userId,
       p_role: "professional",
       p_full_name: name,
       p_state: state,
       p_city: city,
     });
-    await admin
+    if (rpcErr) {
+      console.error("[hisc/ce-request] upsert_profile_safe failed:", rpcErr.message);
+    }
+
+    const profilePatch = {
+      email,
+      full_name: name,
+      discipline,
+      city,
+      state,
+      facility,
+      seeking_ce: true,
+    };
+    const { data: patched, error: patchErr } = await admin
       .from("profiles")
-      .update({ email, discipline, facility, seeking_ce: true })
-      .eq("id", userId);
+      .update(profilePatch)
+      .eq("id", userId)
+      .select("id");
+    if (patchErr) {
+      console.error("[hisc/ce-request] profile update failed:", patchErr.message);
+    }
+
+    // No row was updated → the profile row doesn't exist yet (rpc failed or no
+    // signup trigger). Create it explicitly so the lead is never headless.
+    if (!patchErr && (patched?.length ?? 0) === 0) {
+      const { error: insErr } = await admin
+        .from("profiles")
+        .insert({ id: userId, role: "professional", ...profilePatch });
+      if (insErr) {
+        console.error("[hisc/ce-request] profile insert failed:", insErr.message);
+      }
+    }
 
     // Dedupe: identical pending request from this professional → acknowledge, don't duplicate.
     const { data: dupe } = await admin
