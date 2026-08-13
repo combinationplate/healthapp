@@ -100,7 +100,7 @@ export async function POST(request: Request) {
       .from("ce_sends")
       .select(`
         id, rep_id, course_name, course_hours, redeemed_at,
-        coupon_code, recipient_email,
+        coupon_code, recipient_email, intro_credit,
         professionals(name),
         courses(price)
       `)
@@ -131,8 +131,14 @@ export async function POST(request: Request) {
       for (const r of hp ?? []) houseIds.add(r.id);
       for (const r of hu ?? []) houseIds.add(r.id);
     }
-    const houseSends = (unbilledSends ?? []).filter((se: any) => houseIds.has(se.rep_id));
-    const billableSends = (unbilledSends ?? []).filter((se: any) => !houseIds.has(se.rep_id));
+    // First-CE-free credits are never invoiced either — mark them billed the
+    // same way as house sends so they can't resurface in a later period.
+    const houseSends = (unbilledSends ?? []).filter(
+      (se: any) => houseIds.has(se.rep_id) || se.intro_credit
+    );
+    const billableSends = (unbilledSends ?? []).filter(
+      (se: any) => !houseIds.has(se.rep_id) && !se.intro_credit
+    );
     if (houseSends.length > 0 && !isDryRun) {
       await admin
         .from("ce_sends")

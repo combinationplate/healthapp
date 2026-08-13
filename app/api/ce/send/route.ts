@@ -221,6 +221,11 @@ export async function POST(request: Request) {
     const sentCourses: { courseName: string; courseHours: number; couponCode: string; accessUrl: string }[] = [];
     const failedCourses: string[] = [];
     const insertedSendIds: string[] = [];
+    // Track WHY things failed so the user sees the real reason — previously a
+    // DB insert failure was reported as "could not create coupons in the
+    // store", which pointed debugging at WooCommerce when Woo had succeeded.
+    let lastWooError = "";
+    let lastDbError = "";
 
     for (const course of courses) {
       const couponCode = generateCouponCode(repName);
@@ -242,6 +247,7 @@ export async function POST(request: Request) {
       if (wooResult.error) {
         console.warn(`Coupon creation failed for ${course.name}:`, wooResult.error);
         failedCourses.push(course.name);
+        lastWooError = wooResult.error;
         continue;
       }
 
@@ -265,6 +271,7 @@ export async function POST(request: Request) {
       if (sendError || !insertedSend) {
         console.warn(`ce_send insert failed for ${course.name}:`, sendError?.message);
         failedCourses.push(course.name);
+        lastDbError = sendError?.message ?? "insert returned no row";
         continue;
       }
       insertedSendIds.push(insertedSend.id);
@@ -292,10 +299,14 @@ export async function POST(request: Request) {
     }
 
     if (sentCourses.length === 0) {
-      return NextResponse.json(
-        { error: "Could not create any course coupons in the store. Please try again." },
-        { status: 502 }
-      );
+      // Name the actual failing layer — a DB failure after a successful coupon
+      // creation must not masquerade as a store problem.
+      const error = lastDbError
+        ? `The coupon was created but the send could not be saved: ${lastDbError}`
+        : lastWooError
+        ? `Could not create the course coupon in the store: ${lastWooError}`
+        : "Could not create any course coupons in the store. Please try again.";
+      return NextResponse.json({ error }, { status: 502 });
     }
 
     // Mark one pending CE request fulfilled (if any) — never for test sends.

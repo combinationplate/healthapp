@@ -24,7 +24,7 @@ export default async function AdminBillingPage() {
     .select(`
       id, created_at, clicked_at, course_name, course_hours,
       coupon_code, source, billed, recipient_email, rep_id,
-      professional_id, discount
+      professional_id, discount, intro_credit
     `)
     .order("created_at", { ascending: false })
     .limit(500);
@@ -69,7 +69,8 @@ export default async function AdminBillingPage() {
       rep_name: profile?.full_name ?? "Unknown",
       rep_email: repEmail,
       org_name: isHouse ? "Pulse (house)" : orgName,
-      billable: !isHouse && s.clicked_at ? s.course_hours * 15 : 0,
+      // intro_credit = the rep's first redeemed CE, on us — never billable.
+      billable: !isHouse && !s.intro_credit && s.clicked_at ? s.course_hours * 15 : 0,
     };
   });
 

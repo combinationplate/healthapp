@@ -49,7 +49,7 @@ export async function GET() {
       .from("ce_sends")
       .select(`
         id, rep_id, course_name, course_hours,
-        redeemed_at, billed, coupon_code,
+        redeemed_at, billed, coupon_code, intro_credit,
         professionals(name),
         courses(price)
       `)
@@ -74,7 +74,12 @@ export async function GET() {
     const lineItems = (sends ?? []).map((s: any) => {
       const pro = s.professionals as { name?: string } | null;
       const course = Array.isArray(s.courses) ? s.courses[0] : s.courses;
-      const priceCents = course?.price ? Math.round(course.price * 100) : 1500; // default $15
+      // First-CE-free credit: the line stays visible but costs nothing.
+      const priceCents = s.intro_credit
+        ? 0
+        : course?.price
+        ? Math.round(course.price * 100)
+        : 1500; // default $15
 
       return {
         id: s.id,
@@ -84,6 +89,7 @@ export async function GET() {
         courseHours: s.course_hours,
         redeemedAt: s.redeemed_at,
         priceCents,
+        introCredit: s.intro_credit ?? false,
         billed: s.billed ?? false,
       };
     });

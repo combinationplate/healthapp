@@ -699,6 +699,9 @@ export default function HowItWorksPage() {
                 $15
               </div>
               <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>per 1-hour CE course</div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: ds.teal, marginTop: "8px" }}>
+                Your first CE is on us
+              </div>
             </div>
             </div>
 
@@ -746,6 +749,9 @@ export default function HowItWorksPage() {
               </p>
               <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
                 You&apos;re only charged when a professional actually accesses their course — not when you send it. If you send 50 CEs and 30 are opened, you pay for 30. Sending a CE, generating a QR code, or creating a flyer is always free.
+              </p>
+              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
+                <strong style={{ color: ds.teal }}>Your first CE is on us.</strong> Every rep&apos;s first accessed course is free — see the whole loop work, from send to thank-you, before you spend a dollar.
               </p>
               <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
                 CE courses start at <strong style={{ color: ds.ink }}>$15 per 1-hour course</strong>. Multi-hour courses are priced per credit hour. Your company receives a monthly invoice based on actual usage.
@@ -806,7 +812,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="How do sales teams pay?"
-              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE. Your company receives a monthly invoice based on actual usage."
+              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE, and every rep's first accessed course is free. Your company receives a monthly invoice based on actual usage."
             />
             <FaqItem
               q="Can I use this for my whole team?"

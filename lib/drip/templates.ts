@@ -35,6 +35,9 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
           <li><strong>Pick a course</strong>: ethics, palliative care, mental health, and more</li>
           <li><strong>Hit send</strong>: they get a free CE course by email instantly</li>
         </ol>
+        <p style="font-size:14px;color:#0d9488;font-weight:700;margin:0 0 4px;">
+          Your first CE is on us — you're only ever billed when a professional actually starts a course, and the first one is free.
+        </p>
         ${btn("Open Your Dashboard →", `${APP_URL}/app`)}
         <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
           You can also generate a QR code and branded flyer to leave at facilities.
@@ -80,6 +83,9 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
           The quickest way to try it: add one professional to your network (just a name and email),
           pick any course, and hit send. They'll get a free accredited CE course in their inbox.
+        </p>
+        <p style="font-size:14px;color:#0d9488;font-weight:700;">
+          And remember — your first CE is on us, so there's zero cost to see how it lands.
         </p>
         ${btn("Send Your First CE →", `${APP_URL}/app`)}
         <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">

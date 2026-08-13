@@ -47,11 +47,28 @@ export async function POST(request: Request) {
     // Stamp the redemption (idempotent — re-clicks keep the original timestamps).
     const now = new Date().toISOString();
     const firstClick = !ceSend.clicked_at;
+
+    // First-CE-free: the rep's first-ever redeemed real send is on us.
+    // Stamped here at the billable moment (not computed at invoice time) so
+    // it's explicit and auditable on the row itself.
+    let introCredit = false;
+    if (firstClick && !ceSend.is_test && ceSend.rep_id) {
+      const { count: priorRedeemed } = await admin
+        .from("ce_sends")
+        .select("id", { count: "exact", head: true })
+        .eq("rep_id", ceSend.rep_id)
+        .eq("is_test", false)
+        .not("redeemed_at", "is", null)
+        .neq("id", ceSend.id);
+      introCredit = (priorRedeemed ?? 0) === 0;
+    }
+
     await admin
       .from("ce_sends")
       .update({
         clicked_at: ceSend.clicked_at ?? now,
         redeemed_at: ceSend.redeemed_at ?? now,
+        ...(introCredit ? { intro_credit: true } : {}),
       })
       .eq("id", ceSend.id);
     if (firstClick && !ceSend.is_test) {

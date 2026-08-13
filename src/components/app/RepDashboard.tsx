@@ -3795,11 +3795,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>{sendCeTestMode ? "Test send" : "Free to professional"}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#0b1222' }}>{sendCeTestMode ? "Test send" : repStats.redeemed === 0 ? "Your first CE is on us" : "Free to professional"}</div>
                         <div style={{ fontSize: '11px', color: '#7a8ba8', marginTop: '2px' }}>
                           {sendCeTestMode
                             ? "Not billed, not counted — just for your eyes"
-                            : sendCeCourses.length > 0
+                            : repStats.redeemed === 0
+                              ? "You're only ever billed when a professional starts a course — and your first one is free"
+                              : sendCeCourses.length > 0
                               ? `${sendCeCourses.length} course${sendCeCourses.length !== 1 ? "s" : ""} selected · billed to your company`
                               : "Course cost billed to your company"}
                         </div>
@@ -3811,7 +3813,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         borderRadius: '8px',
                         fontSize: '12px',
                         fontWeight: 700,
-                      }}>Complimentary</span>
+                      }}>{!sendCeTestMode && repStats.redeemed === 0 ? "First one's free" : "Complimentary"}</span>
                     </div>
                   </div>
                   <div>
