@@ -12,7 +12,10 @@ import { verifyPulseSignature } from "@/lib/hiscornerstone/enroll";
 async function sendCompletionCongrats(
   admin: SupabaseClient,
   ceSendId: string,
-  certificateUrl: string | null
+  // Certificate URL is still stored on ce_sends (pro dashboard shows it), but
+  // the email no longer links it — HISC's own completion email delivers the
+  // certificate, and duplicating it here was redundant (2026-08-12).
+  _certificateUrl: string | null
 ): Promise<void> {
   try {
     const resendKey = process.env.RESEND_API_KEY;
@@ -32,14 +35,37 @@ async function sendCompletionCongrats(
       .single();
     if (!pro?.email) return;
 
-    let repName = "";
+    // Sponsor attribution: rep name + org. Skipped for the house account and
+    // for junk/generic profile names ("Team") — a bad attribution line reads
+    // worse than none at all.
+    let sponsorLabel = "";
     if (send.rep_id) {
       const { data: rep } = await admin
         .from("profiles")
-        .select("full_name")
+        .select("full_name, org_id")
         .eq("id", send.rep_id)
         .single();
-      repName = rep?.full_name ?? "";
+      let orgName = "";
+      if (rep?.org_id) {
+        const { data: org } = await admin
+          .from("orgs")
+          .select("name")
+          .eq("id", rep.org_id)
+          .maybeSingle();
+        orgName = (org?.name ?? "").trim();
+      }
+      let repName = (rep?.full_name ?? "").trim();
+      const GENERIC_NAMES = new Set(["team", "rep", "admin", "test", "unknown", "n/a"]);
+      if (repName.length < 3 || GENERIC_NAMES.has(repName.toLowerCase())) {
+        repName = "";
+      }
+      const { data: repUser } = await admin.auth.admin.getUserById(send.rep_id);
+      const houseEmail = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();
+      const isHouse = (repUser?.user?.email ?? "").toLowerCase() === houseEmail;
+      if (!isHouse) {
+        sponsorLabel =
+          repName && orgName ? `${repName} at ${orgName}` : repName || orgName;
+      }
     }
 
     const firstName = (pro.name ?? "there").split(/\s+/)[0];
@@ -47,11 +73,10 @@ async function sendCompletionCongrats(
       "https://pulsereferrals.com/signup?utm_source=pulse&utm_medium=email&utm_campaign=ce-completed";
     const fromAddress = process.env.RESEND_FROM_EMAIL ?? "hello@pulsereferrals.com";
 
-    const certBlock = certificateUrl
-      ? `<p style="margin:0 0 20px;">
-          <a href="${certificateUrl}" style="display:inline-block;background:#0d9488;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;">Download Your Certificate</a>
-        </p>`
-      : `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">Your certificate is available in your account on HISCornerstone.com.</p>`;
+    // HISCornerstone (LearnDash) already emails the certificate at completion —
+    // no duplicate certificate button here (decided 2026-08-12). This email's
+    // job is the sponsor attribution + the "request your next free CE" loop.
+    const certBlock = `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">Your certificate arrives in a separate email from HISCornerstone.com, and it's saved in your account there any time you need it.</p>`;
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
@@ -63,7 +88,7 @@ async function sendCompletionCongrats(
     Congratulations — you completed <strong style="color:#0b1222;">${send.course_name}</strong>${send.course_hours ? ` (${send.course_hours} credit hour${Number(send.course_hours) === 1 ? "" : "s"})` : ""}. Nice work.
   </p>
   ${certBlock}
-  ${repName ? `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">This course was sponsored for you by <strong style="color:#0b1222;">${repName}</strong> — if it was helpful, they'd love to hear it.</p>` : ""}
+  ${sponsorLabel ? `<p style="margin:0 0 20px;font-size:14px;color:#3b4963;line-height:1.6;">This course was sponsored for you by <strong style="color:#0b1222;">${sponsorLabel}</strong> — if it was helpful, they'd love to hear it.</p>` : ""}
   <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#f6f5f0;border-radius:10px;"><tr><td style="padding:20px;">
     <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0b1222;">Need more CE hours?</p>
     <p style="margin:0 0 14px;font-size:14px;color:#3b4963;line-height:1.6;">
@@ -81,11 +106,9 @@ async function sendCompletionCongrats(
       ``,
       `Congratulations — you completed ${send.course_name}. Nice work.`,
       ``,
-      certificateUrl
-        ? `Download your certificate: ${certificateUrl}`
-        : `Your certificate is available in your account on HISCornerstone.com.`,
+      `Your certificate arrives in a separate email from HISCornerstone.com, and it's saved in your account there any time you need it.`,
       ``,
-      repName ? `This course was sponsored for you by ${repName}.` : ``,
+      sponsorLabel ? `This course was sponsored for you by ${sponsorLabel}.` : ``,
       ``,
       `Need more CE hours? Professionals on Pulse get free, nationally accredited CE courses sponsored by local healthcare partners.`,
       `Request your next course: ${ctaUrl}`,
