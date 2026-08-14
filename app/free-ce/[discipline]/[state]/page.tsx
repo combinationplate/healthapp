@@ -80,10 +80,15 @@ export default async function FreeCeStatePage({ params }: Props) {
   const glance: { label: string; value: string }[] = [
     {
       label: "CE hours required",
+      // States that tier hours by license level set contactHoursByLevel; showing the
+      // bare contactHours there would state the TOP tier as if it applied to everyone
+      // (MA reads 30, but an LSWA needs 10).
       value:
         r.requirementType === "none"
           ? "No general requirement"
-          : `${r.contactHours ?? "—"} contact hours${r.requirementType === "options" ? " (one qualifying option)" : ""}`,
+          : r.contactHoursByLevel
+            ? `${r.contactHoursByLevel} contact hours`
+            : `${r.contactHours ?? "—"} contact hours${r.requirementType === "options" ? " (one qualifying option)" : ""}`,
     },
     {
       label: "Renewal cycle",

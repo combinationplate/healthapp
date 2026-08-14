@@ -31,6 +31,14 @@ export interface StateRequirement {
   requirementType: RequirementType;
   /** Contact hours per cycle. null when requirementType is "none" or purely options-based. */
   contactHours: number | null;
+  /**
+   * Set ONLY for states whose hour total varies by license level, where `contactHours`
+   * alone is the top tier and a bare number would mislead everyone below it. Rendered
+   * in place of the bare number on the at-a-glance card — e.g. MA:
+   * "30 (LICSW) · 20 (LCSW) · 15 (LSW) · 10 (LSWA)". Keep it to the tier breakdown;
+   * the full rule belongs in `summary`/`details`.
+   */
+  contactHoursByLevel?: string;
   /** Renewal cycle length in years. null when not applicable. */
   cycleYears: number | null;
   /**

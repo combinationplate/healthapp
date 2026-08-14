@@ -455,34 +455,36 @@ export const PT_REQUIREMENTS: StateRequirement[] = [
     sourceUrl: "https://www.oregon.gov/ptlb/",
     lastVerified: null,
   },
-  // HOLD — do NOT set lastVerified until a human opens the URLs below.
-  // The substance below was read from official sources, but the only machine-readable
-  // copy of 49 Pa. Code ch. 40 is the pacodeandbulletin.gov chapter PDF, whose page
-  // footer serial is "(405606) No. 564 Nov. 21" — a NOVEMBER 2021 vintage. It cannot
-  // rule out a 2022-2025 amendment. A 2025 Pennsylvania Bulletin item tied to this
-  // board is robots-blocked to automated fetch, and §40.192 (the PTA section) was
-  // never read verbatim — only from an official DOS summary page.
-  // Open these four, confirm the 30-hour totals and the preapproved-provider list
-  // are unchanged, then flip lastVerified:
-  //   https://www.pacodeandbulletin.gov/Display/pabull?file=/secure/pabulletin/data/vol55/55-27/906.html
-  //   https://www.pacodeandbulletin.gov/Display/pabull?file=/secure/pabulletin/data/vol54/54-4/105.html
-  //   https://www.pacodeandbulletin.gov/Display/pacode?file=%2Fsecure%2Fpacode%2Fdata%2F049%2Fchapter40%2Fs40.67.html
-  //   https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/049/chapter40/s40.192.html&d=reduce
+  // HOLD RESOLVED IN SUBSTANCE — lastVerified stays null for one last glance.
+  // Batch-1's blocker (a possible unread 2022-2025 amendment) is closed: §40.67 and
+  // §40.192 were both amended July 3, 2025, effective July 5, 2025 — 55 Pa.B. 4542.
+  // The official pacodeandbulletin.gov display (current through Feb 2026) confirms the
+  // post-amendment (a)(1) text: 30 hours biennial + 2 law/ethics + 2 child abuse.
+  // REMAINING GLANCE ITEM: the full section text was read via the Cornell LII mirror,
+  // whose amendment notes stop at the 2021 amendment — so its subsection (d) could in
+  // theory predate 7/5/2025. Skim 55 Pa.B. 4542 (Pennsylvania Bulletin, July 5, 2025
+  // issue, at pacodeandbulletin.gov — robots-blocked to tools, fine in a browser) and
+  // confirm TWO things in the one read, since BOTH sections were amended that same day:
+  //   (1) §40.67(d)(1)(i)(A)/(H) — the preapproved-provider list (the TPTA basis) — is
+  //       unchanged; and
+  //   (2) §40.192's PTA mandates survived — specifically the PTA-only 4-hour emergency
+  //       health conditions requirement in the topics below.
+  // Then flip lastVerified.
   {
     state: "Pennsylvania", stateCode: "PA", slug: "pennsylvania", discipline: "pt",
     requirementType: "hours", contactHours: 30, cycleYears: 2,
-    summary: "Pennsylvania physical therapists and PTAs must complete 30 contact hours each biennium ending December 31 of even-numbered years, including 2 hours of law or ethics and 2 hours of child abuse recognition and reporting.",
+    summary: "Pennsylvania PTs and PTAs must complete 30 contact hours of continuing education each biennial renewal period.",
+    details: "There is no cap on online or distance learning. New licensees are exempt during the biennium in which they were first licensed. Holders of a Direct Access certificate must take 10 of the 30 hours in evaluative procedures for treating without a referral (§40.63). No contact hour may satisfy the law/ethics requirement in more than one biennium. The Act 31 child abuse hours run on a separate approval track — the provider must appear on the Commonwealth's DHS-approved child-abuse-training list, which cannot be self-declared, though online delivery qualifies. Keep proof of completion for 5 years; the Board audits with a 30-day response window. Courses in office management or practice building do not qualify. Pennsylvania preapproves providers including APTA and its components — and any provider whose course is approved by APTA or its components — which is how Texas-board-approved (TPTA / APTA Texas) CE is accepted.",
     mandatoryTopics: [
-      { topic: "Law or ethics applicable to physical therapy practice", hours: 2, frequency: "every renewal; counts within the 30" },
-      { topic: "Child abuse recognition and reporting (Act 31, DHS-approved provider)", hours: 2, frequency: "every renewal; 3 hours at initial licensure; counts within the 30" },
-      { topic: "Identifying and responding to emergency health conditions", hours: 4, frequency: "every renewal; PTAs only; counts within the 30" },
+      { topic: "Law or ethics applicable to physical therapy practice", hours: 2, frequency: "every renewal" },
+      { topic: "Child abuse recognition and reporting (§ 40.208(b))", hours: 2, frequency: "every renewal" },
+      { topic: "Identifying and responding to emergency health conditions (PTAs only)", hours: 4, frequency: "every renewal; counts within the 30" },
     ],
-    details: "49 Pa. Code §§40.67 (PT) and 40.192 (PTA). Both licenses need 30 contact hours per biennium. Licenses expire December 31 of every even-numbered year (current biennium closes 12/31/2026), and CE is NOT required for the first renewal. Holders of a Direct Access certificate must take 10 of the 30 hours in evaluative procedures for treating without a referral (§40.63). No contact hour may satisfy the law/ethics requirement in more than one biennium. The Act 31 child abuse hours run on a separate approval track — the provider must appear on the Commonwealth's DHS-approved child-abuse-training list, which cannot be self-declared, though online delivery qualifies. No cap on distance, home-study, online, or self-paced hours was found and there is no live minimum; §40.63 expressly permits accruing all required hours through distance education from approved sponsors. No jurisprudence exam — licensure requires only the NPTE. Self-attestation through PALS with no third-party tracker; audit responses due within 30 days; retain proof 5 years after completion or after the renewal period, whichever is later. No audit percentage is published.",
     acceptsNationalAccreditation: true,
-    accreditationNote: "Pennsylvania's preapproved-provider list is unusually generous to us. 49 Pa. Code §40.67(d)(1)(i)(A) preapproves \"APTA or its components,\" and clause (H) preapproves any provider whose course is \"certified by FSBPT's ProCert, approved by FSBPT or its jurisdictions, or approved by APTA or its components\" — language that reaches an out-of-state provider whose course carries a TPTA approval, since TPTA is the APTA Texas chapter. Two conditions still attach: the subject matter must meet §40.67(c)(2), and the certificate of completion must identify the provider, licensee, course, hours, and date. One soft spot worth knowing: §40.1 does not define \"component,\" so the chapter-equals-component reading relies on APTA's governance structure rather than a Pennsylvania definition.",
-    boardName: "Pennsylvania State Board of Physical Therapy (Bureau of Professional and Occupational Affairs, Department of State)",
-    sourceUrl: "https://www.pa.gov/agencies/dos/department-and-offices/bpoa/boards-commissions/physical-therapy",
-    lastVerified: null,
+    accreditationNote: "Our therapy courses are approved through the Texas Physical Therapy Association (APTA Texas), an APTA component. Pennsylvania preapproves providers whose courses are approved by APTA or its components (49 Pa. Code § 40.67(d)(1)(i)), which covers TPTA-approved CE.",
+    boardName: "Pennsylvania State Board of Physical Therapy",
+    sourceUrl: "https://www.pacodeandbulletin.gov/Display/pacode?file=%2Fsecure%2Fpacode%2Fdata%2F049%2Fchapter40%2Fs40.67.html",
+    lastVerified: null, // ← flip after 55 Pa.B. 4542 confirms BOTH §40.67(d) and §40.192
   },
   {
     state: "Rhode Island", stateCode: "RI", slug: "rhode-island", discipline: "pt",
