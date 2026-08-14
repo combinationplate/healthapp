@@ -28,4 +28,13 @@ export const SEQUENCES: Record<string, DripSequence> = {
       { delaySeconds: 432000, subject: "Know a rep? Get your CE faster", template: "pro-welcome-2" },
     ],
   },
+
+  manager_welcome: {
+    steps: [
+      { delaySeconds: 0, subject: "Welcome to Pulse: get your team set up in 5 minutes", template: "manager-welcome-0" },
+      { delaySeconds: 86400, subject: "Forward this to your reps", template: "manager-welcome-1", condition: "no_rep_joined" },
+      { delaySeconds: 259200, subject: "How billing works (and what your dashboard shows)", template: "manager-welcome-2" },
+      { delaySeconds: 604800, subject: "Is your team on Pulse yet?", template: "manager-reengage-14", condition: "no_rep_joined" },
+    ],
+  },
 };

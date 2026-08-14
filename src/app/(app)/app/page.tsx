@@ -52,7 +52,7 @@ export default async function AppPage() {
     );
 
     const dripSequence = profile.role === "rep" ? "rep_welcome"
-      : profile.role === "manager" ? "rep_welcome"
+      : profile.role === "manager" ? "manager_welcome"
       : "pro_welcome";
 
     const { data: existingDrip } = await admin

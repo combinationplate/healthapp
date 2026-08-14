@@ -29,6 +29,11 @@ export function ManagerDashboard({ userName, managerId }: Props) {
   const [inviteUrl, setInviteUrl] = useState<string | null>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  // Onboarding checklist state
+  const [hasBilling, setHasBilling] = useState<boolean | null>(null);
+  const [checklistDismissed, setChecklistDismissed] = useState(false);
 
   // Billing state
   const [showBilling, setShowBilling] = useState(false);
@@ -62,6 +67,15 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     fetchData();
   }, [fetchData]);
 
+  // Light billing check — powers the onboarding checklist. Re-runs when the
+  // billing view toggles so saving billing settings marks the step done.
+  useEffect(() => {
+    fetch("/api/billing/setup", { credentials: "include" })
+      .then(r => r.json())
+      .then(data => setHasBilling(!!data.settings || !!data.hasOrg))
+      .catch(() => setHasBilling(false));
+  }, [showBilling]);
+
   // Fetch billing data when billing view is shown
   useEffect(() => {
     if (!showBilling) return;
@@ -93,10 +107,20 @@ export function ManagerDashboard({ userName, managerId }: Props) {
 
   async function handleGenerateInvite() {
     setInviteLoading(true);
+    setInviteError(null);
     const res = await fetch("/api/manager/invite", { method: "POST", credentials: "include" });
     const data = await res.json();
     setInviteLoading(false);
-    if (data.url) setInviteUrl(data.url);
+    if (data.url) {
+      setInviteUrl(data.url);
+    } else {
+      // The invite route needs an org — billing setup is what creates it.
+      setInviteError(
+        res.status === 400
+          ? "Set up billing first — that creates your company, then you can invite reps."
+          : data.error || "Couldn't generate an invite link. Please try again."
+      );
+    }
   }
 
   async function handleBillingSetup(e: React.FormEvent) {
@@ -175,6 +199,104 @@ export function ManagerDashboard({ userName, managerId }: Props) {
               </StatsGrid>
             </div>
 
+            {/* ── Onboarding checklist — shown for new managers ── */}
+            {(() => {
+              if (hasBilling === null || loading) return null;
+              const checklistSteps = [
+                { id: "billing", label: "Set up your company & billing — this unlocks rep invites", done: hasBilling, action: () => setShowBilling(true) },
+                { id: "invite", label: "Generate your invite link and send it to your reps", done: reps.length > 0 || inviteUrl !== null, action: handleGenerateInvite },
+                { id: "joined", label: "Your first rep joins — their activity shows up below automatically", done: reps.length > 0, action: fetchData },
+              ];
+              const checklistComplete = checklistSteps.filter(s => s.done).length;
+              if (checklistDismissed || checklistComplete >= 3) return null;
+              return (
+                <div style={{
+                  borderRadius: "16px",
+                  border: "1px solid rgba(13,148,136,0.15)",
+                  background: "linear-gradient(135deg, rgba(13,148,136,0.03), rgba(36,85,255,0.03))",
+                  padding: "24px",
+                  position: "relative",
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setChecklistDismissed(true)}
+                    style={{
+                      position: "absolute", top: "12px", right: "12px",
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: "18px", color: "#7a8ba8", lineHeight: 1,
+                    }}
+                    aria-label="Dismiss"
+                  >×</button>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "24px" }}>👋</span>
+                    <h3 style={{
+                      fontFamily: "'Fraunces', Georgia, serif",
+                      fontSize: "18px", fontWeight: 800, color: "#0b1222", margin: 0,
+                    }}>Welcome to Pulse!</h3>
+                  </div>
+                  <p style={{ fontSize: "13px", color: "#7a8ba8", marginBottom: "20px", marginLeft: "36px" }}>
+                    Pulse works through your reps — get them in and this dashboard fills itself. Three steps:
+                  </p>
+
+                  <div style={{
+                    height: "4px", borderRadius: "2px",
+                    background: "rgba(11,18,34,0.06)",
+                    marginBottom: "18px", marginLeft: "36px",
+                    overflow: "hidden",
+                  }}>
+                    <div style={{
+                      width: `${(checklistComplete / 3) * 100}%`,
+                      height: "100%", borderRadius: "2px",
+                      background: "linear-gradient(90deg, #2455ff, #0d9488)",
+                      transition: "width 0.5s ease",
+                    }} />
+                  </div>
+
+                  <div style={{ display: "grid", gap: "8px", marginLeft: "36px" }}>
+                    {checklistSteps.map((step, i) => (
+                      <div
+                        key={step.id}
+                        onClick={step.done ? undefined : step.action}
+                        style={{
+                          display: "flex", alignItems: "center", gap: "12px",
+                          padding: "12px 14px", borderRadius: "10px",
+                          background: step.done ? "rgba(13,148,136,0.04)" : "white",
+                          border: `1px solid ${step.done ? "rgba(13,148,136,0.12)" : "rgba(11,18,34,0.08)"}`,
+                          cursor: step.done ? "default" : "pointer",
+                          transition: "all 0.15s",
+                        }}
+                      >
+                        <div style={{
+                          width: "28px", height: "28px", borderRadius: "50%", flexShrink: 0,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "12px", fontWeight: 800,
+                          background: step.done ? "#0d9488" : "#0b1222",
+                          color: "white",
+                        }}>
+                          {step.done ? "✓" : i + 1}
+                        </div>
+                        <span style={{
+                          fontSize: "14px", fontWeight: 600, flex: 1,
+                          color: step.done ? "#7a8ba8" : "#0b1222",
+                          textDecoration: step.done ? "line-through" : "none",
+                        }}>
+                          {step.label}
+                        </span>
+                        {!step.done && (
+                          <span style={{ color: "#2455ff", fontSize: "16px", fontWeight: 700 }}>→</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <p style={{ fontSize: "12px", color: "#7a8ba8", marginLeft: "36px", marginTop: "14px", marginBottom: 0 }}>
+                    Each rep gets a guided first send of their own the moment they join — and their first CE is free.
+                  </p>
+                </div>
+              );
+            })()}
+
             {/* ── Rep Performance ── */}
             <SectionCard>
               {/* Section header with invite button */}
@@ -209,6 +331,11 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                   >
                     {inviteLoading ? "Generating…" : "+ Invite Rep"}
                   </button>
+                  {inviteError && (
+                    <p style={{ fontSize: "12px", color: "#e8604c", margin: 0, maxWidth: "260px", textAlign: "right" }}>
+                      {inviteError}
+                    </p>
+                  )}
                   {inviteUrl && (
                     <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                       <input

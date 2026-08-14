@@ -143,6 +143,69 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
         ${btn("Request a CE Course →", `${APP_URL}/app`, "#0d9488")}
       `);
 
+    case "manager-welcome-0":
+      return wrap(`
+        <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">Welcome to Pulse, ${firstName}!</h1>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          Pulse turns free CE courses into referral relationships for your whole team.
+          Your reps send accredited CEs to the nurses, social workers, and case managers
+          they call on — and get remembered when it's time to refer. Your dashboard shows
+          it all in one place. Here's how to get your team going:
+        </p>
+        <ol style="font-size:14px;color:#3b4963;line-height:2;padding-left:20px;">
+          <li><strong>Set up your company</strong>: open the Billing tab and add your company name — this unlocks rep invites</li>
+          <li><strong>Generate your invite link</strong>: one click on "+ Invite Rep", then text or email it to your team</li>
+          <li><strong>Watch the dashboard</strong>: CEs sent, network size, and redemption rate for every rep</li>
+        </ol>
+        <p style="font-size:14px;color:#0d9488;font-weight:700;margin:0 0 4px;">
+          Each rep's first CE is on us — and you're only ever billed when a professional actually starts a course.
+        </p>
+        ${btn("Open Your Team Dashboard →", `${APP_URL}/app`)}
+        <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
+          Your reps get their own guided first send the moment they join — nothing you need to train.
+        </p>
+      `);
+
+    case "manager-welcome-1":
+      return wrap(`
+        <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">The Fastest Way to Get Your Team On</h1>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          Hi ${firstName}, most teams get going with one short message from their manager.
+          Copy the note below, add your invite link from the dashboard, and send it to your reps:
+        </p>
+        <div style="background:#f6f5f0;border-left:3px solid #2455ff;border-radius:8px;padding:16px 20px;margin:16px 0;">
+          <p style="font-size:14px;color:#0b1222;font-style:italic;line-height:1.7;margin:0;">
+            "Team — we're trying Pulse. It lets you send free, accredited CE courses to the
+            nurses and case managers you call on (they need the hours every renewal).
+            Takes about 60 seconds per send, and it gives them a real reason to remember you.
+            Join with this link: [your invite link]"
+          </p>
+        </div>
+        <p style="font-size:14px;color:#3b4963;line-height:1.7;">
+          Your invite link is one click away — open your dashboard and hit <strong>+ Invite Rep</strong>.
+        </p>
+        ${btn("Get Your Invite Link →", `${APP_URL}/app`)}
+      `);
+
+    case "manager-welcome-2":
+      return wrap(`
+        <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">What You'll See as Your Team Ramps</h1>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          Hi ${firstName}, once your reps are on, your dashboard tracks the whole play for every rep:
+        </p>
+        <div style="background:#f6f5f0;border-radius:12px;padding:20px;margin:16px 0;">
+          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>CEs sent this month</strong>: who's actually putting courses in front of professionals</p>
+          <p style="font-size:14px;color:#0b1222;margin:0 0 12px;"><strong>Network size</strong>: how many professionals each rep has a line to</p>
+          <p style="font-size:14px;color:#0b1222;margin:0;"><strong>Redemption rate</strong>: how often those CEs get opened and started — the best signal a relationship is forming</p>
+        </div>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          <strong>Billing is simple:</strong> no subscriptions, no seats. You're only billed when a
+          professional actually starts a course a rep sponsored — and each rep's first CE is free.
+          One monthly invoice covers the whole team; set your billing email in the Billing tab.
+        </p>
+        ${btn("Review Your Billing Setup →", `${APP_URL}/app`)}
+      `);
+
     // Personal, plain-text-style re-engagement emails (deliberately unbranded —
     // serif font, no logo, reply-driven). Only sent to reps with no CE sends.
     case "rep-reengage-14":
@@ -167,6 +230,20 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
   <p>If now isn't the right time, no hard feelings. Your account stays open and free, and everything will be right where you left it.</p>
   <p>But if you've got 60 seconds today: add one nurse, pick one course, hit send.</p>
   <p style="margin:24px 0;"><a href="${APP_URL}/app" style="display:inline-block;background:#2455ff;color:#fff;font-weight:700;padding:14px 32px;border-radius:10px;font-size:15px;text-decoration:none;font-family:'DM Sans',system-ui,sans-serif;">Send one CE →</a></p>
+  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+</div>`;
+
+    // Manager re-engagement — same personal, unbranded style. Only sent to
+    // managers whose org still has zero reps joined.
+    case "manager-reengage-14":
+      return `
+<div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
+  <p>Hi ${firstName},</p>
+  <p>You set up a Pulse manager account a little while back, but I noticed no reps have joined your team yet. No guilt trip — I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
+  <p><strong>The invite link never made it out?</strong> Open your dashboard, hit + Invite Rep, and text the link straight to one rep. Start with your hungriest one.</p>
+  <p><strong>Your reps aren't sure what it is?</strong> Forward them one line: "Free accredited CEs you can send to the nurses and case managers you call on — they need the hours, you get remembered."</p>
+  <p><strong>Wanted to see it work first?</strong> Fair. Hit reply and I'll walk you through it personally.</p>
+  <p>And if it's something else — something confusing or something that didn't work — just reply and tell me. I read every response.</p>
   <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
 </div>`;
 

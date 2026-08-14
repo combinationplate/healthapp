@@ -71,29 +71,47 @@ export async function GET(request: Request) {
     }
 
     // Conditional steps (e.g. only nudge reps who haven't sent a CE yet)
+    let conditionMet = true;
     if (step.condition === "no_ce_sent") {
       const { count } = await admin
         .from("ce_sends")
         .select("id", { count: "exact", head: true })
         .eq("rep_id", enrollment.user_id)
         .eq("is_test", false);
-
-      if ((count ?? 0) > 0) {
-        const nextStep = enrollment.current_step + 1;
-        if (nextStep >= sequence.steps.length) {
-          await admin.from("drip_enrollments").update({ completed: true }).eq("id", enrollment.id);
-          completed++;
-        } else {
-          const nextDelay = sequence.steps[nextStep].delaySeconds;
-          const nextSendAt = new Date(Date.now() + nextDelay * 1000).toISOString();
-          await admin
-            .from("drip_enrollments")
-            .update({ current_step: nextStep, next_send_at: nextSendAt })
-            .eq("id", enrollment.id);
-        }
-        skipped++;
-        continue;
+      conditionMet = (count ?? 0) === 0;
+    } else if (step.condition === "no_rep_joined") {
+      // Manager sequences: skip once at least one rep has joined their org.
+      const { data: mgrProfile } = await admin
+        .from("profiles")
+        .select("org_id")
+        .eq("id", enrollment.user_id)
+        .single();
+      if (mgrProfile?.org_id) {
+        const { count } = await admin
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("org_id", mgrProfile.org_id)
+          .eq("role", "rep");
+        conditionMet = (count ?? 0) === 0;
       }
+    }
+
+    // Condition no longer holds → skip this step and advance to the next one
+    if (step.condition && !conditionMet) {
+      const nextStep = enrollment.current_step + 1;
+      if (nextStep >= sequence.steps.length) {
+        await admin.from("drip_enrollments").update({ completed: true }).eq("id", enrollment.id);
+        completed++;
+      } else {
+        const nextDelay = sequence.steps[nextStep].delaySeconds;
+        const nextSendAt = new Date(Date.now() + nextDelay * 1000).toISOString();
+        await admin
+          .from("drip_enrollments")
+          .update({ current_step: nextStep, next_send_at: nextSendAt })
+          .eq("id", enrollment.id);
+      }
+      skipped++;
+      continue;
     }
 
     try {

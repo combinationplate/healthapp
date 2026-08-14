@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
   // ── Check if already enrolled — skip everything if so ─────────
   const sequence =
-    role === "rep" ? "rep_welcome" : role === "manager" ? "rep_welcome" : "pro_welcome";
+    role === "rep" ? "rep_welcome" : role === "manager" ? "manager_welcome" : "pro_welcome";
   const { data: existing } = await admin
     .from("drip_enrollments")
     .select("id")
