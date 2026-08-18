@@ -16,7 +16,7 @@ Getting more hospice referrals in 2026 comes down to one shift: **stop marketing
 
 "The hospital refers to us" is how referral relationships die. Hospitals don't refer — people do. In practice, hospice referrals flow through a small set of roles:
 
-- **Case managers and discharge planners** — the highest-volume source. They're coordinating transitions all day, and they decide which hospice's name gets mentioned first.
+- **Case managers and discharge planners** — the highest-volume source. They're coordinating transitions all day, and they decide which hospice's name gets mentioned first. They're worth their own playbook: [how to build relationships with case managers and discharge planners](/blog/building-relationships-case-managers-discharge-planners).
 - **Social workers** — especially in hospitals, SNFs, and dialysis centers. They're often the ones having the goals-of-care conversation with families.
 - **Nurses** — floor nurses and home health nurses see decline before anyone else. They rarely make the formal referral, but they heavily influence it.
 - **Physicians and NPs** — they sign the orders, but in most settings they're ratifying a recommendation that a case manager or social worker already made.
