@@ -213,13 +213,12 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return `
 <div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
   <p>Hi ${firstName},</p>
-  <p>It's been a couple of weeks since you set up your Pulse account, and I noticed you haven't sent your first CE yet.</p>
-  <p>No guilt trip. I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
-  <p><strong>Not sure which course to send?</strong> Start with ethics. Every license needs it, so it's never the wrong pick.</p>
-  <p><strong>Don't have a nurse's email handy?</strong> Skip it. Generate your QR flyer and let them come to you at your next facility visit.</p>
-  <p><strong>Just busy?</strong> Fair. It takes about 60 seconds whenever you're ready: <a href="${APP_URL}/app" style="color:#2455ff;">pulsereferrals.com/app</a></p>
-  <p>And if it's something else, something confusing or something that didn't work, just hit reply and tell me. I read every response.</p>
-  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+  <p>Zach here, from the Pulse team. The first CE send is the hardest one — after that it's muscle memory. A few shortcuts that help:</p>
+  <p><strong>Picking a course:</strong> ethics is the safe bet. Every license needs it, so it's never the wrong choice.</p>
+  <p><strong>No email addresses yet?</strong> Print your QR flyer and let nurses come to you — they scan it at your next facility visit and claim a free CE on the spot.</p>
+  <p><strong>Short on time?</strong> A send takes about a minute at <a href="${APP_URL}/app" style="color:#2455ff;">pulsereferrals.com/app</a> — and your first one is free.</p>
+  <p>If anything was confusing or didn't work the way you expected, just reply and tell me — I read every response.</p>
+  <p>Zach<br/><span style="color:#7a8ba8;font-size:14px;">Pulse Team · pulsereferrals.com</span></p>
 </div>`;
 
     case "rep-reengage-21":
@@ -231,7 +230,7 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
   <p>If now isn't the right time, no hard feelings. Your account stays open and free, and everything will be right where you left it.</p>
   <p>But if you've got 60 seconds today: add one nurse, pick one course, hit send.</p>
   <p style="margin:24px 0;"><a href="${APP_URL}/app" style="display:inline-block;background:#2455ff;color:#fff;font-weight:700;padding:14px 32px;border-radius:10px;font-size:15px;text-decoration:none;font-family:'DM Sans',system-ui,sans-serif;">Send one CE →</a></p>
-  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+  <p>Zach<br/><span style="color:#7a8ba8;font-size:14px;">Pulse Team · pulsereferrals.com</span></p>
 </div>`;
 
     // Manager re-engagement — same personal, unbranded style. Only sent to
@@ -240,12 +239,12 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
       return `
 <div style="font-family:Georgia,'Times New Roman',serif;max-width:540px;margin:0 auto;padding:32px 24px;color:#0b1222;font-size:16px;line-height:1.7;">
   <p>Hi ${firstName},</p>
-  <p>You set up a Pulse manager account a little while back, but I noticed no reps have joined your team yet. No guilt trip — I'm asking because I actually want to know what got in the way. It's usually one of three things:</p>
-  <p><strong>The invite link never made it out?</strong> Open your dashboard, hit + Invite Rep, and text the link straight to one rep. Start with your hungriest one.</p>
-  <p><strong>Your reps aren't sure what it is?</strong> Forward them one line: "Free accredited CEs you can send to the nurses and case managers you call on — they need the hours, you get remembered."</p>
-  <p><strong>Wanted to see it work first?</strong> Fair. Hit reply and I'll walk you through it personally.</p>
-  <p>And if it's something else — something confusing or something that didn't work — just reply and tell me. I read every response.</p>
-  <p>Andrew<br/><span style="color:#7a8ba8;font-size:14px;">Pulse · pulsereferrals.com</span></p>
+  <p>Zach here, from the Pulse team. Getting the first rep onto Pulse is usually the only hard part — after that, teams tend to run on their own. A few things that help:</p>
+  <p><strong>Sending the invite:</strong> open your dashboard, hit + Invite Rep, and text the link straight to one rep. Starting with your hungriest rep works best.</p>
+  <p><strong>Explaining it to your team:</strong> one line does it — "Free accredited CEs you can send to the nurses and case managers you call on. They need the hours, you get remembered."</p>
+  <p><strong>Want to see it work first?</strong> Reply to this email and I'll walk you through it.</p>
+  <p>If anything was confusing or didn't work the way you expected, just reply and tell me — I read every response.</p>
+  <p>Zach<br/><span style="color:#7a8ba8;font-size:14px;">Pulse Team · pulsereferrals.com</span></p>
 </div>`;
 
     default:
