@@ -17,17 +17,25 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { billingType, billingEmail, orgName } = await request.json() as {
-      billingType: "org" | "rep";
-      billingEmail: string;
+      // "org" = company pays (org-level billing).
+      // "rep" = this user pays individually.
+      // "reps_pay" = create/link the org WITHOUT any billing entity — each rep
+      //   sets up their own individual billing; the manager keeps team
+      //   visibility (org_id) but is never invoiced.
+      billingType: "org" | "rep" | "reps_pay";
+      billingEmail?: string;
       orgName?: string;
     };
 
-    if (!billingType || !billingEmail) {
-      return NextResponse.json({ error: "Missing billingType or billingEmail" }, { status: 400 });
+    if (!billingType) {
+      return NextResponse.json({ error: "Missing billingType" }, { status: 400 });
+    }
+    if (billingType !== "reps_pay" && !billingEmail) {
+      return NextResponse.json({ error: "Missing billingEmail" }, { status: 400 });
     }
 
-    // Validate email format
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingEmail)) {
+    // Validate email format (not needed for reps_pay — no invoice goes to the manager)
+    if (billingType !== "reps_pay" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(billingEmail!)) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
@@ -45,6 +53,41 @@ export async function POST(request: Request) {
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    }
+
+    // ── reps_pay: create/link the org, deactivate org billing, done ────────
+    if (billingType === "reps_pay") {
+      if (!profile.org_id && !orgName) {
+        return NextResponse.json({ error: "Missing orgName" }, { status: 400 });
+      }
+
+      let orgId = profile.org_id as string | null;
+      if (orgId) {
+        if (orgName) {
+          await admin.from("orgs").update({ name: orgName }).eq("id", orgId);
+        }
+      } else {
+        const { data: newOrg, error: orgError } = await admin
+          .from("orgs")
+          .insert({ name: orgName! })
+          .select("id")
+          .single();
+        if (orgError || !newOrg) {
+          return NextResponse.json({ error: "Failed to create organization" }, { status: 500 });
+        }
+        orgId = newOrg.id;
+        await admin.from("profiles").update({ org_id: orgId }).eq("id", user.id);
+      }
+
+      // Switching from company-pays: deactivate org-level billing so the
+      // invoice cron falls back to each rep's individual billing settings.
+      await admin
+        .from("billing_settings")
+        .update({ is_active: false })
+        .eq("org_id", orgId!)
+        .eq("is_active", true);
+
+      return NextResponse.json({ success: true, payerMode: "reps_pay" });
     }
 
     let orgId: string | null = null;
@@ -204,10 +247,22 @@ export async function GET() {
       orgName = org?.name;
     }
 
+    // Payer mode for the UI:
+    //   "org"      = company pays (active org-level billing)
+    //   "reps_pay" = org exists but no org-level billing — reps pay individually
+    //   "rep"      = no org; individual billing for this user
+    let payerMode: "org" | "reps_pay" | "rep" | null = null;
+    if (profile?.org_id) {
+      payerMode = settings?.billing_type === "org" ? "org" : "reps_pay";
+    } else if (settings) {
+      payerMode = "rep";
+    }
+
     return NextResponse.json({
       settings,
       orgName,
       hasOrg: !!profile?.org_id,
+      payerMode,
     });
   } catch (e) {
     console.error("Billing get error:", e);

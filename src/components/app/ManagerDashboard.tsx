@@ -43,12 +43,14 @@ export function ManagerDashboard({ userName, managerId }: Props) {
   const [usageLoading, setUsageLoading] = useState(false);
   const [pastInvoices, setPastInvoices] = useState<any[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
-  const [setupForm, setSetupForm] = useState<{ billingType: "org" | "rep"; billingEmail: string; orgName: string }>({
+  const [setupForm, setSetupForm] = useState<{ billingType: "org" | "reps_pay"; billingEmail: string; orgName: string }>({
     billingType: "org",
     billingEmail: "",
     orgName: "",
   });
   const [setupSaving, setSetupSaving] = useState(false);
+  // "org" = company pays · "reps_pay" = reps pay individually · null = not set up
+  const [payerMode, setPayerMode] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -72,7 +74,13 @@ export function ManagerDashboard({ userName, managerId }: Props) {
   useEffect(() => {
     fetch("/api/billing/setup", { credentials: "include" })
       .then(r => r.json())
-      .then(data => setHasBilling(!!data.settings || !!data.hasOrg))
+      .then(data => {
+        setHasBilling(!!data.settings || !!data.hasOrg);
+        setPayerMode(data.payerMode ?? null);
+        if (data.payerMode === "reps_pay") {
+          setSetupForm(f => ({ ...f, billingType: "reps_pay" }));
+        }
+      })
       .catch(() => setHasBilling(false));
   }, [showBilling]);
 
@@ -114,10 +122,10 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     if (data.url) {
       setInviteUrl(data.url);
     } else {
-      // The invite route needs an org — billing setup is what creates it.
+      // The invite route needs an org — company setup (Billing tab) creates it.
       setInviteError(
         res.status === 400
-          ? "Set up billing first — that creates your company, then you can invite reps."
+          ? "Set up your company first (Billing tab) — then you can invite reps."
           : data.error || "Couldn't generate an invite link. Please try again."
       );
     }
@@ -135,8 +143,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
     const data = await res.json();
     setSetupSaving(false);
     if (res.ok) {
-      setBillingSettings(data);
-      // Refresh billing data
+      // Refresh billing data (refetches settings + payer mode)
       setShowBilling(false);
       setTimeout(() => setShowBilling(true), 100);
     } else {
@@ -203,7 +210,7 @@ export function ManagerDashboard({ userName, managerId }: Props) {
             {(() => {
               if (hasBilling === null || loading) return null;
               const checklistSteps = [
-                { id: "billing", label: "Set up your company & billing — this unlocks rep invites", done: hasBilling, action: () => setShowBilling(true) },
+                { id: "billing", label: "Set up your company & choose who pays — this unlocks rep invites", done: hasBilling, action: () => setShowBilling(true) },
                 { id: "invite", label: "Generate your invite link and send it to your reps", done: reps.length > 0 || inviteUrl !== null, action: handleGenerateInvite },
                 { id: "joined", label: "Your first rep joins — their activity shows up below automatically", done: reps.length > 0, action: fetchData },
               ];
@@ -470,6 +477,23 @@ export function ManagerDashboard({ userName, managerId }: Props) {
         {showBilling && (
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 
+            {/* Reps-pay-individually banner */}
+            {payerMode === "reps_pay" && (
+              <div style={{
+                borderRadius: "12px",
+                border: "1px solid rgba(13,148,136,0.2)",
+                background: "rgba(13,148,136,0.05)",
+                padding: "14px 18px",
+                fontSize: "13px",
+                color: "#3b4963",
+                lineHeight: 1.6,
+              }}>
+                <strong style={{ color: "#0d9488" }}>Your reps pay individually.</strong>{" "}
+                The usage below is shown for team visibility — invoices go to each rep's
+                own billing, set up in their dashboard. You are never invoiced.
+              </div>
+            )}
+
             {/* Current Period Summary */}
             <div style={{
               borderRadius: "16px", border: "1px solid rgba(11,18,34,0.08)",
@@ -644,13 +668,13 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 <p style={{ color: "#7a8ba8", fontSize: "14px" }}>Loading…</p>
               ) : (
                 <form onSubmit={handleBillingSetup} style={{ display: "grid", gap: "16px", maxWidth: "480px" }}>
-                  {/* Billing type */}
+                  {/* Who pays? */}
                   <div>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                      Bill to
+                      Who pays?
                     </label>
                     <div style={{ display: "flex", gap: "8px" }}>
-                      {(["org", "rep"] as const).map(t => (
+                      {(["org", "reps_pay"] as const).map(t => (
                         <button
                           key={t}
                           type="button"
@@ -663,24 +687,49 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                             cursor: "pointer", fontFamily: "'DM Sans', system-ui, sans-serif",
                           }}
                         >
-                          {t === "org" ? "My Company" : "Me Individually"}
+                          {t === "org" ? "My Company" : "My Reps, Individually"}
                         </button>
                       ))}
                     </div>
+                    {setupForm.billingType === "reps_pay" && (
+                      <p style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "8px", marginBottom: 0, lineHeight: 1.5 }}>
+                        Each rep sets up their own billing in their dashboard and gets their own
+                        invoice. You still see all team usage here — you're just never billed.
+                      </p>
+                    )}
                   </div>
 
-                  {/* Company name (if org billing) */}
+                  {/* Company name (both modes — it's what creates your org) */}
+                  <div>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                      Company Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={setupForm.orgName}
+                      onChange={e => setSetupForm(f => ({ ...f, orgName: e.target.value }))}
+                      placeholder="Harmony Hospice"
+                      style={{
+                        width: "100%", padding: "10px 14px", borderRadius: "10px",
+                        border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px",
+                        fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
+
+                  {/* Billing email — only when the company pays */}
                   {setupForm.billingType === "org" && (
                     <div>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                        Company Name
+                        Billing Email
                       </label>
                       <input
-                        type="text"
+                        type="email"
                         required
-                        value={setupForm.orgName}
-                        onChange={e => setSetupForm(f => ({ ...f, orgName: e.target.value }))}
-                        placeholder="Harmony Hospice"
+                        value={setupForm.billingEmail}
+                        onChange={e => setSetupForm(f => ({ ...f, billingEmail: e.target.value }))}
+                        placeholder="accounting@company.com"
                         style={{
                           width: "100%", padding: "10px 14px", borderRadius: "10px",
                           border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px",
@@ -689,25 +738,6 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                       />
                     </div>
                   )}
-
-                  {/* Billing email */}
-                  <div>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "#7a8ba8", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                      Billing Email
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={setupForm.billingEmail}
-                      onChange={e => setSetupForm(f => ({ ...f, billingEmail: e.target.value }))}
-                      placeholder="accounting@company.com"
-                      style={{
-                        width: "100%", padding: "10px 14px", borderRadius: "10px",
-                        border: "1px solid rgba(11,18,34,0.08)", fontSize: "14px",
-                        fontFamily: "'DM Sans', system-ui, sans-serif", boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
 
                   <button
                     type="submit"
@@ -724,11 +754,15 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                     {setupSaving ? "Saving…" : billingSettings ? "Update Billing" : "Set Up Billing"}
                   </button>
 
-                  {billingSettings && (
+                  {payerMode === "reps_pay" ? (
+                    <div style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "4px" }}>
+                      Current: Reps pay individually — you're never invoiced
+                    </div>
+                  ) : billingSettings ? (
                     <div style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "4px" }}>
                       Current: {billingSettings.billing_type === "org" ? "Company billing" : "Individual billing"} · {billingSettings.billing_email}
                     </div>
-                  )}
+                  ) : null}
                 </form>
               )}
             </div>

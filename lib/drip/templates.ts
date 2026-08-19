@@ -158,7 +158,7 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
           <li><strong>Watch the dashboard</strong>: CEs sent, network size, and redemption rate for every rep</li>
         </ol>
         <p style="font-size:14px;color:#0d9488;font-weight:700;margin:0 0 4px;">
-          Each rep's first CE is on us — and you're only ever billed when a professional actually starts a course.
+          Each rep's first CE is on us — and nobody is ever billed unless a professional actually starts a course.
         </p>
         ${btn("Open Your Team Dashboard →", `${APP_URL}/app`)}
         <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
@@ -199,9 +199,10 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
           <p style="font-size:14px;color:#0b1222;margin:0;"><strong>Redemption rate</strong>: how often those CEs get opened and started — the best signal a relationship is forming</p>
         </div>
         <p style="font-size:15px;color:#3b4963;line-height:1.7;">
-          <strong>Billing is simple:</strong> no subscriptions, no seats. You're only billed when a
+          <strong>Billing is simple:</strong> no subscriptions, no seats. A charge only happens when a
           professional actually starts a course a rep sponsored — and each rep's first CE is free.
-          One monthly invoice covers the whole team; set your billing email in the Billing tab.
+          You choose who pays in the Billing tab: one monthly invoice for the whole company, or
+          each rep pays for their own sends individually. Either way, you see all team usage.
         </p>
         ${btn("Review Your Billing Setup →", `${APP_URL}/app`)}
       `);

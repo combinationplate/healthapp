@@ -193,62 +193,70 @@ export async function POST(request: Request) {
 
     const results: any[] = [];
 
-    for (const [key, group] of billingGroups) {
+    // Resolve groups to concrete billing entities BEFORE invoicing. An org
+    // group whose org has NO active org-level billing (manager chose "reps pay
+    // individually", or org billing was never set up) is split into per-rep
+    // groups, so EVERY rep with individual billing is invoiced in this run —
+    // the old inline fallback only processed the first such rep per month.
+    type ResolvedGroup = {
+      billingKey: string;
+      orgId: string | null;
+      repId: string | null;
+      sends: any[];
+      settings: any | null;
+    };
+    const resolvedGroups: ResolvedGroup[] = [];
+
+    for (const [, group] of billingGroups) {
+      if (group.orgId) {
+        const { data: orgBilling } = await admin
+          .from("billing_settings")
+          .select("*")
+          .eq("org_id", group.orgId)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (orgBilling) {
+          resolvedGroups.push({
+            billingKey: group.billingKey,
+            orgId: group.orgId,
+            repId: null,
+            sends: group.sends,
+            settings: orgBilling,
+          });
+          continue;
+        }
+
+        // No org billing → split into one group per rep
+        const repSendMap = new Map<string, any[]>();
+        for (const send of group.sends) {
+          if (!repSendMap.has(send.rep_id)) repSendMap.set(send.rep_id, []);
+          repSendMap.get(send.rep_id)!.push(send);
+        }
+        for (const [repId, repSends] of repSendMap) {
+          resolvedGroups.push({
+            billingKey: `rep:${repId}`,
+            orgId: null,
+            repId,
+            sends: repSends,
+            settings: null,
+          });
+        }
+      } else {
+        resolvedGroups.push({
+          billingKey: group.billingKey,
+          orgId: null,
+          repId: group.repId,
+          sends: group.sends,
+          settings: null,
+        });
+      }
+    }
+
+    for (const group of resolvedGroups) {
+      const key = group.billingKey;
       try {
-        // Find billing settings — try org first, then fall back to individual rep
-        let billingSettings = null;
-
-        if (group.orgId) {
-          const { data } = await admin
-            .from("billing_settings")
-            .select("*")
-            .eq("org_id", group.orgId)
-            .eq("is_active", true)
-            .maybeSingle();
-          billingSettings = data;
-        }
-
-        // If no org billing, try individual rep billing for each rep in the group
-        // In this case, generate separate invoices per rep
-        if (!billingSettings && group.orgId) {
-          // Group sends by rep within this org
-          const repSendMap = new Map<string, any[]>();
-          for (const send of group.sends) {
-            if (!repSendMap.has(send.rep_id)) repSendMap.set(send.rep_id, []);
-            repSendMap.get(send.rep_id)!.push(send);
-          }
-
-          let allHandled = true;
-          for (const [repId, repSends] of repSendMap) {
-            const { data: repBilling } = await admin
-              .from("billing_settings")
-              .select("*")
-              .eq("rep_id", repId)
-              .eq("is_active", true)
-              .maybeSingle();
-
-            if (repBilling) {
-              // Override group to process this rep individually
-              billingSettings = repBilling;
-              group.sends = repSends;
-              group.repId = repId;
-              group.orgId = null;
-              break; // Process first found, rest will be caught next run
-            } else {
-              allHandled = false;
-            }
-          }
-
-          if (!allHandled && !billingSettings) {
-            results.push({
-              billingKey: key,
-              status: "skipped",
-              reason: "No billing settings configured (checked org and individual reps)",
-              ceCount: group.sends.length,
-            });
-            continue;
-          }
-        }
+        let billingSettings = group.settings;
 
         if (!billingSettings && group.repId) {
           const { data } = await admin
