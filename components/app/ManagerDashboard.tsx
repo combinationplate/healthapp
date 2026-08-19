@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard } from "./DashboardShell";
+import { AccreditationInline } from "@/src/components/AccreditationStrip";
 
 type RepStats = {
   id: string;
@@ -52,6 +53,10 @@ export function ManagerDashboard({ userName, managerId }: Props) {
   // "org" = company pays · "reps_pay" = reps pay individually · null = not set up
   const [payerMode, setPayerMode] = useState<string | null>(null);
 
+  // "What your reps send" email preview (shown while the team is empty)
+  const [emailPreview, setEmailPreview] = useState<{ subject: string; from: string; html: string } | null>(null);
+  const [emailPreviewFailed, setEmailPreviewFailed] = useState(false);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -83,6 +88,23 @@ export function ManagerDashboard({ userName, managerId }: Props) {
       })
       .catch(() => setHasBilling(false));
   }, [showBilling]);
+
+  // Load the sample CE email once, only while the team is empty
+  useEffect(() => {
+    if (loading || reps.length > 0 || emailPreview || emailPreviewFailed) return;
+    fetch("/api/ce/preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ sample: true }),
+    })
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(data => {
+        if (data?.html) setEmailPreview(data);
+        else setEmailPreviewFailed(true);
+      })
+      .catch(() => setEmailPreviewFailed(true));
+  }, [loading, reps.length, emailPreview, emailPreviewFailed]);
 
   // Fetch billing data when billing view is shown
   useEffect(() => {
@@ -391,9 +413,50 @@ export function ManagerDashboard({ userName, managerId }: Props) {
               {loading ? (
                 <p style={{ fontSize: "14px", color: "#7a8ba8", padding: "16px 0" }}>Loading…</p>
               ) : reps.length === 0 ? (
-                <div style={{ padding: "48px 0", textAlign: "center" }}>
-                  <p style={{ fontSize: "14px", color: "#7a8ba8" }}>No rep data yet.</p>
-                  <p style={{ marginTop: "4px", fontSize: "13px", color: "#3b4963" }}>When your team uses Pulse, metrics will appear here.</p>
+                /* Ghost sample row — shows what the table WILL look like instead of a dead empty state */
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "2px solid rgba(11,18,34,0.08)" }}>
+                        {["Rep", "CEs this month", "Network size", "Last activity", "Redemption rate"].map((h) => (
+                          <th
+                            key={h}
+                            style={{
+                              textAlign: "left", padding: "10px 16px 10px 0",
+                              fontSize: "11px", fontWeight: 700, color: "#7a8ba8",
+                              textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap",
+                            }}
+                          >{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr style={{ opacity: 0.55 }}>
+                        <td style={{ padding: "14px 16px 14px 0", fontWeight: 600, color: "#0b1222" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{
+                              width: "32px", height: "32px", borderRadius: "50%",
+                              background: "rgba(36,85,255,0.10)", color: "#2455ff",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontWeight: 700, fontSize: "12px", flexShrink: 0,
+                            }}>SR</div>
+                            <span>Sample Rep</span>
+                            <span style={{
+                              fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "999px",
+                              background: "rgba(217,119,6,0.10)", color: "#b45309",
+                            }}>Sample</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "14px 16px 14px 0", color: "#0b1222", fontWeight: 600 }}>12</td>
+                        <td style={{ padding: "14px 16px 14px 0", color: "#7a8ba8" }}>24</td>
+                        <td style={{ padding: "14px 16px 14px 0", color: "#7a8ba8" }}>3 days ago</td>
+                        <td style={{ padding: "14px 0", fontWeight: 600, color: "#0d9488" }}>58%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <p style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "12px", marginBottom: 0 }}>
+                    Sample data — your reps&apos; real numbers appear here automatically as they join and start sending.
+                  </p>
                 </div>
               ) : (
                 <div style={{ overflowX: "auto" }}>
@@ -470,6 +533,41 @@ export function ManagerDashboard({ userName, managerId }: Props) {
                 </div>
               )}
             </SectionCard>
+
+            {/* ── "What your reps send" — the exact CE email, shown while the team is empty ── */}
+            {!loading && reps.length === 0 && emailPreview && (
+              <SectionCard>
+                <div style={{ borderBottom: "1px solid rgba(11,18,34,0.08)", paddingBottom: "16px", marginBottom: "16px" }}>
+                  <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: "16px", fontWeight: 800, color: "#0b1222", margin: 0 }}>
+                    What your reps will send
+                  </h2>
+                  <p style={{ marginTop: "3px", fontSize: "12px", color: "#7a8ba8" }}>
+                    The exact email a nurse, social worker, or case manager receives — sent under your rep&apos;s name, with your company on it.
+                  </p>
+                </div>
+                <div style={{ fontSize: "12px", color: "#3b4963", marginBottom: "10px", lineHeight: 1.7 }}>
+                  <div><span style={{ fontWeight: 700, color: "#7a8ba8" }}>From:</span> {emailPreview.from}</div>
+                  <div><span style={{ fontWeight: 700, color: "#7a8ba8" }}>Subject:</span> {emailPreview.subject}</div>
+                </div>
+                <iframe
+                  title="CE email preview"
+                  sandbox=""
+                  srcDoc={emailPreview.html}
+                  style={{
+                    width: "100%", height: "420px", border: "1px solid rgba(11,18,34,0.08)",
+                    borderRadius: "12px", background: "white",
+                  }}
+                />
+                <p style={{ fontSize: "12px", color: "#7a8ba8", marginTop: "10px", marginBottom: 0 }}>
+                  Free, accredited CE — sponsored by your rep. Replies go straight to the rep&apos;s inbox, so every send opens a conversation.
+                </p>
+              </SectionCard>
+            )}
+
+            {/* ── Accreditation trust strip ── */}
+            <div style={{ padding: "4px 0 0" }}>
+              <AccreditationInline />
+            </div>
           </>
         )}
 

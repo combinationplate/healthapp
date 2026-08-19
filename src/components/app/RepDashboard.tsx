@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import html2canvas from "html2canvas";
 import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
+import { AccreditationInline } from "@/src/components/AccreditationStrip";
 
 const TABS = [
   { id: "distribute", label: "Distribute" },
@@ -1481,6 +1482,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </div>
           );
         })()}
+
+        {/* Accreditation trust strip — answers "is this CE legit?" right where sends happen */}
+        <div style={{ padding: '2px 0' }}>
+          <AccreditationInline />
+        </div>
 
         <TabBar tabs={[...TABS]} active={tab} onChange={(id) => setTab(id as RepTab)} />
 
@@ -3288,6 +3294,37 @@ export function RepDashboard({ repId }: { repId?: string }) {
                             boxShadow: '0 2px 10px rgba(36,85,255,0.18)',
                           }}
                         >{professionals.length === 0 ? "Add a Professional" : "Go to Network"}</button>
+
+                        {/* Ghost sample row — shows what history WILL look like + the status progression */}
+                        <div style={{ marginTop: '32px', textAlign: 'left', opacity: 0.6 }}>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                              <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                                  {["Professional", "Course", "Hrs", "Sent Date", "Source", "Status"].map((h) => (
+                                    <th key={h} style={{ textAlign: 'left', padding: '6px 10px', fontSize: '11px', fontWeight: 700, color: 'var(--ink-muted)', whiteSpace: 'nowrap' }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td style={{ padding: '10px', fontWeight: 600, color: '#0b1222', whiteSpace: 'nowrap' }}>
+                                    Jordan Avery, RN{' '}
+                                    <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', background: 'rgba(217,119,6,0.10)', color: '#b45309' }}>Sample</span>
+                                  </td>
+                                  <td style={{ padding: '10px', color: '#3b4963' }}>Ethics in Healthcare</td>
+                                  <td style={{ padding: '10px', color: '#7a8ba8' }}>2</td>
+                                  <td style={{ padding: '10px', color: '#7a8ba8' }}>—</td>
+                                  <td style={{ padding: '10px', color: '#7a8ba8' }}>Direct</td>
+                                  <td style={{ padding: '10px', fontWeight: 600, color: '#0d9488', whiteSpace: 'nowrap' }}>Accessed ✓</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <p style={{ fontSize: '12px', color: '#7a8ba8', marginTop: '10px', marginBottom: 0 }}>
+                            Sample — your sends appear here with live status: Sent → Opened 👀 → Accessed ✓
+                          </p>
+                        </div>
                       </>
                     ) : (
                       <p style={{ fontSize: '14px', color: '#7a8ba8' }}>No sends match this filter.</p>

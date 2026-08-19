@@ -23,10 +23,15 @@ export async function POST(request: Request) {
       recipientName?: string;
       personalMessage?: string;
       discount?: string;
+      // sample: true → server picks a representative course itself. Used by the
+      // manager dashboard's "what your reps send" card, where no course picker
+      // exists. Renders the same exact template.
+      sample?: boolean;
     };
 
     const courseIdList = Array.from(new Set((body.courseIds ?? []).filter(Boolean)));
-    if (courseIdList.length === 0) {
+    const isSample = body.sample === true && courseIdList.length === 0;
+    if (courseIdList.length === 0 && !isSample) {
       return NextResponse.json({ error: "Select at least one course." }, { status: 400 });
     }
 
@@ -36,10 +41,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: courses } = await supabase
-      .from("courses")
-      .select("id, name, hours")
-      .in("id", courseIdList);
+    let courses: { id: string; name: string; hours: number }[] | null = null;
+    if (isSample) {
+      // Prefer an ethics course (every license needs it), else any course.
+      const { data: ethics } = await supabase
+        .from("courses")
+        .select("id, name, hours")
+        .ilike("name", "%ethic%")
+        .limit(1);
+      if (ethics && ethics.length > 0) {
+        courses = ethics;
+      } else {
+        const { data: anyCourse } = await supabase
+          .from("courses")
+          .select("id, name, hours")
+          .limit(1);
+        courses = anyCourse;
+      }
+    } else {
+      const { data } = await supabase
+        .from("courses")
+        .select("id, name, hours")
+        .in("id", courseIdList);
+      courses = data;
+    }
     if (!courses || courses.length === 0) {
       return NextResponse.json({ error: "Course not found" }, { status: 400 });
     }

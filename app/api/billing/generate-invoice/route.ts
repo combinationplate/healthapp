@@ -95,8 +95,19 @@ export async function POST(request: Request) {
       periodEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
     }
 
-    // Get all unbilled, redeemed CE sends in the period
-    const { data: unbilledSends, error: sendsError } = await admin
+    // Catch-up billing: include ALL redeemed, unbilled sends up to the END of
+    // the period — not just sends redeemed within it. A send skipped at an
+    // earlier monthly run (billing not configured yet — e.g. a reps-pay rep
+    // who set up billing late, or an org slow to finish setup) resurfaces
+    // automatically once billing exists, instead of being orphaned forever by
+    // the old prior-month-only window. The `billed` flag prevents any
+    // double-invoicing. Optional safety valve: set BILLING_CATCHUP_FLOOR
+    // (ISO date, e.g. "2026-08-01") to exclude anything redeemed before it —
+    // useful if old never-to-be-billed redemptions ever need fencing off
+    // (the cleaner fix is marking those rows billed = true).
+    const catchupFloor = process.env.BILLING_CATCHUP_FLOOR;
+
+    let sendsQuery = admin
       .from("ce_sends")
       .select(`
         id, rep_id, course_name, course_hours, redeemed_at,
@@ -107,9 +118,12 @@ export async function POST(request: Request) {
       .not("redeemed_at", "is", null)
       .eq("billed", false)
       .eq("is_test", false)
-      .gte("redeemed_at", periodStart.toISOString())
       .lte("redeemed_at", periodEnd.toISOString())
       .order("redeemed_at");
+    if (catchupFloor) {
+      sendsQuery = sendsQuery.gte("redeemed_at", catchupFloor);
+    }
+    const { data: unbilledSends, error: sendsError } = await sendsQuery;
 
     if (sendsError) {
       console.error("Error fetching unbilled sends:", sendsError);
