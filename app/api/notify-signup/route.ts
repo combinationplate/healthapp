@@ -1,6 +1,7 @@
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { sendWelcomeNow } from "@/lib/drip/welcome";
 
 // Where new-signup alerts are sent. Override in Vercel → Project → Settings →
 // Environment Variables with SIGNUP_ALERT_EMAIL (comma-separate for multiple).
@@ -36,8 +37,12 @@ export async function POST(request: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // ⚠️ Keep this mapping in sync with app/(app)/app/page.tsx and
+  // app/api/drip/enroll/route.ts — a stale copy here double-enrolled a manager
+  // into rep_welcome on 2026-08-19 (each site dedupes on its OWN sequence name,
+  // so mismatched mappings create two enrollments).
   const sequence =
-    role === "rep" ? "rep_welcome" : role === "manager" ? "rep_welcome" : "pro_welcome";
+    role === "rep" ? "rep_welcome" : role === "manager" ? "manager_welcome" : "pro_welcome";
 
   // Dedupe: drip enrollment is our "already handled this signup" marker. If the
   // user is already enrolled, we've already alerted — skip so you never get a
@@ -96,14 +101,22 @@ export async function POST(request: Request) {
     console.error("Failed to send signup notification:", e);
   }
 
-  // ── 2. Enroll in drip (also the dedupe marker used above) ─────
+  // ── 2. Send welcome NOW + enroll in drip (also the dedupe marker) ─────
+  // This route usually wins the race against the dashboard-load path, so it
+  // must send the immediate welcome too; on failure the enrollment stays at
+  // step 0 and the daily cron delivers it as fallback.
   if (userId) {
     try {
+      const enrollmentStart = await sendWelcomeNow({
+        email,
+        name: fullName,
+        sequence,
+      });
       await admin.from("drip_enrollments").insert({
         user_id: userId,
         sequence,
-        current_step: 0,
-        next_send_at: new Date().toISOString(),
+        current_step: enrollmentStart.current_step,
+        next_send_at: enrollmentStart.next_send_at,
         completed: false,
       });
     } catch (e) {
