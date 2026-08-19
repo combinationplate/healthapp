@@ -4,6 +4,7 @@ import { Resend } from "resend";
 import { AppDashboard } from "@/components/app/AppDashboard";
 import { getProfile } from "@/lib/supabase/getProfile";
 import type { ProfileRole } from "@/lib/supabase/getProfile";
+import { sendWelcomeNow } from "@/lib/drip/welcome";
 
 function roleFromMetadata(metadata: Record<string, unknown> | undefined): ProfileRole {
   const role = metadata?.role as string | undefined;
@@ -94,11 +95,19 @@ export default async function AppPage() {
         `,
       });
 
+      // Send the welcome email NOW (while they're in the dashboard) instead of
+      // waiting for the daily cron; on failure the cron delivers it as fallback.
+      const enrollmentStart = await sendWelcomeNow({
+        email: user.email ?? "",
+        name: profile.full_name,
+        sequence: dripSequence,
+      });
+
       await admin.from("drip_enrollments").insert({
         user_id: user.id,
         sequence: dripSequence,
-        current_step: 0,
-        next_send_at: new Date().toISOString(),
+        current_step: enrollmentStart.current_step,
+        next_send_at: enrollmentStart.next_send_at,
         completed: false,
       });
     }

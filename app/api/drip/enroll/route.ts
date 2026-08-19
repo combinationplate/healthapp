@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { sendWelcomeNow } from "@/lib/drip/welcome";
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -57,13 +58,20 @@ export async function POST(request: Request) {
     console.error("Failed to send signup notification:", e);
   }
 
-  // ── 2. Enroll in drip ─────────────────────────────────────────
+  // ── 2. Send the welcome NOW + enroll in drip ──────────────────
+  // Welcome lands while they're still in the app; on failure the daily
+  // cron delivers it as fallback (enrollment stays at step 0).
   try {
+    const enrollmentStart = await sendWelcomeNow({
+      email,
+      name: fullName,
+      sequence,
+    });
     await admin.from("drip_enrollments").insert({
       user_id: userId,
       sequence,
-      current_step: 0,
-      next_send_at: new Date().toISOString(),
+      current_step: enrollmentStart.current_step,
+      next_send_at: enrollmentStart.next_send_at,
       completed: false,
     });
   } catch (e) {
