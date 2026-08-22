@@ -309,6 +309,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [discoverLoading, setDiscoverLoading] = useState(true);
   const [discoverCityFilter, setDiscoverCityFilter] = useState("All");
   const [discoverCities, setDiscoverCities] = useState<string[]>([]);
+  const [discoverDisciplineFilter, setDiscoverDisciplineFilter] = useState("All");
 
   useEffect(() => {
     fetch("/api/rep/discover", { credentials: "include" })
@@ -319,6 +320,22 @@ export function RepDashboard({ repId }: { repId?: string }) {
         setDiscoverLoading(false);
       });
   }, []);
+
+  // Disciplines present in the current discover results, normalized via
+  // DISCIPLINE_MAP so profile variants ("SLP" vs "ST") collapse into one chip.
+  const discoverDisciplines = [
+    ...new Set(
+      discoverPros
+        .map((p) => mapDiscipline(p.discipline))
+        .filter((d): d is string => Boolean(d))
+    ),
+  ].sort();
+  const discoverFiltered = discoverPros.filter(
+    (pro) =>
+      (discoverCityFilter === "All" || pro.city === discoverCityFilter) &&
+      (discoverDisciplineFilter === "All" ||
+        mapDiscipline(pro.discipline) === discoverDisciplineFilter)
+  );
 
   const fetchRepProfile = useCallback(() => {
     fetch("/api/rep/profile", { credentials: "include" })
@@ -1497,7 +1514,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE courses — newest requests first. Send a course to introduce yourself.</p>
             </div>
             {discoverCities.length > 0 && (
-              <div className="flex gap-2 flex-wrap mb-4">
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-muted)] w-[64px] flex-shrink-0">City</span>
                 {["All", ...discoverCities].map((city) => (
                   <button
                     key={city}
@@ -1510,6 +1528,21 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 ))}
               </div>
             )}
+            {discoverDisciplines.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-muted)] w-[64px] flex-shrink-0">Discipline</span>
+                {["All", ...discoverDisciplines].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setDiscoverDisciplineFilter(d)}
+                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${discoverDisciplineFilter === d ? "bg-[#0d9488] text-white border-[#0d9488]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#f6f5f0]"}`}
+                  >
+                    {d === "ST" ? "SLP / ST" : d}
+                  </button>
+                ))}
+              </div>
+            )}
             {discoverLoading ? (
               <p className="py-6 text-sm text-[var(--ink-muted)]">Loading…</p>
             ) : discoverPros.length === 0 ? (
@@ -1518,10 +1551,20 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <p className="mt-1 text-[13px] text-[var(--ink-soft)]">Check back later or add professionals to your network.</p>
                 <button type="button" className={`mt-4 ${BTN_PRIMARY}`} onClick={() => setTab("network")}>View My Network</button>
               </div>
+            ) : discoverFiltered.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-sm text-[var(--ink-muted)]">No professionals match these filters.</p>
+                <button
+                  type="button"
+                  className="mt-3 text-[12px] font-semibold text-[var(--blue)] underline"
+                  onClick={() => { setDiscoverCityFilter("All"); setDiscoverDisciplineFilter("All"); }}
+                >
+                  Clear filters
+                </button>
+              </div>
             ) : (
               <div style={{display:'grid',gap:'12px'}}>
-                {discoverPros
-                  .filter((pro) => discoverCityFilter === "All" || pro.city === discoverCityFilter)
+                {discoverFiltered
                   .map((pro) => {
                     const inNetwork = professionals.some((p) => p.email?.toLowerCase() === (pro as any).email?.toLowerCase()) ||
                                       professionals.some((p) => p.name === pro.name && p.facility === pro.facility);
