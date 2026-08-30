@@ -3,6 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
+import { isJunkFacility, JUNK_FACILITY_MESSAGE, NO_FACILITY_VALUE } from "@/lib/validation/facility";
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
@@ -48,6 +49,13 @@ const [onboardingForm, setOnboardingForm] = useState({
   facility: "",
 });
 const [onboardingSaving, setOnboardingSaving] = useState(false);
+const [onboardingNoFacility, setOnboardingNoFacility] = useState(false);
+const [onboardingError, setOnboardingError] = useState<string | null>(null);
+// Backfill nudge for existing pros whose facility is missing or junk
+const [facilityNudgeOpen, setFacilityNudgeOpen] = useState(false);
+const [nudgeFacility, setNudgeFacility] = useState("");
+const [nudgeSaving, setNudgeSaving] = useState(false);
+const [nudgeError, setNudgeError] = useState<string | null>(null);
 const [requestOpen, setRequestOpen] = useState(false);
 const [requestForm, setRequestForm] = useState({
   topic: "",
@@ -108,6 +116,16 @@ const [networkLoading, setNetworkLoading] = useState(true);
       .then((data) => {
         if (data.profile && !data.profile.discipline) {
           setNeedsOnboarding(true);
+        } else if (data.profile && isJunkFacility(data.profile.facility)) {
+          // Existing pro with a missing/placeholder facility — show the
+          // one-field backfill nudge unless they've dismissed it before.
+          let dismissed = false;
+          try {
+            dismissed = localStorage.getItem("pulse-facility-nudge-dismissed") === "1";
+          } catch {
+            // localStorage unavailable — show the nudge
+          }
+          if (!dismissed) setFacilityNudgeOpen(true);
         }
         setProfileLoading(false);
       });
@@ -154,15 +172,51 @@ const [networkLoading, setNetworkLoading] = useState(true);
 
   async function handleOnboarding(e: React.FormEvent) {
     e.preventDefault();
+    setOnboardingError(null);
+    const facilityValue = onboardingNoFacility ? NO_FACILITY_VALUE : onboardingForm.facility.trim();
+    if (isJunkFacility(facilityValue)) {
+      setOnboardingError(JUNK_FACILITY_MESSAGE);
+      return;
+    }
     setOnboardingSaving(true);
     const res = await fetch("/api/pro/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(onboardingForm),
+      body: JSON.stringify({ ...onboardingForm, facility: facilityValue }),
     });
     setOnboardingSaving(false);
     if (res.ok) setNeedsOnboarding(false);
+  }
+
+  // Save from the facility backfill nudge. Only sends `facility` — the
+  // profile POST route drops undefined fields, so nothing else is touched.
+  async function saveFacilityNudge(value: string) {
+    setNudgeError(null);
+    const facilityValue = value.trim();
+    if (isJunkFacility(facilityValue)) {
+      setNudgeError(JUNK_FACILITY_MESSAGE);
+      return;
+    }
+    setNudgeSaving(true);
+    const res = await fetch("/api/pro/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ facility: facilityValue }),
+    });
+    setNudgeSaving(false);
+    if (res.ok) setFacilityNudgeOpen(false);
+    else setNudgeError("Could not save right now — please try again.");
+  }
+
+  function dismissFacilityNudge() {
+    try {
+      localStorage.setItem("pulse-facility-nudge-dismissed", "1");
+    } catch {
+      // best effort
+    }
+    setFacilityNudgeOpen(false);
   }
   
   async function handleSubmitRequest(e: React.FormEvent) {
@@ -226,6 +280,45 @@ const [networkLoading, setNetworkLoading] = useState(true);
             />
           </StatsGrid>
         </div>
+
+        {/* Facility backfill nudge — shown when facility is missing or junk */}
+        {facilityNudgeOpen && !needsOnboarding && (
+          <div style={{ borderRadius: '12px', border: '1px solid rgba(217,119,6,0.25)', background: 'rgba(217,119,6,0.05)', padding: '16px 18px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--ink)' }}>Where do you work?</div>
+                <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--ink-soft)' }}>
+                  Adding your facility helps reps send you CE courses that fit your setting.
+                </p>
+              </div>
+              <button type="button" aria-label="Dismiss" onClick={dismissFacilityNudge} style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--ink-muted)', lineHeight: 1 }}>×</button>
+            </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); saveFacilityNudge(nudgeFacility); }}
+              style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}
+            >
+              <input
+                type="text"
+                value={nudgeFacility}
+                onChange={(e) => setNudgeFacility(e.target.value)}
+                placeholder="St. Luke's Hospital"
+                style={{ flex: 1, minWidth: '220px', borderRadius: '8px', border: '1px solid var(--border)', padding: '9px 12px', fontSize: '13px', fontFamily: 'inherit' }}
+              />
+              <button type="submit" disabled={nudgeSaving} className={BTN_PRIMARY} style={{ fontSize: '12px', padding: '8px 16px' }}>
+                {nudgeSaving ? 'Saving…' : 'Save'}
+              </button>
+            </form>
+            <button
+              type="button"
+              onClick={() => saveFacilityNudge(NO_FACILITY_VALUE)}
+              disabled={nudgeSaving}
+              style={{ marginTop: '8px', background: 'none', border: 'none', padding: 0, fontSize: '12px', color: 'var(--blue)', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              I&apos;m not based at a facility
+            </button>
+            {nudgeError && <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#DC2626' }}>{nudgeError}</p>}
+          </div>
+        )}
 
         <TabBar tabs={[...PRO_TABS]} active={tab} onChange={(id) => setTab(id as ProTab)} />
 
@@ -537,7 +630,12 @@ const [networkLoading, setNetworkLoading] = useState(true);
         </div>
         <div>
           <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Facility</label>
-          <input type="text" required value={onboardingForm.facility} onChange={e => setOnboardingForm(f => ({...f, facility: e.target.value}))} placeholder="St. Luke's Hospital" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+          <input type="text" required={!onboardingNoFacility} disabled={onboardingNoFacility} value={onboardingForm.facility} onChange={e => setOnboardingForm(f => ({...f, facility: e.target.value}))} placeholder="St. Luke's Hospital" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box',background:onboardingNoFacility?'var(--cream)':'white',color:onboardingNoFacility?'var(--ink-muted)':'inherit'}} />
+          <label style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'12px',color:'var(--ink-soft)',marginTop:'8px',cursor:'pointer'}}>
+            <input type="checkbox" checked={onboardingNoFacility} onChange={e => setOnboardingNoFacility(e.target.checked)} />
+            I&apos;m not based at a facility (independent, per diem, retired, …)
+          </label>
+          {onboardingError && <p style={{margin:'8px 0 0',fontSize:'12px',color:'#DC2626'}}>{onboardingError}</p>}
         </div>
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
           <div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { Suspense, useState, type FormEvent } from "react";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { isJunkFacility, JUNK_FACILITY_MESSAGE, NO_FACILITY_VALUE } from "@/lib/validation/facility";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
@@ -36,6 +37,7 @@ function SignupForm() {
   const [state, setState] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [facility, setFacility] = useState("");
+  const [noFacility, setNoFacility] = useState(false);
   const [referralSource, setReferralSource] = useState("");
   const [referralOther, setReferralOther] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,8 +50,14 @@ function SignupForm() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setMessage(null);
+    // Block placeholder facilities ("NA", "none", "various", …) BEFORE the
+    // captcha token is consumed, so a failed attempt doesn't burn it.
+    if (isPro && !noFacility && isJunkFacility(facility)) {
+      setMessage({ type: "error", text: JUNK_FACILITY_MESSAGE });
+      return;
+    }
+    setLoading(true);
     const supabase = createClient();
     const accountType = role === "rep" ? "sales" : role === "manager" ? "manager" : "hcp";
 
@@ -62,7 +70,8 @@ function SignupForm() {
       if (city.trim()) metadata.city = city.trim().replace(/\b\w/g, c => c.toUpperCase());
       if (state) metadata.state = state;
       if (discipline) metadata.discipline = discipline;
-      if (facility.trim()) metadata.facility = facility.trim();
+      const facilityValue = noFacility ? NO_FACILITY_VALUE : facility.trim();
+      if (facilityValue) metadata.facility = facilityValue;
     }
 
     const referral =
@@ -98,7 +107,7 @@ function SignupForm() {
           city: isPro ? city : undefined,
           state: isPro ? state : undefined,
           discipline: isPro ? discipline : undefined,
-          facility: isPro ? facility : undefined,
+          facility: isPro ? (noFacility ? NO_FACILITY_VALUE : facility) : undefined,
           referralSource: referral,
         }),
       });
@@ -201,10 +210,19 @@ function SignupForm() {
                   type="text"
                   value={facility}
                   onChange={(e) => setFacility(e.target.value)}
-                  required
+                  required={!noFacility}
+                  disabled={noFacility}
                   placeholder="St. Luke's Hospital"
-                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
+                  className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none disabled:bg-[var(--cream)] disabled:text-[var(--ink-muted)]"
                 />
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-xs text-[var(--ink-soft)]">
+                  <input
+                    type="checkbox"
+                    checked={noFacility}
+                    onChange={(e) => setNoFacility(e.target.checked)}
+                  />
+                  I&apos;m not based at a facility (independent, per diem, retired, …)
+                </label>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
