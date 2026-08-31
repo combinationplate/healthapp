@@ -32,11 +32,12 @@ export async function GET() {
   // Get all pro profiles to match names
   const proUserIds = (networkRequests ?? []).map((r: { professional_id: string }) => r.professional_id);
   
-  let proProfiles: { id: string; full_name: string | null; discipline: string | null; city: string | null; state: string | null; facility: string | null }[] = [];
+  let proProfiles: { id: string; full_name: string | null; discipline: string | null; city: string | null; state: string | null; facility: string | null; work_setting?: string | null; license_renews_on?: string | null; ce_hours_needed?: number | null }[] = [];
   if (proUserIds.length > 0) {
     const { data } = await admin
       .from("profiles")
-      .select("id, full_name, discipline, city, state, facility")
+      // select("*") so this works before the ce-profile migration runs
+      .select("*")
       .in("id", proUserIds);
     proProfiles = data ?? [];
   }
@@ -68,6 +69,9 @@ export async function GET() {
       facility: profile?.facility ?? null,
       city: profile?.city ?? null,
       state: profile?.state ?? null,
+      workSetting: profile?.work_setting ?? null,
+      licenseRenewsOn: profile?.license_renews_on ?? null,
+      ceHoursNeeded: profile?.ce_hours_needed ?? null,
       isDirectRequest: r.rep_id === user.id,
       isInNetwork,
       professionalId: r.professional_id,

@@ -39,7 +39,8 @@ export async function GET() {
 
   let query = admin
     .from("profiles")
-    .select("id, full_name, discipline, city, state, facility, email")
+    // select("*") so this works before the ce-profile migration runs
+    .select("*")
     .eq("role", "professional")
     .neq("id", user.id);
   query = pendingProIds.length
@@ -98,6 +99,9 @@ export async function GET() {
     state: string | null;
     facility: string | null;
     email: string | null;
+    work_setting?: string | null;
+    license_renews_on?: string | null;
+    ce_hours_needed?: number | null;
   }) => ({
     id: p.id,
     name: p.full_name ?? "Unknown",
@@ -106,6 +110,9 @@ export async function GET() {
     city: p.city,
     state: p.state,
     facility: p.facility,
+    workSetting: p.work_setting ?? null,
+    licenseRenewsOn: p.license_renews_on ?? null,
+    ceHoursNeeded: p.ce_hours_needed ?? null,
     requests: requests.filter((r) => r.professional_id === p.id),
   }));
 

@@ -4,6 +4,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 import { ANY_TOPIC, CE_REQUEST_TOPICS, CE_REQUEST_TOPIC_LABELS, isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
+import { WORK_SETTINGS, toMonthInput } from "@/lib/ce-profile";
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
@@ -44,6 +45,14 @@ export function ProDashboard({ userName, userId }: { userName?: string | null; u
 const [needsOnboarding, setNeedsOnboarding] = useState(false);
 const [profileFacility, setProfileFacility] = useState<string | null>(null);
 const [requestFacility, setRequestFacility] = useState("");
+// CE Profile (optional rep-facing context): "" = not set. The request modal
+// asks only for missing fields; the My CE Profile card is the editable home.
+const [ceProfile, setCeProfile] = useState({ workSetting: "", renewMonth: "", hoursNeeded: "" });
+const [ceProfileDraft, setCeProfileDraft] = useState({ workSetting: "", renewMonth: "", hoursNeeded: "" });
+const [ceProfileSaving, setCeProfileSaving] = useState(false);
+const [ceProfileSaved, setCeProfileSaved] = useState(false);
+const [requestWorkSetting, setRequestWorkSetting] = useState("");
+const [requestRenewMonth, setRequestRenewMonth] = useState("");
 const [onboardingForm, setOnboardingForm] = useState({
   discipline: "",
   state: "",
@@ -114,6 +123,13 @@ const [networkLoading, setNetworkLoading] = useState(true);
         }
         if (data.profile) {
           setProfileFacility((data.profile.facility ?? "").trim() || null);
+          const loaded = {
+            workSetting: data.profile.work_setting ?? "",
+            renewMonth: toMonthInput(data.profile.license_renews_on),
+            hoursNeeded: data.profile.ce_hours_needed != null ? String(data.profile.ce_hours_needed) : "",
+          };
+          setCeProfile(loaded);
+          setCeProfileDraft(loaded);
         }
         setProfileLoading(false);
       });
@@ -171,6 +187,28 @@ const [networkLoading, setNetworkLoading] = useState(true);
     if (res.ok) setNeedsOnboarding(false);
   }
   
+  async function handleSaveCeProfile(e: React.FormEvent) {
+    e.preventDefault();
+    setCeProfileSaving(true);
+    setCeProfileSaved(false);
+    const res = await fetch("/api/pro/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        workSetting: ceProfileDraft.workSetting,
+        licenseRenewsOn: ceProfileDraft.renewMonth,
+        ceHoursNeeded: ceProfileDraft.hoursNeeded,
+      }),
+    });
+    setCeProfileSaving(false);
+    if (res.ok) {
+      setCeProfile({ ...ceProfileDraft });
+      setCeProfileSaved(true);
+      setTimeout(() => setCeProfileSaved(false), 2500);
+    }
+  }
+
   async function handleSubmitRequest(e: React.FormEvent) {
     e.preventDefault();
     setRequestSaving(true);
@@ -181,6 +219,8 @@ const [networkLoading, setNetworkLoading] = useState(true);
       body: JSON.stringify({
         ...requestForm,
         facility: !profileFacility && requestFacility.trim() ? requestFacility.trim() : undefined,
+        workSetting: requestWorkSetting || undefined,
+        licenseRenewsOn: requestRenewMonth || undefined,
       }),
     });
     setRequestSaving(false);
@@ -189,6 +229,12 @@ const [networkLoading, setNetworkLoading] = useState(true);
       const data = await res.json();
       if (data.request) setMyRequests((prev) => [data.request, ...prev]);
       if (!profileFacility && requestFacility.trim()) setProfileFacility(requestFacility.trim());
+      if (requestWorkSetting || requestRenewMonth) {
+        setCeProfile((prev) => ({ ...prev, workSetting: requestWorkSetting || prev.workSetting, renewMonth: requestRenewMonth || prev.renewMonth }));
+        setCeProfileDraft((prev) => ({ ...prev, workSetting: requestWorkSetting || prev.workSetting, renewMonth: requestRenewMonth || prev.renewMonth }));
+        setRequestWorkSetting("");
+        setRequestRenewMonth("");
+      }
       setTimeout(() => {
         setRequestOpen(false);
         setRequestSuccess(false);
@@ -414,6 +460,43 @@ const [networkLoading, setNetworkLoading] = useState(true);
   </div>
 )}
             </SectionCard>
+
+            {/* My CE Profile — optional context that helps sponsors fulfill faster.
+                Fields asked in the request modal land here too (single source). */}
+            <SectionCard>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-3 mb-4">
+              <div>
+                <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>My CE Profile</h2>
+                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Optional — complete profiles get matched with a sponsor faster.</p>
+              </div>
+              <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background: [ceProfile.workSetting, ceProfile.renewMonth, ceProfile.hoursNeeded].filter(Boolean).length === 3 ? 'var(--green-glow)' : 'var(--gold-glow)',color: [ceProfile.workSetting, ceProfile.renewMonth, ceProfile.hoursNeeded].filter(Boolean).length === 3 ? 'var(--green)' : '#92670A'}}>
+                {[ceProfile.workSetting, ceProfile.renewMonth, ceProfile.hoursNeeded].filter(Boolean).length}/3 complete
+              </span>
+            </div>
+            <form onSubmit={handleSaveCeProfile} style={{display:'grid',gap:'14px'}}>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Work setting</label>
+                  <select value={ceProfileDraft.workSetting} onChange={e => setCeProfileDraft(d => ({...d, workSetting: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+                    <option value="">Select...</option>
+                    {WORK_SETTINGS.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>License renews</label>
+                  <input type="month" value={ceProfileDraft.renewMonth} onChange={e => setCeProfileDraft(d => ({...d, renewMonth: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+                </div>
+                <div>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>CE hours still needed</label>
+                  <input type="number" min="0" max="200" placeholder="e.g. 18" value={ceProfileDraft.hoursNeeded} onChange={e => setCeProfileDraft(d => ({...d, hoursNeeded: e.target.value}))} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+                </div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',gap:'10px'}}>
+                <button type="submit" disabled={ceProfileSaving} className={BTN_SECONDARY} style={{opacity: ceProfileSaving ? 0.6 : 1}}>{ceProfileSaving ? "Saving…" : "Save profile"}</button>
+                {ceProfileSaved && <span style={{fontSize:'12px',fontWeight:600,color:'var(--green)'}}>✓ Saved</span>}
+              </div>
+            </form>
+            </SectionCard>
         </div>
       )}
 
@@ -614,6 +697,26 @@ const [networkLoading, setNetworkLoading] = useState(true);
               <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Your facility</label>
               <input type="text" required value={requestFacility} onChange={e => setRequestFacility(e.target.value)} placeholder="St. Luke's Hospital" style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
               <p style={{margin:'6px 0 0',fontSize:'11px',color:'var(--ink-muted)'}}>Reps prioritize requests that include a facility — it helps the right local sponsor find you.</p>
+            </div>
+          )}
+          {(!ceProfile.workSetting || !ceProfile.renewMonth) && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {!ceProfile.workSetting && (
+                <div>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>Where do you work? <span style={{textTransform:'none',fontWeight:400}}>(optional)</span></label>
+                  <select value={requestWorkSetting} onChange={e => setRequestWorkSetting(e.target.value)} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit'}}>
+                    <option value="">Select...</option>
+                    {WORK_SETTINGS.map(w => <option key={w} value={w}>{w}</option>)}
+                  </select>
+                </div>
+              )}
+              {!ceProfile.renewMonth && (
+                <div>
+                  <label style={{display:'block',fontSize:'11px',fontWeight:600,color:'var(--ink-soft)',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.05em'}}>License renews <span style={{textTransform:'none',fontWeight:400}}>(optional)</span></label>
+                  <input type="month" value={requestRenewMonth} onChange={e => setRequestRenewMonth(e.target.value)} style={{width:'100%',borderRadius:'8px',border:'1px solid var(--border)',padding:'10px 12px',fontSize:'13px',fontFamily:'inherit',boxSizing:'border-box'}} />
+                </div>
+              )}
+              <p className="sm:col-span-2" style={{margin:0,fontSize:'11px',color:'var(--ink-muted)'}}>These help a local sponsor prioritize your request — asked once, saved to your CE profile.</p>
             </div>
           )}
           {connectedReps.length > 0 && (

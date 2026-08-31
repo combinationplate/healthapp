@@ -7,6 +7,7 @@ import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./Dashboard
 import { AccreditationInline } from "@/src/components/AccreditationStrip";
 import { isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
 import { effectiveTerritory } from "@/lib/territory";
+import { renewalLine } from "@/lib/ce-profile";
 
 const TABS = [
   { id: "distribute", label: "Distribute" },
@@ -278,6 +279,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
     facility: string | null;
     city: string | null;
     state: string | null;
+    workSetting: string | null;
+    licenseRenewsOn: string | null;
+    ceHoursNeeded: number | null;
     isDirectRequest: boolean;
     isInNetwork: boolean;
     professionalId: string;
@@ -306,6 +310,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
     city: string | null;
     state: string | null;
     facility: string | null;
+    workSetting?: string | null;
+    licenseRenewsOn?: string | null;
+    ceHoursNeeded?: number | null;
     requests: { professional_id: string; topic: string; hours: number; deadline: string; created_at?: string }[];
   }[]>([]);
   const [discoverLoading, setDiscoverLoading] = useState(true);
@@ -1666,8 +1673,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           )}
                         </div>
                         <div style={{fontSize:'12px',color:'#7a8ba8',marginTop:'3px'}}>
-                          {[pro.facility, pro.city && pro.state ? `${pro.city}, ${pro.state}` : pro.state].filter(Boolean).join(' · ')}
+                          {[pro.workSetting, pro.facility, pro.city && pro.state ? `${pro.city}, ${pro.state}` : pro.state].filter(Boolean).join(' · ')}
                         </div>
+                        {renewalLine(pro.licenseRenewsOn, pro.ceHoursNeeded) && (
+                          <div style={{fontSize:'11px',fontWeight:600,color:'#B8860B',marginTop:'3px'}}>⏳ {renewalLine(pro.licenseRenewsOn, pro.ceHoursNeeded)}</div>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -1740,7 +1750,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <div>
                 <div style={{fontWeight:600,fontSize:'14px',color:'var(--ink)'}}>{r.professionalName}</div>
                 <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>
-                  {[r.discipline, r.facility, r.city && r.state ? `${r.city}, ${r.state}` : r.state].filter(Boolean).join(' · ')}
+                  {[r.discipline, r.workSetting, r.facility, r.city && r.state ? `${r.city}, ${r.state}` : r.state].filter(Boolean).join(' · ')}
                 </div>
               </div>
               <div style={{display:'flex',gap:'6px',alignItems:'center'}}>
@@ -1758,6 +1768,9 @@ export function RepDashboard({ repId }: { repId?: string }) {
               {' '}· {r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
               {isAnyTopic(r.topic) && (
                 <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'4px'}}>Open to any course that fits their license — pick whatever you&apos;d like to lead with.</div>
+              )}
+              {renewalLine(r.licenseRenewsOn, r.ceHoursNeeded) && (
+                <div style={{fontSize:'11px',fontWeight:600,color:'#B8860B',marginTop:'4px'}}>⏳ {renewalLine(r.licenseRenewsOn, r.ceHoursNeeded)}</div>
               )}
             </div>
             <div style={{display:'flex',gap:'8px'}}>

@@ -3,6 +3,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { normalizeRequestTopic } from "@/lib/ce-topics";
+import { normalizeWorkSetting, normalizeRenewalDate, normalizeHoursNeeded, formatRenewal, renewalLine } from "@/lib/ce-profile";
 
 export async function GET() {
   const supabase = await createClient();
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { hours, deadline, visible, inviteEmail, facility } = body;
+    const { hours, deadline, visible, inviteEmail, facility, workSetting, licenseRenewsOn, ceHoursNeeded } = body;
 
     if (!body.topic || !hours || !deadline) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -87,15 +88,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
+    // CE Profile capture: the request modal asks only for fields the profile
+    // is missing — save them (best-effort; tolerate the migration not having
+    // run yet, and never fail the request over it).
+    const wsNorm = workSetting !== undefined ? normalizeWorkSetting(workSetting) : undefined;
+    const renewNorm = licenseRenewsOn !== undefined ? normalizeRenewalDate(licenseRenewsOn) : undefined;
+    const hoursNorm = ceHoursNeeded !== undefined ? normalizeHoursNeeded(ceHoursNeeded) : undefined;
+    if (wsNorm || renewNorm || hoursNorm != null) {
+      const ceProfileUpdate: Record<string, unknown> = {};
+      if (wsNorm) ceProfileUpdate.work_setting = wsNorm;
+      if (renewNorm) ceProfileUpdate.license_renews_on = renewNorm;
+      if (hoursNorm != null) ceProfileUpdate.ce_hours_needed = hoursNorm;
+      try {
+        await admin.from("profiles").update(ceProfileUpdate).eq("id", user.id);
+      } catch (e) {
+        console.warn("CE profile capture failed (non-fatal):", e);
+      }
+    }
+
     // Notify admin of the new CE request (also visible in the admin CE log).
     try {
       const alertKey = process.env.RESEND_API_KEY;
       if (alertKey) {
         const { data: prof } = await admin
           .from("profiles")
-          .select("full_name, discipline, city, state, facility")
+          // select("*") so this works before the ce-profile migration runs
+          .select("*")
           .eq("id", user.id)
           .single();
+        const profX = prof as (typeof prof & { work_setting?: string | null; license_renews_on?: string | null; ce_hours_needed?: number | null }) | null;
+        const renewal = renewalLine(renewNorm ?? profX?.license_renews_on, hoursNorm ?? profX?.ce_hours_needed) ?? formatRenewal(profX?.license_renews_on);
+        const setting = wsNorm ?? profX?.work_setting ?? null;
         const alertResend = new Resend(alertKey);
         const loc = [prof?.city, prof?.state].filter(Boolean).join(", ");
         await alertResend.emails.send({
@@ -110,6 +133,8 @@ export async function POST(request: Request) {
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Discipline</td><td>${prof?.discipline ?? "—"}</td></tr>
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Facility</td><td>${prof?.facility ?? "—"}</td></tr>
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Location</td><td>${loc || "—"}</td></tr>
+                ${setting ? `<tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Setting</td><td>${setting}</td></tr>` : ""}
+                ${renewal ? `<tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">License</td><td>${renewal}</td></tr>` : ""}
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${topic} (${hours} hrs)</td></tr>
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Deadline</td><td>${deadline}</td></tr>
               </table>
@@ -158,7 +183,7 @@ export async function POST(request: Request) {
         const facility = proProfile?.facility ?? null;
         const proDetails = [discipline, facility].filter(Boolean).join(" at ");
 
-        const signupUrl = "https://pulsereferrals.vercel.app/signup";
+        const signupUrl = "https://pulsereferrals.com/signup";
         const html = `
           <p>Hi,</p>
           <p><strong>${proName}</strong>${proDetails ? ` (${proDetails})` : ""} needs continuing education and is looking for a rep to help them out.</p>
