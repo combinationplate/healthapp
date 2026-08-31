@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { sanitizeTerritoryStates } from "@/lib/territory";
 
 export async function GET() {
   const supabase = await createClient();
@@ -14,7 +15,8 @@ export async function GET() {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, full_name, state, city, org_id, manager_id")
+    // select("*") so this keeps working before the territory_states migration runs
+    .select("*")
     .eq("id", user.id)
     .single();
 
@@ -31,9 +33,21 @@ export async function GET() {
     org_logo_url = (org as { logo_url?: string | null } | null)?.logo_url ?? null;
   }
 
+  const prof = profile as (typeof profile & { territory_states?: string[] | null }) | null;
   return NextResponse.json({
-    profile: profile
-      ? { ...profile, org_name, org_logo_url, email: user.email ?? null }
+    profile: prof
+      ? {
+          id: prof.id,
+          full_name: prof.full_name ?? null,
+          state: prof.state ?? null,
+          city: prof.city ?? null,
+          org_id: prof.org_id ?? null,
+          manager_id: prof.manager_id ?? null,
+          territory_states: prof.territory_states ?? null,
+          org_name,
+          org_logo_url,
+          email: user.email ?? null,
+        }
       : null,
   });
 }
@@ -45,7 +59,7 @@ export async function POST(request: Request) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { state, city, orgName, discipline, facility } = body;
+    const { state, city, orgName, discipline, facility, territoryStates } = body;
     const cityNormalized =
       typeof city === "string" ? city.trim().replace(/\b\w/g, (c: string) => c.toUpperCase()) : null;
 
@@ -62,6 +76,22 @@ export async function POST(request: Request) {
     if (cityNormalized) profileUpdate.city = cityNormalized;
     if (discipline) profileUpdate.discipline = discipline;
     if (facility) profileUpdate.facility = facility;
+    // Multi-state territory: only touch the column when the client sent the
+    // key (Array). Sanitized against real state codes; home state excluded.
+    let territoryUpdate: string[] | null | undefined = undefined;
+    if (Array.isArray(territoryStates)) {
+      let home: string | null = typeof state === "string" && state ? state : null;
+      if (!home) {
+        const { data: existing } = await admin
+          .from("profiles")
+          .select("state")
+          .eq("id", user.id)
+          .single();
+        home = existing?.state ?? null;
+      }
+      territoryUpdate = sanitizeTerritoryStates(territoryStates, home);
+      profileUpdate.territory_states = territoryUpdate;
+    }
 
     // Handle org linkage if orgName is provided
     if (orgName && orgName.trim()) {
@@ -92,10 +122,17 @@ export async function POST(request: Request) {
       }
     }
 
-    const { error } = await admin
+    let { error } = await admin
       .from("profiles")
       .update(profileUpdate)
       .eq("id", user.id);
+
+    // If the territory_states migration has not run yet, retry without it so
+    // the rest of the profile update still lands.
+    if (error && territoryUpdate !== undefined && /territory_states/i.test(error.message)) {
+      delete profileUpdate.territory_states;
+      ({ error } = await admin.from("profiles").update(profileUpdate).eq("id", user.id));
+    }
 
     if (error) {
       console.error("Profile update failed:", error.message);

@@ -6,6 +6,7 @@ import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 import { AccreditationInline } from "@/src/components/AccreditationStrip";
 import { isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
+import { effectiveTerritory } from "@/lib/territory";
 
 const TABS = [
   { id: "distribute", label: "Distribute" },
@@ -262,7 +263,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
     requests: 0,
   });
   const [repOnboarding, setRepOnboarding] = useState(false);
-  const [repOnboardingForm, setRepOnboardingForm] = useState({ state: "", city: "", orgName: "" });
+  const [repOnboardingForm, setRepOnboardingForm] = useState<{ state: string; city: string; orgName: string; territoryStates: string[] }>({ state: "", city: "", orgName: "", territoryStates: [] });
   const [repOnboardingSaving, setRepOnboardingSaving] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [repRequests, setRepRequests] = useState<{
@@ -311,16 +312,29 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [discoverCityFilter, setDiscoverCityFilter] = useState("All");
   const [discoverCities, setDiscoverCities] = useState<string[]>([]);
   const [discoverDisciplineFilter, setDiscoverDisciplineFilter] = useState("All");
+  const [discoverStateFilter, setDiscoverStateFilter] = useState("All");
+  // States the discover list is filtered to (from the API; empty = nationwide).
+  const [discoverTerritory, setDiscoverTerritory] = useState<string[]>([]);
+  // Multi-state territory editor
+  const [territoryOpen, setTerritoryOpen] = useState(false);
+  const [territoryDraft, setTerritoryDraft] = useState<string[]>([]);
+  const [territorySaving, setTerritorySaving] = useState(false);
+  const [repHomeState, setRepHomeState] = useState<string | null>(null);
+  const [repTerritoryStates, setRepTerritoryStates] = useState<string[]>([]);
 
-  useEffect(() => {
+  const fetchDiscover = useCallback(() => {
     fetch("/api/rep/discover", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         if (data.professionals) setDiscoverPros(data.professionals);
         if (data.cities) setDiscoverCities(data.cities);
+        if (Array.isArray(data.territory)) setDiscoverTerritory(data.territory);
         setDiscoverLoading(false);
       });
   }, []);
+  useEffect(() => {
+    fetchDiscover();
+  }, [fetchDiscover]);
 
   // Disciplines present in the current discover results, normalized via
   // DISCIPLINE_MAP so profile variants ("SLP" vs "ST") collapse into one chip.
@@ -333,6 +347,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
   ].sort();
   const discoverFiltered = discoverPros.filter(
     (pro) =>
+      (discoverStateFilter === "All" || pro.state === discoverStateFilter) &&
       (discoverCityFilter === "All" || pro.city === discoverCityFilter) &&
       (discoverDisciplineFilter === "All" ||
         mapDiscipline(pro.discipline) === discoverDisciplineFilter)
@@ -344,6 +359,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
       .then((data) => {
         if (data.profile && !data.profile.state) {
           setRepOnboarding(true);
+        }
+        if (data.profile) {
+          setRepHomeState(data.profile.state ?? null);
+          setRepTerritoryStates(Array.isArray(data.profile.territory_states) ? data.profile.territory_states : []);
         }
         if (data.profile) {
           setRepProfile({
@@ -381,6 +400,26 @@ export function RepDashboard({ repId }: { repId?: string }) {
     });
     setRepOnboardingSaving(false);
     setRepOnboarding(false);
+    // Apply the new territory immediately.
+    fetchRepProfile();
+    setDiscoverLoading(true);
+    fetchDiscover();
+  }
+
+  async function handleSaveTerritory() {
+    setTerritorySaving(true);
+    await fetch("/api/rep/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ territoryStates: territoryDraft }),
+    });
+    setTerritorySaving(false);
+    setTerritoryOpen(false);
+    setRepTerritoryStates(territoryDraft.filter((st) => st !== repHomeState));
+    setDiscoverStateFilter("All");
+    setDiscoverLoading(true);
+    fetchDiscover();
   }
 
   const [touchpointOpen, setTouchpointOpen] = useState(false);
@@ -1513,7 +1552,35 @@ export function RepDashboard({ repId }: { repId?: string }) {
             <div className="border-b border-[var(--border)] pb-3 mb-4">
               <h2 style={{ fontFamily: "'Fraunces', Georgia, serif", fontSize: '16px', fontWeight: 800, color: '#0b1222', margin: 0 }}>Professionals Seeking CEs</h2>
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE courses — newest requests first. Send a course to introduce yourself.</p>
+              {repHomeState && (
+                <p className="mt-1 text-[11px] text-[var(--ink-muted)]">
+                  Showing: <span className="font-semibold text-[var(--ink-soft)]">{effectiveTerritory(repHomeState, repTerritoryStates).join(", ")}</span>
+                  {" · "}
+                  <button
+                    type="button"
+                    className="font-semibold text-[var(--blue)] underline"
+                    onClick={() => { setTerritoryDraft(repTerritoryStates); setTerritoryOpen(true); }}
+                  >
+                    {repTerritoryStates.length > 0 ? "Edit territory" : "Cover more states?"}
+                  </button>
+                </p>
+              )}
             </div>
+            {discoverTerritory.length > 1 && (
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-muted)] w-[64px] flex-shrink-0">State</span>
+                {["All", ...discoverTerritory].map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => { setDiscoverStateFilter(st); setDiscoverCityFilter("All"); }}
+                    className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold border ${discoverStateFilter === st ? "bg-[var(--ink)] text-white border-[var(--ink)]" : "border-[var(--border)] bg-white text-[var(--ink-soft)] hover:bg-[#f6f5f0]"}`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+            )}
             {discoverCities.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-muted)] w-[64px] flex-shrink-0">City</span>
@@ -1558,7 +1625,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 <button
                   type="button"
                   className="mt-3 text-[12px] font-semibold text-[var(--blue)] underline"
-                  onClick={() => { setDiscoverCityFilter("All"); setDiscoverDisciplineFilter("All"); }}
+                  onClick={() => { setDiscoverStateFilter("All"); setDiscoverCityFilter("All"); setDiscoverDisciplineFilter("All"); }}
                 >
                   Clear filters
                 </button>
@@ -4524,6 +4591,54 @@ export function RepDashboard({ repId }: { repId?: string }) {
           </div>
         )}
 
+    {territoryOpen && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)" }} onClick={() => !territorySaving && setTerritoryOpen(false)}>
+        <div style={{ width: "92%", maxWidth: "520px", background: "white", borderRadius: "16px", padding: "28px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }} onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "6px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Your Territory</h3>
+            <button type="button" onClick={() => !territorySaving && setTerritoryOpen(false)} style={{ background: "none", border: "none", fontSize: "22px", cursor: "pointer", color: "var(--ink-muted)", lineHeight: 1 }}>×</button>
+          </div>
+          <p style={{ fontSize: "13px", color: "var(--ink-muted)", margin: "0 0 16px" }}>Select every state you cover. Discover will show professionals seeking CEs across all of them.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", maxHeight: "220px", overflowY: "auto", padding: "2px", marginBottom: "16px" }}>
+            {US_STATES.map((st) => {
+              const isHome = st === repHomeState;
+              const on = isHome || territoryDraft.includes(st);
+              return (
+                <button
+                  key={st}
+                  type="button"
+                  disabled={isHome}
+                  title={isHome ? "Your home state is always included" : undefined}
+                  onClick={() => setTerritoryDraft((d) => (d.includes(st) ? d.filter((x) => x !== st) : [...d, st]))}
+                  style={{ padding: "6px 10px", borderRadius: "8px", fontSize: "12px", fontWeight: 600, cursor: isHome ? "default" : "pointer", border: on ? "1px solid var(--blue)" : "1px solid var(--border)", background: isHome ? "var(--ink)" : on ? "var(--blue)" : "white", color: on ? "white" : "var(--ink-soft)" }}
+                >
+                  {st}{isHome ? " 🏠" : ""}
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={() => setTerritoryDraft([])}
+              disabled={territorySaving || territoryDraft.length === 0}
+              style={{ background: "none", border: "none", fontSize: "12px", fontWeight: 600, color: territoryDraft.length ? "var(--ink-muted)" : "rgba(122,139,168,0.4)", cursor: territoryDraft.length ? "pointer" : "default", textDecoration: "underline", padding: 0 }}
+            >
+              Just my home state
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveTerritory}
+              disabled={territorySaving}
+              style={{ padding: "10px 20px", borderRadius: "10px", border: "none", background: "var(--blue)", color: "white", fontSize: "13px", fontWeight: 600, cursor: "pointer", opacity: territorySaving ? 0.6 : 1 }}
+            >
+              {territorySaving ? "Saving…" : `Save territory (${1 + territoryDraft.filter((x) => x !== repHomeState).length} state${territoryDraft.filter((x) => x !== repHomeState).length ? "s" : ""})`}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {repOnboarding && (
       <div style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,18,34,0.55)", backdropFilter: "blur(4px)" }}>
         <div style={{ width: "92%", maxWidth: "480px", background: "white", borderRadius: "16px", padding: "32px", boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}>
@@ -4543,6 +4658,24 @@ export function RepDashboard({ repId }: { repId?: string }) {
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+              <div style={{ marginTop: "10px" }}>
+                <p style={{ fontSize: "11px", color: "var(--ink-muted)", margin: "0 0 6px" }}>Cover more than one state? Tap any others you work in <span style={{ color: "var(--ink-muted)" }}>(optional)</span>:</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", maxHeight: "108px", overflowY: "auto", padding: "2px" }}>
+                  {US_STATES.filter((st) => st !== repOnboardingForm.state).map((st) => {
+                    const on = repOnboardingForm.territoryStates.includes(st);
+                    return (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => setRepOnboardingForm((f) => ({ ...f, territoryStates: on ? f.territoryStates.filter((x) => x !== st) : [...f.territoryStates, st] }))}
+                        style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: 600, cursor: "pointer", border: on ? "1px solid var(--blue)" : "1px solid var(--border)", background: on ? "var(--blue)" : "white", color: on ? "white" : "var(--ink-soft)" }}
+                      >
+                        {st}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div>
               <label style={{ display: "block", fontSize: "11px", fontWeight: 600, color: "var(--ink-soft)", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Company Name</label>

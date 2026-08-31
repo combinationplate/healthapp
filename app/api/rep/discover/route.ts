@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { effectiveTerritory } from "@/lib/territory";
 
 export async function GET() {
   const supabase = await createClient();
@@ -12,12 +13,15 @@ export async function GET() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // Get rep's state for territory filtering
-  const { data: repProfile } = await admin
+  // Get rep's territory (home state + any additional territory_states).
+  // select("*") so this keeps working before the territory_states migration runs.
+  const { data: repProfileRow } = await admin
     .from("profiles")
-    .select("state")
+    .select("*")
     .eq("id", user.id)
     .single();
+  const repProfile = repProfileRow as { state?: string | null; territory_states?: string[] | null } | null;
+  const territory = effectiveTerritory(repProfile?.state, repProfile?.territory_states);
 
   // Discoverable = opted in (seeking_ce) OR has an open pending request —
   // someone with an open request is, by definition, seeking CE.
@@ -45,8 +49,10 @@ export async function GET() {
   // House account (Pulse Team) has no territory — it fulfills nationwide.
   const HOUSE_EMAIL = (process.env.HOUSE_ACCOUNT_EMAIL || "hello@pulsereferrals.com").toLowerCase();
   const isHouse = (user.email ?? "").toLowerCase() === HOUSE_EMAIL;
-  if (repProfile?.state && !isHouse) {
-    query = query.eq("state", repProfile.state);
+  if (territory.length > 0 && !isHouse) {
+    query = territory.length === 1
+      ? query.eq("state", territory[0])
+      : query.in("state", territory);
   }
 
   const { data: professionals } = await query.limit(50);
@@ -111,5 +117,7 @@ export async function GET() {
   return NextResponse.json({
     professionals: result,
     cities: [...new Set(result.map((p) => p.city).filter(Boolean))].sort(),
+    // The states this list was filtered to (empty = nationwide/house).
+    territory: isHouse ? [] : territory,
   });
 }
