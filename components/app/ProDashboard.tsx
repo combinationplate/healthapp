@@ -3,6 +3,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
+import { ANY_TOPIC, CE_REQUEST_TOPICS, CE_REQUEST_TOPIC_LABELS, isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
 
 const PRO_TABS = [
   { id: "courses", label: "CE Courses" },
@@ -403,7 +404,7 @@ const [networkLoading, setNetworkLoading] = useState(true);
       <div key={r.id} style={{padding:'14px',borderRadius:'10px',border:'1px solid var(--border)',background:'white'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
           <div>
-            <div style={{fontWeight:600,fontSize:'13px',color:'var(--ink)'}}>{r.topic}</div>
+            <div style={{fontWeight:600,fontSize:'13px',color:'var(--ink)'}}>{formatRequestTopic(r.topic)}{r.topic === ANY_TOPIC ? <span style={{marginLeft:'6px',fontSize:'10px',fontWeight:700,color:'var(--green)'}}>Flexible</span> : null}</div>
             <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'2px'}}>{r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div>
           </div>
           <span style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background: r.status === 'pending' ? 'var(--gold-glow)' : 'var(--green-glow)',color: r.status === 'pending' ? '#92670A' : 'var(--green)'}}>{r.status}</span>
@@ -592,14 +593,11 @@ const [networkLoading, setNetworkLoading] = useState(true);
                   is what gets submitted ("Outro" instead of "Other") and shown to
                   everyone. Values stay canonical English; labels may translate. */}
               <option value="">Select topic...</option>
-              <option value="Ethics">Ethics</option>
-              <option value="Palliative Care">Palliative Care</option>
-              <option value="Mental Health">Mental Health</option>
-              <option value="Chronic Disease Management">Chronic Disease Management</option>
-              <option value="Patient Safety">Patient Safety</option>
-              <option value="Care Transitions">Care Transitions</option>
-              <option value="Other">Other</option>
+              {CE_REQUEST_TOPICS.map(t => <option key={t} value={t}>{CE_REQUEST_TOPIC_LABELS[t]}</option>)}
             </select>
+            {isAnyTopic(requestForm.topic) && (
+              <p style={{margin:'6px 0 0',fontSize:'11px',color:'var(--green)',fontWeight:600}}>Fastest way to get your CE — any rep can send an accredited course that fits your license.</p>
+            )}
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
             <div>

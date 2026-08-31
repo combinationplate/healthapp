@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { normalizeRequestTopic } from "@/lib/ce-topics";
 
 export async function GET() {
   const supabase = await createClient();
@@ -57,21 +58,10 @@ export async function POST(request: Request) {
     // The topic is a fixed dropdown, but browser translators (Google Translate,
     // Edge) rewrite option text — clients without stable option values submitted
     // the translated label verbatim ("Outro" for "Other"), which then rendered
-    // for every user on the demand map. Normalize to the canonical list here so
-    // no client variant can ever store a non-canonical topic.
-    const CANONICAL_TOPICS = [
-      "Ethics",
-      "Palliative Care",
-      "Mental Health",
-      "Chronic Disease Management",
-      "Patient Safety",
-      "Care Transitions",
-      "Other",
-    ];
-    const rawTopic = String(body.topic).trim();
-    const topic =
-      CANONICAL_TOPICS.find((c) => c.toLowerCase() === rawTopic.toLowerCase()) ??
-      "Other";
+    // for every user on the demand map. Normalize to the canonical list
+    // (lib/ce-topics.ts — includes "Any Topic") so no client variant can ever
+    // store a non-canonical topic.
+    const topic = normalizeRequestTopic(body.topic);
 
     const admin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

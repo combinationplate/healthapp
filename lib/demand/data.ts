@@ -1,5 +1,6 @@
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { foldToMetro, metroLabel, type Metro } from "@/lib/demand/metros";
+import { formatRequestTopic } from "@/lib/ce-topics";
 
 // ─── Public, anonymized shapes (NEVER include name/email/PII) ────────
 export type PublicRequest = {
@@ -120,7 +121,7 @@ export async function getDemandData(): Promise<DemandData> {
     discipline: e.discipline,
     metro: metroLabel(e.metro),
     state: e.metro.state,
-    topic: (e.r.topic || "Continuing education").trim(),
+    topic: formatRequestTopic(e.r.topic),
     hours: Number(e.r.hours) || 0,
     urgency: e.u.label,
   }));
@@ -136,7 +137,7 @@ export async function getDemandData(): Promise<DemandData> {
       dotMap.set(key, d);
     }
     if (!d.disciplines.includes(e.discipline)) d.disciplines.push(e.discipline);
-    const topic = (e.r.topic || "").trim();
+    const topic = e.r.topic ? formatRequestTopic(e.r.topic) : "";
     if (topic && !d.topics.includes(topic)) d.topics.push(topic);
     d.hours += Number(e.r.hours) || 0;
   }

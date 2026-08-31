@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PublicRequest } from "@/lib/demand/data";
+import { formatRequestTopic } from "@/lib/ce-topics";
 
 function discColor(d: string): string {
   const s = d.toLowerCase();
@@ -68,7 +69,7 @@ export function DemandCards({ requests }: { requests: PublicRequest[] }) {
             </div>
             <div className="demand-card-city">{r.metro}</div>
             <div className="demand-card-topic">
-              {r.topic} &middot; <strong>{r.hours} CE hr{r.hours !== 1 ? "s" : ""}</strong>
+              {formatRequestTopic(r.topic)} &middot; <strong>{r.hours} CE hr{r.hours !== 1 ? "s" : ""}</strong>
             </div>
             <div className="demand-card-note">Licensed professional, verified profile</div>
 

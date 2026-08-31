@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
 
 export async function POST(request: Request) {
   try {
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
               <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Rep</td><td>${repName} (${user.email ?? ""})</td></tr>
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Professional</td><td>${pro?.full_name ?? "—"} (${pro?.email ?? "—"})</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${claimed.topic ?? "—"} · ${claimed.hours ?? "?"} hrs</td></tr>
+                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${formatRequestTopic(claimed.topic)} · ${claimed.hours ?? "?"} hrs</td></tr>
                 <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Location</td><td>${[pro?.city, pro?.state].filter(Boolean).join(", ") || "—"}</td></tr>
               </table>
               <p style="font-size:13px;color:#7a8ba8;margin-top:14px;">Introduce them once the CE is delivered.</p>
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
             subject: "A sponsor claimed your CE request",
             html: `
               <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;max-width:520px;padding:8px 4px;color:#0b1222;">
-                <p style="font-size:15px;line-height:1.6;">Good news — a local sponsor has claimed your continuing education request${claimed.topic ? ` for <strong>${claimed.topic}</strong>` : ""}.</p>
+                <p style="font-size:15px;line-height:1.6;">Good news — a local sponsor has claimed your continuing education request${claimed.topic && !isAnyTopic(claimed.topic) ? ` for <strong>${claimed.topic}</strong>` : ""}.</p>
                 <p style="font-size:15px;line-height:1.6;color:#3b4963;">We'll deliver your nationally accredited CE at no cost, and introduce you to your sponsor once it's ready. No action needed right now.</p>
                 <p style="font-size:13px;color:#7a8ba8;">— Pulse</p>
               </div>`,

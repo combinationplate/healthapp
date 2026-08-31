@@ -18,4 +18,4 @@ where deadline is not null
 select id, topic, status, created_at
 from public.ce_requests
 where deadline is not null
-  and topic not in ('Ethics','Palliative Care','Mental Health','Chronic Disease Management','Patient Safety','Care Transitions','Other');
+  and topic not in ('Any Topic','Ethics','Palliative Care','Mental Health','Chronic Disease Management','Patient Safety','Care Transitions','Other');

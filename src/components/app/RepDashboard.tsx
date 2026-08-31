@@ -5,6 +5,7 @@ import html2canvas from "html2canvas";
 import { createClient } from "../../../lib/supabase/client";
 import { StatCard, StatsGrid, PageShell, SectionCard, TabBar } from "./DashboardShell";
 import { AccreditationInline } from "@/src/components/AccreditationStrip";
+import { isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
 
 const TABS = [
   { id: "distribute", label: "Distribute" },
@@ -1640,7 +1641,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       <div style={{marginTop:'8px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
                         {pro.requests.map((r, i) => (
                           <span key={i} style={{padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'rgba(217,119,6,0.08)',color:'#92670A'}}>
-                            Needs: {r.topic} · {r.hours} hrs{r.created_at ? ` · Requested ${timeAgo(r.created_at)}` : ""}
+                            Needs: {formatRequestTopic(r.topic)} · {r.hours} hrs{r.created_at ? ` · Requested ${timeAgo(r.created_at)}` : ""}
                           </span>
                         ))}
                       </div>
@@ -1683,7 +1684,14 @@ export function RepDashboard({ repId }: { repId?: string }) {
               </div>
             </div>
             <div style={{fontSize:'13px',color:'var(--ink)',marginBottom:'12px'}}>
-              <strong>{r.topic}</strong> · {r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+              <strong>{formatRequestTopic(r.topic)}</strong>
+              {isAnyTopic(r.topic) && (
+                <span style={{marginLeft:'6px',padding:'2px 8px',borderRadius:'20px',fontSize:'10px',fontWeight:700,background:'rgba(13,148,136,0.1)',color:'#0d9488',verticalAlign:'middle'}}>Flexible</span>
+              )}
+              {' '}· {r.hours} hrs · Due {new Date(r.deadline).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}
+              {isAnyTopic(r.topic) && (
+                <div style={{fontSize:'11px',color:'var(--ink-muted)',marginTop:'4px'}}>Open to any course that fits their license — pick whatever you&apos;d like to lead with.</div>
+              )}
             </div>
             <div style={{display:'flex',gap:'8px'}}>
               <button
