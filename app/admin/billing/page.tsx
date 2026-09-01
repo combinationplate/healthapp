@@ -331,17 +331,7 @@ export default async function AdminBillingPage() {
           ))}
         </div>
 
-        <h2
-          style={{
-            fontFamily: "'Fraunces', Georgia, serif",
-            fontSize: "18px",
-            fontWeight: 800,
-            color: "#0b1222",
-            marginBottom: "14px",
-          }}
-        >
-          CE Requests
-        </h2>
+        {/* Heading lives inside the component so it doubles as the collapse toggle */}
         <CeRequestsLog rows={requestRows} />
 
         <h2

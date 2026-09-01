@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export type CeRequestRow = {
   id: string;
@@ -25,9 +25,40 @@ const STATUS_STYLES: Record<string, { bg: string; color: string }> = {
 
 const STATUSES = ["all", "pending", "fulfilled", "cancelled"];
 
+const PAGE_SIZE = 25;
+const OPEN_KEY = "pulse_admin_ce_requests_open";
+
 export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
   const [status, setStatus] = useState<string>("all");
   const [query, setQuery] = useState("");
+  // Collapsed by default so the admin page stays short; remembered per browser.
+  const [open, setOpen] = useState(false);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(OPEN_KEY) === "1") setOpen(true);
+    } catch {
+      /* storage unavailable — stay collapsed */
+    }
+  }, []);
+
+  const toggleOpen = () => {
+    setOpen((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(OPEN_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
+
+  const pendingCount = useMemo(
+    () => rows.filter((r) => r.status === "pending").length,
+    [rows],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -46,8 +77,91 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
     });
   }, [rows, status, query]);
 
+  // Reset pagination whenever the filter changes.
+  useEffect(() => {
+    setLimit(PAGE_SIZE);
+  }, [status, query]);
+
+  const visible = filtered.slice(0, limit);
+  const hiddenCount = Math.max(0, filtered.length - visible.length);
+
   return (
     <div style={{ marginBottom: "32px" }}>
+      <button
+        type="button"
+        onClick={toggleOpen}
+        aria-expanded={open}
+        aria-controls="admin-ce-requests-panel"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          width: "100%",
+          padding: 0,
+          marginBottom: open ? "14px" : "0",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+          fontFamily: "inherit",
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            display: "inline-block",
+            width: "18px",
+            fontSize: "12px",
+            color: "#7a8ba8",
+            transform: open ? "rotate(90deg)" : "rotate(0deg)",
+            transition: "transform 0.15s ease",
+          }}
+        >
+          ▶
+        </span>
+        <span
+          style={{
+            fontFamily: "'Fraunces', Georgia, serif",
+            fontSize: "18px",
+            fontWeight: 800,
+            color: "#0b1222",
+          }}
+        >
+          CE Requests
+        </span>
+        <span
+          style={{
+            padding: "2px 10px",
+            borderRadius: "999px",
+            background: "#f0efeb",
+            color: "#3b4963",
+            fontSize: "11px",
+            fontWeight: 700,
+          }}
+        >
+          {rows.length}
+        </span>
+        {pendingCount > 0 ? (
+          <span
+            style={{
+              padding: "2px 10px",
+              borderRadius: "999px",
+              background: STATUS_STYLES.pending.bg,
+              color: STATUS_STYLES.pending.color,
+              fontSize: "11px",
+              fontWeight: 700,
+            }}
+          >
+            {pendingCount} pending
+          </span>
+        ) : null}
+        <span style={{ fontSize: "12px", color: "#7a8ba8", marginLeft: "auto" }}>
+          {open ? "Hide" : "Show"}
+        </span>
+      </button>
+
+      {!open ? null : (
+      <div id="admin-ce-requests-panel">
       <div
         style={{
           display: "flex",
@@ -157,7 +271,7 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
                   </td>
                 </tr>
               ) : (
-                filtered.map((r) => {
+                visible.map((r) => {
                   const st = STATUS_STYLES[r.status] ?? STATUS_STYLES.cancelled;
                   return (
                     <tr
@@ -262,7 +376,54 @@ export function CeRequestsLog({ rows }: { rows: CeRequestRow[] }) {
             </tbody>
           </table>
         </div>
+        {hiddenCount > 0 ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "10px",
+              borderTop: "1px solid rgba(11,18,34,0.06)",
+              background: "#fafaf7",
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setLimit((n) => n + PAGE_SIZE)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "999px",
+                border: "1px solid rgba(11,18,34,0.12)",
+                background: "#fff",
+                color: "#3b4963",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Show {Math.min(PAGE_SIZE, hiddenCount)} more
+            </button>
+            <button
+              type="button"
+              onClick={() => setLimit(filtered.length)}
+              style={{
+                padding: "6px 14px",
+                borderRadius: "999px",
+                border: "1px solid rgba(11,18,34,0.12)",
+                background: "#fff",
+                color: "#3b4963",
+                fontSize: "12px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Show all {filtered.length}
+            </button>
+          </div>
+        ) : null}
       </div>
+      </div>
+      )}
     </div>
   );
 }
