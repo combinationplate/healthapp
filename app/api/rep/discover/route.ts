@@ -56,7 +56,11 @@ export async function GET() {
       : query.in("state", territory);
   }
 
-  const { data: professionals } = await query.limit(50);
+  // Newest profiles first BEFORE the cap — previously an unordered .limit(50)
+  // dropped the newest signups/requests once >50 pros were discoverable.
+  const { data: professionals } = await query
+    .order("created_at", { ascending: false })
+    .limit(500);
 
   const proIds = (professionals ?? []).map((p: { id: string }) => p.id);
 
@@ -102,8 +106,10 @@ export async function GET() {
     work_setting?: string | null;
     license_renews_on?: string | null;
     ce_hours_needed?: number | null;
+    created_at?: string | null;
   }) => ({
     id: p.id,
+    createdAt: p.created_at ?? null,
     name: p.full_name ?? "Unknown",
     email: (unlockedIds.has(p.id) || networkEmails.has(p.email?.toLowerCase() ?? "")) ? (p.email ?? null) : null,
     discipline: p.discipline,
@@ -119,12 +125,20 @@ export async function GET() {
   // Most recent open request first; profiles with no open request sink to the bottom.
   const latestTs = (reqs: { created_at: string }[]) =>
     reqs.length ? Math.max(...reqs.map((r) => new Date(r.created_at).getTime())) : 0;
-  result.sort((a, b) => latestTs(b.requests) - latestTs(a.requests));
+  // Ties (no open request) break on newest signup first.
+  const joinedTs = (iso: string | null) => (iso ? new Date(iso).getTime() : 0);
+  result.sort(
+    (a, b) =>
+      latestTs(b.requests) - latestTs(a.requests) ||
+      joinedTs(b.createdAt) - joinedTs(a.createdAt)
+  );
 
   return NextResponse.json({
     professionals: result,
     cities: [...new Set(result.map((p) => p.city).filter(Boolean))].sort(),
     // The states this list was filtered to (empty = nationwide/house).
     territory: isHouse ? [] : territory,
+    // House account sees every state regardless of its saved territory.
+    nationwide: isHouse,
   });
 }

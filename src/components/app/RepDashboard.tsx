@@ -322,6 +322,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [discoverStateFilter, setDiscoverStateFilter] = useState("All");
   // States the discover list is filtered to (from the API; empty = nationwide).
   const [discoverTerritory, setDiscoverTerritory] = useState<string[]>([]);
+  // House account: API ignores territory and returns every state.
+  const [discoverNationwide, setDiscoverNationwide] = useState(false);
   // Multi-state territory editor
   const [territoryOpen, setTerritoryOpen] = useState(false);
   const [territoryDraft, setTerritoryDraft] = useState<string[]>([]);
@@ -336,6 +338,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         if (data.professionals) setDiscoverPros(data.professionals);
         if (data.cities) setDiscoverCities(data.cities);
         if (Array.isArray(data.territory)) setDiscoverTerritory(data.territory);
+        setDiscoverNationwide(Boolean(data.nationwide));
         setDiscoverLoading(false);
       });
   }, []);
@@ -352,6 +355,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
         .filter((d): d is string => Boolean(d))
     ),
   ].sort();
+  // State pill options: the rep's territory, or (house/nationwide) every state
+  // that actually appears in the results.
+  const discoverStateOptions = discoverNationwide
+    ? [...new Set(discoverPros.map((p) => p.state).filter((st): st is string => Boolean(st)))].sort()
+    : discoverTerritory;
   const discoverFiltered = discoverPros.filter(
     (pro) =>
       (discoverStateFilter === "All" || pro.state === discoverStateFilter) &&
@@ -1561,7 +1569,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               <p className="mt-1 text-[11px] text-[var(--ink-muted)]">Professionals looking for CE courses — newest requests first. Send a course to introduce yourself.</p>
               {repHomeState && (
                 <p className="mt-1 text-[11px] text-[var(--ink-muted)]">
-                  Showing: <span className="font-semibold text-[var(--ink-soft)]">{effectiveTerritory(repHomeState, repTerritoryStates).join(", ")}</span>
+                  Showing: <span className="font-semibold text-[var(--ink-soft)]">{discoverNationwide ? "Nationwide (house account — territory not applied)" : effectiveTerritory(repHomeState, repTerritoryStates).join(", ")}</span>
                   {" · "}
                   <button
                     type="button"
@@ -1573,10 +1581,10 @@ export function RepDashboard({ repId }: { repId?: string }) {
                 </p>
               )}
             </div>
-            {discoverTerritory.length > 1 && (
+            {discoverStateOptions.length > 1 && (
               <div className="flex items-center gap-2 flex-wrap mb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--ink-muted)] w-[64px] flex-shrink-0">State</span>
-                {["All", ...discoverTerritory].map((st) => (
+                {["All", ...discoverStateOptions].map((st) => (
                   <button
                     key={st}
                     type="button"
@@ -4631,14 +4639,30 @@ export function RepDashboard({ repId }: { repId?: string }) {
             })}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
-            <button
-              type="button"
-              onClick={() => setTerritoryDraft([])}
-              disabled={territorySaving || territoryDraft.length === 0}
-              style={{ background: "none", border: "none", fontSize: "12px", fontWeight: 600, color: territoryDraft.length ? "var(--ink-muted)" : "rgba(122,139,168,0.4)", cursor: territoryDraft.length ? "pointer" : "default", textDecoration: "underline", padding: 0 }}
-            >
-              Just my home state
-            </button>
+            <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+              {(() => {
+                const allOthers = US_STATES.filter((st) => st !== repHomeState);
+                const allOn = allOthers.every((st) => territoryDraft.includes(st));
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setTerritoryDraft(allOthers)}
+                    disabled={territorySaving || allOn}
+                    style={{ background: "none", border: "none", fontSize: "12px", fontWeight: 600, color: allOn ? "rgba(122,139,168,0.4)" : "var(--blue)", cursor: allOn ? "default" : "pointer", textDecoration: "underline", padding: 0 }}
+                  >
+                    Select all states
+                  </button>
+                );
+              })()}
+              <button
+                type="button"
+                onClick={() => setTerritoryDraft([])}
+                disabled={territorySaving || territoryDraft.length === 0}
+                style={{ background: "none", border: "none", fontSize: "12px", fontWeight: 600, color: territoryDraft.length ? "var(--ink-muted)" : "rgba(122,139,168,0.4)", cursor: territoryDraft.length ? "pointer" : "default", textDecoration: "underline", padding: 0 }}
+              >
+                Just my home state
+              </button>
+            </div>
             <button
               type="button"
               onClick={handleSaveTerritory}
