@@ -111,8 +111,13 @@ export default function LandingNav() {
               </Link>
             </li>
             <li>
-              <Link href="/#cta" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+              <Link href="/for-sales-teams" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
                 For Sales Teams
+              </Link>
+            </li>
+            <li>
+              <Link href="/pricing" style={{ fontSize: "14px", fontWeight: 500, color: "#3b4963", textDecoration: "none" }}>
+                Pricing
               </Link>
             </li>
             <li>
@@ -174,7 +179,7 @@ export default function LandingNav() {
                 whiteSpace: "nowrap",
               }}
             >
-              Get Started Free
+              Get Started
             </Link>
             <button
               type="button"
@@ -212,7 +217,8 @@ export default function LandingNav() {
             {[
               { href: "/how-it-works", label: "How It Works" },
               { href: "/#professionals", label: "Free CEs" },
-              { href: "/#cta", label: "For Sales Teams" },
+              { href: "/for-sales-teams", label: "For Sales Teams" },
+              { href: "/pricing", label: "Pricing" },
               { href: "/accreditation", label: "Accreditation" },
               { href: "/blog", label: "Blog" },
             ].map((link) => (

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AccreditationStrip } from "../AccreditationStrip";
+import PricingBlock from "@/components/landing/PricingBlock";
 
 /* ── Design tokens ──────────────────────────────────────────── */
 const ds = {
@@ -263,6 +264,21 @@ export default function HowItWorksPage() {
               ← Home
             </a>
             <a
+              href="/pricing"
+              style={{
+                padding: "8px 20px",
+                borderRadius: ds.r,
+                border: `1px solid ${ds.border}`,
+                background: "transparent",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: ds.inkSoft,
+                textDecoration: "none",
+              }}
+            >
+              Pricing
+            </a>
+            <a
               href="/accreditation"
               style={{
                 padding: "8px 20px",
@@ -328,7 +344,8 @@ export default function HowItWorksPage() {
             }}
           >
             Pulse connects healthcare professionals who need CE credits with the hospice, home
-            health, and rehab sales teams who can provide them — for free.
+            health, and rehab sales teams who sponsor them. Free for professionals, always. Sales
+            teams pay $15 per CE — only when it&apos;s opened.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px" }}>
             <a
@@ -461,8 +478,9 @@ export default function HowItWorksPage() {
                 Sales Teams
               </h3>
               <p style={{ fontSize: "15px", color: ds.inkSoft, lineHeight: 1.6, margin: 0 }}>
-                Distribute free CEs to nurses, social workers, and case managers in your territory.
-                Build real referral relationships — not just lunches.
+                Sponsor CEs for the nurses, social workers, and case managers in your territory.
+                $15 per CE, billed only when it&apos;s opened. Build real referral relationships — not
+                just lunches.
               </p>
             </div>
           </div>
@@ -514,7 +532,7 @@ export default function HowItWorksPage() {
               RN · LPN · MSW · LCSW · Case Managers · PT · OT · SLP
             </p>
             <a
-              href="/register"
+              href="/signup?type=hcp"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -544,9 +562,10 @@ export default function HowItWorksPage() {
             <p style={{ ...sectionLabel, color: ds.blue }}>
               For Hospice, Home Health &amp; Rehab Sales Teams
             </p>
-            <h2 style={sectionTitle}>Build Referral Relationships with Free CEs</h2>
+            <h2 style={sectionTitle}>Build Referral Relationships with Sponsored CEs</h2>
             <p style={{ fontSize: "17px", color: ds.inkSoft, marginTop: "14px" }}>
-              Every CE you distribute is a touchpoint with a potential referral source.
+              Every CE you sponsor is a touchpoint with a potential referral source — $15 per
+              credit hour, billed only when the professional opens it. First one on us.
             </p>
           </div>
           <div
@@ -567,7 +586,7 @@ export default function HowItWorksPage() {
             <StepCard
               num={2}
               color={ds.blue}
-              title="Send Free CEs"
+              title="Sponsor a CE"
               desc="Pick a course, pick a professional, hit send. Or generate a branded QR code and flyer to leave at facilities. One click. Their inbox. Done."
             />
             <StepCard
@@ -579,7 +598,7 @@ export default function HowItWorksPage() {
           </div>
           <div style={{ textAlign: "center", marginTop: "48px" }}>
             <a
-              href="/login"
+              href="/signup?type=sales"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -593,7 +612,7 @@ export default function HowItWorksPage() {
                 boxShadow: "0 4px 24px rgba(36,85,255,0.25)",
               }}
             >
-              Get Started Free
+              Start Free — First CE On Us
             </a>
           </div>
         </div>
@@ -604,7 +623,7 @@ export default function HowItWorksPage() {
         <div style={container}>
           <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto 64px" }}>
             <p style={{ ...sectionLabel, color: ds.blue }}>Distribution Tools</p>
-            <h2 style={sectionTitle}>Four Ways to Distribute Free CEs</h2>
+            <h2 style={sectionTitle}>Four Ways to Distribute Sponsored CEs</h2>
           </div>
           <div
             style={{
@@ -639,152 +658,8 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      {/* ══════════════ PRICING ══════════════ */}
-      <section style={{ padding: "100px 0", background: ds.white }}>
-        <div style={container}>
-          <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto 48px" }}>
-            <p style={{ ...sectionLabel, color: ds.teal }}>Pricing</p>
-            <h2 style={sectionTitle}>Simple Pricing. No Surprises.</h2>
-            <p style={{ fontSize: "16px", color: ds.inkSoft, marginTop: "12px" }}>
-              Get started free. CE courses are priced per course, per send — the same rates you&apos;d
-              pay on HISCornerstone.com. Professionals never pay a thing.
-            </p>
-          </div>
-
-          <div
-            style={{
-              maxWidth: "640px",
-              margin: "0 auto",
-              borderRadius: ds.rXl,
-              border: `1px solid ${ds.border}`,
-              background: ds.white,
-              padding: "48px",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.04)",
-            }}
-          >
-            {/* Two-box pricing summary */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "28px" }}>
-              <div style={{ borderRadius: ds.rLg, background: ds.cream, padding: "24px" }}>
-                <div
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: ds.inkMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Platform
-                </div>
-                <div style={{ fontFamily: ds.fontDisplay, fontSize: "36px", fontWeight: 900, color: ds.ink }}>
-                  Free
-                </div>
-                <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>to get started</div>
-            </div>
-            <div style={{ borderRadius: ds.rLg, background: "rgba(36,85,255,0.05)", padding: "24px" }}>
-              <div
-                style={{
-                  fontSize: "13px",
-                  fontWeight: 700,
-                  color: ds.inkMuted,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.06em",
-                  marginBottom: "8px",
-                }}
-              >
-                CE Courses
-              </div>
-              <div style={{ fontFamily: ds.fontDisplay, fontSize: "36px", fontWeight: 900, color: ds.blue }}>
-                $15
-              </div>
-              <div style={{ fontSize: "13px", color: ds.inkSoft, marginTop: "4px" }}>per 1-hour CE course</div>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: ds.teal, marginTop: "8px" }}>
-                Your first CE is on us
-              </div>
-            </div>
-            </div>
-
-            {/* Feature list */}
-            <p style={{ fontSize: "14px", fontWeight: 700, color: ds.ink, marginBottom: "12px" }}>
-              What&apos;s included:
-            </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "grid", gap: "12px" }}>
-              {[
-                "Unlimited rep accounts — no per-seat fees",
-                "Network management & CSV import",
-                "Touchpoint tracking (calls, visits, CEs, events)",
-                "QR codes & branded flyers",
-                "Professional discovery",
-                "Manager dashboard & team visibility",
-                "Bulk send & CE history tracking",
-              ].map((item) => (
-                <li key={item} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "15px" }}>
-                  <span
-                    style={{
-                      flexShrink: 0,
-                      width: "24px",
-                      height: "24px",
-                      borderRadius: "50%",
-                      background: ds.tealGlow,
-                      color: ds.teal,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "12px",
-                      fontWeight: 800,
-                    }}
-                  >
-                    ✓
-                  </span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            {/* Course pricing note */}
-            <div style={{ borderTop: `1px solid ${ds.border}`, paddingTop: "24px", marginBottom: "24px" }}>
-              <p style={{ fontSize: "14px", fontWeight: 700, color: ds.ink, marginBottom: "8px" }}>
-                How billing works:
-              </p>
-              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
-                You&apos;re only charged when a professional actually accesses their course — not when you send it. If you send 50 CEs and 30 are opened, you pay for 30. Sending a CE, generating a QR code, or creating a flyer is always free.
-              </p>
-              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
-                <strong style={{ color: ds.teal }}>Your first CE is on us.</strong> Every rep&apos;s first accessed course is free — see the whole loop work, from send to thank-you, before you spend a dollar.
-              </p>
-              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7, marginBottom: "12px" }}>
-                CE courses start at <strong style={{ color: ds.ink }}>$15 per 1-hour course</strong>. Multi-hour courses are priced per credit hour. Your company receives a monthly invoice based on actual usage.
-              </p>
-              <p style={{ fontSize: "14px", color: ds.inkSoft, lineHeight: 1.7 }}>
-                Professionals never pay anything. The cost is covered by your company as a business development investment — typically a fraction of what a single lunch &amp; learn costs.
-              </p>
-            </div>
-
-            <div style={{ textAlign: "center" }}>
-              <div style={{ marginTop: "8px" }}>
-                <a
-                  href="/login"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    background: ds.blue,
-                    color: ds.white,
-                    fontWeight: 700,
-                    padding: "16px 36px",
-                    borderRadius: ds.r,
-                    fontSize: "16px",
-                    textDecoration: "none",
-                    boxShadow: "0 4px 24px rgba(36,85,255,0.25)",
-                  }}
-                >
-                  Get Started Free
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ══════════════ PRICING (shared block — components/landing/PricingBlock.tsx) ══════════════ */}
+      <PricingBlock />
 
       {/* ══════════════ FAQ ══════════════ */}
       <section style={{ padding: "100px 0", background: ds.cream }}>
@@ -804,7 +679,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="Are the courses nationally accredited?"
-              a="Yes. All CE courses on Pulse are nationally accredited and approved across all 50 states. Courses are provided through HISCornerstone.com, an established CE provider."
+              a="Courses are provided by H.I.S. Cornerstone Continuing Education — an ANCC-accredited provider and ASWB ACE provider (#2082), established in 2007. National accreditation where it exists, state approval and reciprocity where it doesn't. See the Accreditation page for your discipline and state."
             />
             <FaqItem
               q="Do I need to create an account?"
@@ -812,7 +687,7 @@ export default function HowItWorksPage() {
             />
             <FaqItem
               q="How do sales teams pay?"
-              a="The platform is free — no per-seat fees, no setup costs. You're only charged when a professional actually accesses their CE course, not when you send it. Courses start at $15 per 1-hour CE, and every rep's first accessed course is free. Your company receives a monthly invoice based on actual usage."
+              a="The platform is free — no per-seat fees, no setup costs, no credit card to sign up. You're only charged when a professional actually opens their CE course, not when you send it. Courses are $15 per credit hour, and every rep's first opened course is free. A monthly invoice for actual usage goes to your company — or to each rep individually, your choice."
             />
             <FaqItem
               q="Can I use this for my whole team?"
@@ -847,12 +722,12 @@ export default function HowItWorksPage() {
             Ready to Get Started?
           </h2>
           <p style={{ fontSize: "17px", color: ds.inkSoft, maxWidth: "520px", margin: "0 auto 36px" }}>
-            Whether you need free CEs for your license or a better way to build referral
-            relationships — Pulse is free to get started.
+            Free CEs for your license, or a better way to build referral relationships. Professionals
+            never pay; sales teams pay $15 per opened CE, and the first one is on us.
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px" }}>
             <a
-              href="/register"
+              href="/signup?type=hcp"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -869,7 +744,7 @@ export default function HowItWorksPage() {
               Get Free CEs
             </a>
             <a
-              href="/login"
+              href="/for-sales-teams"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -908,6 +783,10 @@ export default function HowItWorksPage() {
             ·{" "}
             <a href="/how-it-works" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
               How It Works
+            </a>{" "}
+            ·{" "}
+            <a href="/pricing" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
+              Pricing
             </a>{" "}
             ·{" "}
             <a href="/accreditation" style={{ color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>

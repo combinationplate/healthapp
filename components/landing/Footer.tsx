@@ -40,8 +40,8 @@ export default function Footer() {
             </div>
             <p className="text-[14px] leading-[1.7] text-white/45">
               Free, accredited CE courses for nurses, social workers, case
-              managers, and therapists. Referral-building distribution tools
-              for hospice, home health, and rehab sales teams.
+              managers, and therapists — sponsored by the hospice, home health,
+              and rehab sales teams who want the introduction.
             </p>
           </div>
           <div>
@@ -50,18 +50,28 @@ export default function Footer() {
             </h4>
             <ul className="list-none">
               <li className="mb-2">
-                <Link href="#how-it-works" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/how-it-works" className="text-[14px] text-white/65 hover:text-white">
                   How It Works
                 </Link>
               </li>
               <li className="mb-2">
-                <Link href="#professionals" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/#professionals" className="text-[14px] text-white/65 hover:text-white">
                   Free CEs
                 </Link>
               </li>
               <li className="mb-2">
-                <Link href="#sales-teams" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/for-sales-teams" className="text-[14px] text-white/65 hover:text-white">
                   For Sales Teams
+                </Link>
+              </li>
+              <li className="mb-2">
+                <Link href="/pricing" className="text-[14px] text-white/65 hover:text-white">
+                  Pricing
+                </Link>
+              </li>
+              <li className="mb-2">
+                <Link href="/demand" className="text-[14px] text-white/65 hover:text-white">
+                  CE Demand Map
                 </Link>
               </li>
             </ul>
@@ -91,12 +101,9 @@ export default function Footer() {
                 </Link>
               </li>
               <li className="mb-2">
-                <a
-                  href="mailto:hello@pulsereferrals.com?subject=Question%20about%20Pulse"
-                  className="text-[14px] text-white/65 hover:text-white"
-                >
+                <Link href="/contact" className="text-[14px] text-white/65 hover:text-white">
                   Contact
-                </a>
+                </Link>
               </li>
               <li className="mb-2">
                 <Link href="/blog" className="text-[14px] text-white/65 hover:text-white">

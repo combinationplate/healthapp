@@ -11,8 +11,9 @@ export default function FinalCTA() {
           Ready to Get Started?
         </h2>
         <p className="mx-auto mb-12 max-w-[560px] text-[18px] text-ink-soft">
-          Whether you need free CEs for your license or a better way to build
-          referral relationships — Pulse is free to join.
+          Free for professionals, always. Free for sales teams to join — you
+          pay $15 per CE only when a professional opens it, and your first one
+          is on us.
         </p>
         <div className="mx-auto grid max-w-[780px] gap-6 sm:grid-cols-2">
           <div id="sales-teams" className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
@@ -21,16 +22,19 @@ export default function FinalCTA() {
               Hospice, Home Health &amp; Rehab Sales Teams
             </h3>
             <p className="mb-6 text-[14px] leading-[1.6] text-ink-soft">
-              Distribute free CE courses to build referral relationships. QR
+              Sponsor accredited CE courses to build referral relationships. QR
               codes, branded flyers, bulk send, network management, professional
-              discovery, and manager dashboards.
+              discovery, and manager dashboards. $15 per opened CE — first one free.
             </p>
             <Link
               href="/signup?type=sales"
               className="w-full justify-center rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow inline-flex"
             >
-              Get Started Free
+              Start Free — First CE On Us
             </Link>
+            <p className="mt-3 text-[13px]">
+              <Link href="/pricing" className="font-semibold text-blue hover:underline">See pricing →</Link>
+            </p>
           </div>
           <div className="rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 text-center transition-all hover:-translate-y-1 hover:shadow-[0_12px_40px_rgba(0,0,0,.06)]">
             <span className="mb-3 block text-[40px]">🧑‍⚕️</span>

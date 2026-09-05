@@ -6,7 +6,7 @@ import Container from "@/components/ui/Container";
 const benefits = [
   {
     title: "Accredited CE Courses — Free",
-    desc: "Access accredited courses in ethics, palliative care, mental health, chronic disease management, and more — for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs. National accreditation where it exists (ANCC, ASWB ACE), state approval and reciprocity where it doesn't. Completely free.",
+    desc: "Access accredited courses in ethics, palliative care, mental health, chronic disease management, and more — for RNs, LPNs, MSWs, LCSWs, case managers, PTs, OTs, and SLPs. National accreditation where it exists (ANCC, ASWB ACE), state approval and reciprocity where it doesn't. Completely free to you.",
   },
   {
     title: "Built for Rehab Therapists Too",
@@ -22,7 +22,7 @@ const benefits = [
   },
   {
     title: "Connect with Local Reps",
-    desc: "Reps at hospice, home health, and rehab companies in your area want to provide you with free CEs. You control your visibility — your contact info is only shared if you accept.",
+    desc: "Reps at hospice, home health, and rehab companies in your area sponsor your CEs — that's why they're free to you. You control your visibility — your contact info is only shared if you accept.",
   },
   {
     title: "No Account Needed to Start",
@@ -68,10 +68,11 @@ export default function HCPSection() {
           </ul>
           <div className="rounded-[var(--r-xl)] border border-[rgba(13,148,136,.15)] bg-gradient-to-br from-[#F0FDF4] to-[#ECFDF5] p-11 text-center">
             <div className="mb-3.5 text-[52px]">🎓</div>
-            <h3 className="text-[26px] font-extrabold">100% Free. Always.</h3>
+            <h3 className="text-[26px] font-extrabold">100% Free for Professionals. Always.</h3>
             <p className="mt-2.5 mb-6 text-[15px] leading-[1.6] text-ink-soft">
               Register and start getting free, accredited CE courses
-              matched to your discipline and state.
+              matched to your discipline and state. Local sponsors cover the
+              cost — you never see a bill.
             </p>
             <Link
               href="/signup?type=hcp"

@@ -17,12 +17,13 @@ export default function Distribution() {
               Distribution Made Easy
             </p>
             <h2 className="mt-3 font-serif text-[clamp(28px,3.5vw,40px)] font-extrabold leading-tight tracking-[-.02em]">
-              Four Ways to Distribute Free CE Courses
+              Four Ways to Get a Sponsored CE Into Their Hands
             </h2>
             <p className="mb-7 text-[16px] leading-[1.8] text-ink-soft">
               Whether you&apos;re visiting a hospital, at a lunch-and-learn, or
               following up from your desk — Pulse gives hospice, home health,
-              and rehab reps the right tool for every situation.
+              and rehab reps the right tool for every situation. Sending is
+              always free; you&apos;re billed only when the professional opens the course.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {methods.map((m) => (

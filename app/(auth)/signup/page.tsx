@@ -123,13 +123,13 @@ function SignupForm() {
       <div className="w-full max-w-[400px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 shadow-lg">
         <div className="mb-6 flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">
           <svg width={32} height={22} viewBox="0 0 36 24"><path className="heartbeat-path" d="M0 12 L8 12 L11 4 L15 20 L19 8 L22 14 L25 12 L36 12" fill="none" stroke="#2455FF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-          {isManager ? "Manager Sign Up" : isSales ? "Get Started Free" : "Create Free Account"}
+          {isManager ? "Manager Sign Up" : isSales ? "Create Your Rep Account" : "Create Free Account"}
         </div>
         <p className="mb-4 text-sm text-[var(--ink-muted)]">
           {isManager
-            ? "Lead your team with visibility and tools."
+            ? "Free to join, unlimited reps. $15 per opened CE — invoiced to your company or to each rep, your choice."
             : isSales
-            ? "Start distributing free CEs to build referral relationships."
+            ? "Free to join. $15 per CE, billed only when a professional opens it — your first one is on us."
             : "Get free CE courses, event invites, and local rep connections."}
         </p>
         <div className="mb-4">

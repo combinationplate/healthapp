@@ -30,11 +30,16 @@ export default function ProblemSolution() {
               Your Reps Spend $500 per Lunch. What Do They Get Back?
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
-              Your reps know that providing free CEs builds referral relationships
+              Your reps know that sponsoring CEs builds referral relationships
               — but the logistics are a nightmare. Finding the right course,
               generating codes, emailing individuals, tracking who used what.
               There&apos;s no single system, and no visibility into what&apos;s
               actually working.
+            </p>
+            <p className="mt-4 text-[17px] leading-[1.8] text-ink-soft">
+              On Pulse a sponsored CE is <strong className="text-ink">$15</strong>, and you pay only
+              when the professional actually opens it — a tracked, attributed
+              touchpoint for less than the tip on that lunch.
             </p>
             <ul className="mt-7 list-none">
               {problemItems.map((item) => (
@@ -50,14 +55,23 @@ export default function ProblemSolution() {
               ))}
             </ul>
           </div>
-          <div className="flex min-h-[340px] items-center justify-center rounded-[var(--r-xl)] border border-[var(--border)] bg-cream p-12">
-            <div className="text-center">
-              <span className="mb-4 block text-[72px]">⏰</span>
-              <h4 className="text-[22px] font-bold text-ink-muted">
-                Hours Wasted Every Week
-              </h4>
-              <p className="text-[16px] text-ink-muted">
-                Searching · Copying · Emailing · Guessing
+          <div className="flex min-h-[340px] flex-col justify-center gap-4 rounded-[var(--r-xl)] border border-[var(--border)] bg-cream p-8 sm:p-10">
+            <div className="rounded-[var(--r-lg)] border border-[var(--border)] bg-white p-6">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="font-serif text-[40px] font-black leading-none text-ink-muted">$500</span>
+                <span className="text-[12px] font-bold uppercase tracking-[.08em] text-ink-muted">One lunch-and-learn</span>
+              </div>
+              <p className="mt-3 text-[14px] leading-[1.6] text-ink-soft">
+                Whoever showed up. No record of who it reached, no follow-up trigger, nothing your manager can see.
+              </p>
+            </div>
+            <div className="rounded-[var(--r-lg)] border border-[rgba(36,85,255,.2)] bg-white p-6 shadow-[0_8px_30px_rgba(36,85,255,.08)]">
+              <div className="flex items-baseline justify-between gap-4">
+                <span className="font-serif text-[40px] font-black leading-none text-blue">$15</span>
+                <span className="text-[12px] font-bold uppercase tracking-[.08em] text-blue">One sponsored CE</span>
+              </div>
+              <p className="mt-3 text-[14px] leading-[1.6] text-ink-soft">
+                Delivered with your rep&apos;s name on it. You see when it was opened. Billed only if it is — and the first one is free.
               </p>
             </div>
           </div>
@@ -82,7 +96,7 @@ export default function ProblemSolution() {
               Pulse Puts Everything Your Sales Team Needs in One Place
             </h2>
             <p className="mt-5 text-[17px] leading-[1.8] text-ink-soft">
-              Send free, accredited CE courses in seconds — via email,
+              Sponsor accredited CE courses in seconds — via email,
               QR code, or bulk send. Build your referral network, discover
               professionals seeking CEs, track every touchpoint, and give
               managers full team visibility.
@@ -100,12 +114,17 @@ export default function ProblemSolution() {
                 </li>
               ))}
             </ul>
-            <Link
-              href="/signup?type=sales"
-              className="mt-7 inline-flex items-center gap-2 rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow transition-all hover:bg-blue-dark hover:-translate-y-0.5"
-            >
-              Get Started Free
-            </Link>
+            <div className="mt-7 flex flex-wrap items-center gap-4">
+              <Link
+                href="/signup?type=sales"
+                className="inline-flex items-center gap-2 rounded-[var(--r)] bg-blue px-9 py-4 text-base font-bold text-white shadow-glow transition-all hover:bg-blue-dark hover:-translate-y-0.5"
+              >
+                Start Free — First CE On Us
+              </Link>
+              <Link href="/pricing" className="text-[15px] font-semibold text-blue hover:underline">
+                See pricing →
+              </Link>
+            </div>
           </div>
         </div>
       </Container>

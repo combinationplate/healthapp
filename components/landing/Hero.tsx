@@ -16,8 +16,20 @@ export default function Hero() {
             Free CEs for Healthcare Pros.<br /><em className="italic text-teal">Referrals</em> for Sales Teams.
           </h1>
           <p className="mx-auto mb-10 max-w-[680px] text-[19px] leading-[1.7] text-ink-soft">
-            Every nurse, social worker, case manager, and therapist needs continuing education — but most facilities don&apos;t pay for it. Pulse gives healthcare professionals free, accredited CE courses, and gives hospice, home health, and rehab sales teams the referral relationships that come with providing them.
+            Every nurse, social worker, case manager, and therapist needs continuing education — but most facilities don&apos;t pay for it. Pulse gives healthcare professionals free, accredited CE courses, and gives hospice, home health, and rehab sales teams the referral relationships that come with sponsoring them.
           </p>
+          <div className="mx-auto mb-10 grid max-w-[720px] gap-3 text-left sm:grid-cols-2">
+            <div className="rounded-[var(--r-lg)] border border-[rgba(13,148,136,.18)] bg-white/80 px-5 py-4">
+              <div className="text-[12px] font-bold uppercase tracking-[.08em] text-teal">Healthcare professionals</div>
+              <div className="mt-1 text-[15px] font-semibold text-ink">Always free. No card, no catch.</div>
+            </div>
+            <div className="rounded-[var(--r-lg)] border border-[rgba(36,85,255,.18)] bg-white/80 px-5 py-4">
+              <div className="text-[12px] font-bold uppercase tracking-[.08em] text-blue">Sales teams</div>
+              <div className="mt-1 text-[15px] font-semibold text-ink">
+                Free to join. $15 per CE, billed only when it&apos;s opened. First one on us.
+              </div>
+            </div>
+          </div>
           <div className="flex flex-wrap justify-center gap-3.5">
             <Link
               href="/signup?type=hcp"
@@ -26,7 +38,7 @@ export default function Hero() {
               Get Free CE Courses
             </Link>
             <Link
-              href="/signup?type=sales"
+              href="/for-sales-teams"
               className="inline-flex items-center gap-2 rounded-[var(--r)] border-2 border-[var(--border)] bg-white px-9 py-4 text-base font-bold text-ink transition-colors hover:border-blue hover:text-blue"
             >
               I&apos;m a Sales Rep →

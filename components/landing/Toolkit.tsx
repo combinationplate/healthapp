@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Container from "@/components/ui/Container";
 
 const cards = [
@@ -13,7 +14,7 @@ const cards = [
     accent: "blue",
     icon: "📚",
     title: "CE Distribution Tools",
-    desc: "Sales reps send CE courses to professionals via email, QR code, or bulk send — with one click. Auto-generated coupon codes, tracking, and billing built in.",
+    desc: "Sales reps sponsor CE courses for professionals via email, QR code, or bulk send — with one click. Delivery tracking and pay-only-when-opened billing built in.",
     tag: "Most Popular",
     tagClass: "bg-[rgba(232,96,76,.08)] text-coral",
   },
@@ -21,7 +22,7 @@ const cards = [
     accent: "teal",
     icon: "📱",
     title: "QR Codes & Flyers",
-    desc: "Generate branded QR codes and print-ready flyers with your company name. Leave them at facilities — nurses scan and get a free CE instantly. No app needed.",
+    desc: "Generate branded QR codes and print-ready flyers with your company name. Leave them at facilities — nurses scan and get their sponsored CE instantly. No app needed.",
   },
   {
     accent: "blue",
@@ -71,11 +72,28 @@ export default function Toolkit() {
         <h2 className="section-title mt-3 text-center font-serif text-[clamp(30px,4vw,44px)] font-extrabold tracking-[-.02em]">
           Two Audiences. One Platform.
         </h2>
-        <p className="section-sub mx-auto mb-16 max-w-[640px] text-center text-[18px] text-ink-soft">
+        <p className="section-sub mx-auto mb-10 max-w-[640px] text-center text-[18px] text-ink-soft">
           Nurses, social workers, case managers, and therapists get free,
-          accredited CEs. Sales teams get the referral relationships that come
-          from providing them. Everybody wins.
+          accredited CEs. Sales teams sponsor them — and get the referral
+          relationships that come with it. Everybody wins.
         </p>
+        <div className="mx-auto mb-16 grid max-w-[860px] gap-4 sm:grid-cols-2">
+          <div className="rounded-[var(--r-lg)] border border-[rgba(13,148,136,.15)] bg-[var(--teal-glow)] p-6">
+            <div className="text-[12px] font-bold uppercase tracking-[.08em] text-teal">If you&apos;re a healthcare professional</div>
+            <p className="mt-2 text-[15px] leading-[1.6] text-ink">
+              Every course is <strong>100% free to you</strong>, sponsored by a local hospice, home health, or rehab
+              team. No credit card, no catch, no account needed to start.
+            </p>
+          </div>
+          <div className="rounded-[var(--r-lg)] border border-[rgba(36,85,255,.15)] bg-[var(--blue-glow)] p-6">
+            <div className="text-[12px] font-bold uppercase tracking-[.08em] text-blue">If you&apos;re on a sales team</div>
+            <p className="mt-2 text-[15px] leading-[1.6] text-ink">
+              The platform is free. You pay <strong>$15 per CE credit hour</strong> — only when a professional
+              opens the course, never on send. Your first one is on us.{" "}
+              <Link href="/pricing" className="font-bold text-blue hover:underline">See pricing →</Link>
+            </p>
+          </div>
+        </div>
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {cards.map((c) => (
             <div

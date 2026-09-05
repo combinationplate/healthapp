@@ -6,13 +6,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
   // Fixed date for static pages — bump manually when a static page meaningfully changes.
   const lastModified = new Date("2026-08-07");
+  // 2026-09-05: pricing-clarity pass (homepage, how-it-works) + new /pricing and /for-sales-teams.
+  const pricingPass = new Date("2026-09-05");
 
   const staticPages: MetadataRoute.Sitemap = [
-    { url: base, lastModified, changeFrequency: "weekly", priority: 1.0 },
+    { url: base, lastModified: pricingPass, changeFrequency: "weekly", priority: 1.0 },
     { url: `${base}/free-ce-for-nurses`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-social-workers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-case-managers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${base}/how-it-works`, lastModified, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/free-ce-for-therapists`, lastModified, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/for-sales-teams`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/pricing`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${base}/how-it-works`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/accreditation`, lastModified, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/demand`, lastModified, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/blog`, lastModified, changeFrequency: "weekly", priority: 0.7 },
