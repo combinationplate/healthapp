@@ -3,7 +3,7 @@ import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { normalizeRequestTopic } from "@/lib/ce-topics";
-import { normalizeWorkSetting, normalizeRenewalDate, normalizeHoursNeeded, formatRenewal, renewalLine } from "@/lib/ce-profile";
+import { normalizeWorkSetting, normalizeRenewalDate, normalizeHoursNeeded } from "@/lib/ce-profile";
 
 export async function GET() {
   const supabase = await createClient();
@@ -106,44 +106,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Notify admin of the new CE request (also visible in the admin CE log).
-    try {
-      const alertKey = process.env.RESEND_API_KEY;
-      if (alertKey) {
-        const { data: prof } = await admin
-          .from("profiles")
-          // select("*") so this works before the ce-profile migration runs
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        const profX = prof as (typeof prof & { work_setting?: string | null; license_renews_on?: string | null; ce_hours_needed?: number | null }) | null;
-        const renewal = renewalLine(renewNorm ?? profX?.license_renews_on, hoursNorm ?? profX?.ce_hours_needed) ?? formatRenewal(profX?.license_renews_on);
-        const setting = wsNorm ?? profX?.work_setting ?? null;
-        const alertResend = new Resend(alertKey);
-        const loc = [prof?.city, prof?.state].filter(Boolean).join(", ");
-        await alertResend.emails.send({
-          from: "Pulse Alerts <hello@pulsereferrals.com>",
-          to: process.env.SIGNUP_ALERT_EMAIL || "hello@pulsereferrals.com",
-          subject: `New CE request: ${topic} (${hours} hrs)`,
-          html: `
-            <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
-              <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New CE request</h2>
-              <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Professional</td><td>${prof?.full_name ?? "—"}</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Discipline</td><td>${prof?.discipline ?? "—"}</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Facility</td><td>${prof?.facility ?? "—"}</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Location</td><td>${loc || "—"}</td></tr>
-                ${setting ? `<tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Setting</td><td>${setting}</td></tr>` : ""}
-                ${renewal ? `<tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">License</td><td>${renewal}</td></tr>` : ""}
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${topic} (${hours} hrs)</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Deadline</td><td>${deadline}</td></tr>
-              </table>
-            </div>`,
-        });
-      }
-    } catch (e) {
-      console.error("CE request admin notify failed:", e);
-    }
+    // (Admin CE-request alert email removed 2026-09-27 — requests are visible
+    // in the admin CE Requests log; only signups email admin now.)
 
     // Save facility to the profile when provided (asked in the request modal
     // for professionals whose profile is missing it — improves rep lead quality).

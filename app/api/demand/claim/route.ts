@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { isAnyTopic, formatRequestTopic } from "@/lib/ce-topics";
+import { isAnyTopic } from "@/lib/ce-topics";
 
 export async function POST(request: Request) {
   try {
@@ -59,35 +59,14 @@ export async function POST(request: Request) {
       .eq("id", claimed.professional_id)
       .single();
 
-    const repName = profile?.full_name || user.email || "A Pulse rep";
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
       const from = "Pulse <hello@pulsereferrals.com>";
 
-      // 1) Notify admin (internal — may include professional details).
-      try {
-        await resend.emails.send({
-          from,
-          to: process.env.SIGNUP_ALERT_EMAIL || "hello@pulsereferrals.com",
-          subject: `CE request claimed by ${repName}`,
-          html: `
-            <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
-              <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">CE request claimed</h2>
-              <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Rep</td><td>${repName} (${user.email ?? ""})</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Professional</td><td>${pro?.full_name ?? "—"} (${pro?.email ?? "—"})</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Topic</td><td>${formatRequestTopic(claimed.topic)} · ${claimed.hours ?? "?"} hrs</td></tr>
-                <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Location</td><td>${[pro?.city, pro?.state].filter(Boolean).join(", ") || "—"}</td></tr>
-              </table>
-              <p style="font-size:13px;color:#7a8ba8;margin-top:14px;">Introduce them once the CE is delivered.</p>
-            </div>`,
-        });
-      } catch (e) {
-        console.error("admin claim email failed", e);
-      }
+      // (Admin "CE request claimed" alert removed 2026-09-27 — only signups email admin.)
 
-      // 2) Notify the professional a sponsor claimed (no rep identity revealed yet).
+      // Notify the professional a sponsor claimed (no rep identity revealed yet).
       if (pro?.email) {
         try {
           await resend.emails.send({

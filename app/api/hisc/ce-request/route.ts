@@ -10,8 +10,8 @@ import { verifyPulseSignature } from "@/lib/hiscornerstone/enroll";
  * HMAC-signed by the pulse-connect plugin). Creates a real Pulse professional
  * (find-or-create auth user + profile) and a pending ce_request, so the lead
  * shows up on the public demand map and in rep dashboards exactly like an
- * organic request. Sends the professional an acknowledgment email and alerts
- * admin.
+ * organic request. Sends the professional an acknowledgment email, and alerts
+ * admin ONLY when a brand-new Pulse account was created (i.e. a signup).
  */
 
 type LeadBody = {
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { userId } = await findOrCreateProfessional(admin, { name, email, discipline, city, state, facility: facility ?? undefined });
+    const { userId, created } = await findOrCreateProfessional(admin, { name, email, discipline, city, state, facility: facility ?? undefined });
     if (!userId) {
       return NextResponse.json({ error: "Could not create account" }, { status: 500 });
     }
@@ -176,7 +176,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // Emails: acknowledgment to the professional + admin alert. Best-effort.
+    // Emails: acknowledgment to the professional + admin signup alert (new
+    // accounts only — repeat requests from existing users don't email admin). Best-effort.
     const resendKey = process.env.RESEND_API_KEY;
     if (resendKey) {
       const resend = new Resend(resendKey);
@@ -223,14 +224,14 @@ export async function POST(request: Request) {
         console.warn("[hisc/ce-request] ack email failed:", e);
       }
 
-      try {
+      if (created) try {
         await resend.emails.send({
           from: `Pulse Alerts <${fromAddress}>`,
           to: process.env.SIGNUP_ALERT_EMAIL || "hello@pulsereferrals.com",
-          subject: `HISC lead: ${discipline} in ${city}, ${state} requesting ${topic} (${hours} hrs)`,
+          subject: `New signup: ${name} (Healthcare Professional · via hiscornerstone.com)`,
           html: `
 <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:480px;padding:24px;">
-  <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New CE request from hiscornerstone.com</h2>
+  <h2 style="margin:0 0 12px;font-size:18px;color:#0b1222;">New Pulse Signup (via hiscornerstone.com)</h2>
   <table style="font-size:14px;color:#3b4963;border-collapse:collapse;">
     <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Name</td><td>${name}</td></tr>
     <tr><td style="padding:4px 16px 4px 0;font-weight:600;color:#7a8ba8;">Email</td><td>${email}</td></tr>
