@@ -3,9 +3,10 @@
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { Suspense, useState, type FormEvent } from "react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import React, { Suspense, useRef, useState, type FormEvent } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { isJunkFacility, JUNK_FACILITY_MESSAGE, NO_FACILITY_VALUE } from "@/lib/validation/facility";
+import { signupProblem } from "@/lib/validation/signup";
 
 const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 
@@ -43,6 +44,10 @@ function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaRef = useRef<TurnstileInstance | undefined>(undefined);
+  // Bot traps: a field humans never see, and the time the form was opened.
+  const [website, setWebsite] = useState("");
+  const openedAt = useRef(Date.now());
 
   const isSales = role === "rep";
   const isManager = role === "manager";
@@ -55,6 +60,18 @@ function SignupForm() {
     // captcha token is consumed, so a failed attempt doesn't burn it.
     if (isPro && !noFacility && isJunkFacility(facility)) {
       setMessage({ type: "error", text: JUNK_FACILITY_MESSAGE });
+      return;
+    }
+    // Bot traps — fail silently-ish so scripts learn nothing.
+    if (website.trim() || Date.now() - openedAt.current < 3000) {
+      setMessage({ type: "error", text: "Something went wrong — please try again." });
+      return;
+    }
+    // Same rules as the Supabase signup hook, checked here so real users get a
+    // clear message without burning the captcha token.
+    const problem = signupProblem(fullName, email);
+    if (problem) {
+      setMessage({ type: "error", text: problem });
       return;
     }
     setLoading(true);
@@ -90,6 +107,9 @@ function SignupForm() {
     setLoading(false);
     if (error) {
       setMessage({ type: "error", text: error.message });
+      // Turnstile tokens are single-use — a retry needs a fresh one.
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
       return;
     }
 
@@ -285,9 +305,25 @@ function SignupForm() {
             )}
           </div>
 
+          {/* Honeypot: hidden from humans (and screen readers); bots fill it. */}
+          <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+            <label htmlFor="website">Website</label>
+            <input
+              id="website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </div>
+
           <Turnstile
+            ref={captchaRef}
             siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
             onSuccess={(token) => setCaptchaToken(token)}
+            onExpire={() => setCaptchaToken(null)}
             options={{ size: "flexible", theme: "light" }}
           />
           {message && (

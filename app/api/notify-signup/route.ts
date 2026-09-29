@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   const { userId, email, fullName, role, city, state, discipline, facility } = body;
-  if (!email || !role) {
+  if (!userId || !email || !role) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
@@ -36,6 +36,20 @@ export async function POST(request: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+
+  // Anti-abuse: this endpoint is public, so only act for a REAL account that was
+  // created in the last 30 minutes with this exact email. Otherwise anyone could
+  // POST here to make us email arbitrary addresses (spam relay / email bombing).
+  const { data: authData } = await admin.auth.admin.getUserById(userId);
+  const authUser = authData?.user;
+  const createdMs = authUser?.created_at ? new Date(authUser.created_at).getTime() : 0;
+  if (
+    !authUser ||
+    (authUser.email ?? "").toLowerCase() !== email.trim().toLowerCase() ||
+    Date.now() - createdMs > 30 * 60 * 1000
+  ) {
+    return NextResponse.json({ error: "Invalid signup" }, { status: 400 });
+  }
 
   // ⚠️ Keep this mapping in sync with app/(app)/app/page.tsx and
   // app/api/drip/enroll/route.ts — a stale copy here double-enrolled a manager
@@ -47,7 +61,7 @@ export async function POST(request: Request) {
   // Dedupe: drip enrollment is our "already handled this signup" marker. If the
   // user is already enrolled, we've already alerted — skip so you never get a
   // duplicate email (e.g. the dashboard-load path in app/(app)/app/page.tsx).
-  if (userId) {
+  {
     const { data: existing } = await admin
       .from("drip_enrollments")
       .select("id")
