@@ -65,6 +65,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li className="mb-2">
+                <Link href="/in-service-ideas" className="text-[14px] text-white/65 hover:text-white">
+                  In-Service Topics
+                </Link>
+              </li>
+              <li className="mb-2">
                 <Link href="/pricing" className="text-[14px] text-white/65 hover:text-white">
                   Pricing
                 </Link>

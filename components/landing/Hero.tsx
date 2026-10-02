@@ -26,7 +26,7 @@ export default function Hero() {
             <div className="rounded-[var(--r-lg)] border border-[rgba(36,85,255,.18)] bg-white/80 px-5 py-4">
               <div className="text-[12px] font-bold uppercase tracking-[.08em] text-blue">Sales teams</div>
               <div className="mt-1 text-[15px] font-semibold text-ink">
-                Free to join. $15 per CE, billed only when it&apos;s opened. First one on us.
+                Accredited CE for your in-services and field visits. $15 per CE, billed only when it&apos;s opened. First one on us.
               </div>
             </div>
           </div>

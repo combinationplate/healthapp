@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { getLiveDisciplines, getPublishableRequirements } from "@/lib/ce-requirements";
+import { AUDIENCES, HUB } from "@/lib/seo/in-service";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
@@ -8,6 +9,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date("2026-08-07");
   // 2026-09-05: pricing-clarity pass (homepage, how-it-works) + new /pricing and /for-sales-teams.
   const pricingPass = new Date("2026-09-05");
+  // 2026-10-02: in-service copy pass on /for-sales-teams + new /in-service-ideas hub and spokes.
+  const inServicePass = new Date("2026-10-02");
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: pricingPass, changeFrequency: "weekly", priority: 1.0 },
@@ -15,7 +18,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/free-ce-for-social-workers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-case-managers`, lastModified, changeFrequency: "monthly", priority: 0.9 },
     { url: `${base}/free-ce-for-therapists`, lastModified, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${base}/for-sales-teams`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/for-sales-teams`, lastModified: inServicePass, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${base}/${HUB.slug}`, lastModified: inServicePass, changeFrequency: "monthly", priority: 0.8 },
+    ...AUDIENCES.map((a) => ({
+      url: `${base}/${HUB.slug}/${a.slug}`,
+      lastModified: inServicePass,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
     { url: `${base}/pricing`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/how-it-works`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/accreditation`, lastModified, changeFrequency: "monthly", priority: 0.8 },

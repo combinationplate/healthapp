@@ -9,14 +9,14 @@ import PricingBlock, { PRICING } from "@/components/landing/PricingBlock";
 import Container from "@/components/ui/Container";
 
 export const metadata: Metadata = {
-  title: "Pulse for Hospice, Home Health & Rehab Sales Teams — Sponsored CE That Earns Referrals",
+  title: "In-Service CE for Hospice & Home Health Sales Teams | Pulse",
   description:
-    "Sponsor accredited CE for the nurses, social workers, and case managers who send you referrals. Free platform, $15 per CE credit hour billed only when the course is opened, first CE on us. Delivery, open, and redemption tracking per rep.",
+    "Pair every in-service and facility visit with an accredited CE course. Free platform, $15 per credit hour billed only when opened, first CE on us, per-rep tracking.",
   alternates: { canonical: "https://pulsereferrals.com/for-sales-teams" },
   openGraph: {
-    title: "Pulse for Sales Teams — Sponsored CE That Earns Referrals",
+    title: "Pulse for Sales Teams — Accredited CE for Your In-Services",
     description:
-      "A $15 sponsored CE, tracked and attributed to your rep, instead of a $500 lunch nobody remembers. Free platform. First CE on us.",
+      "Hand out an accredited CE course at every in-service, tracked and attributed to your rep. $15 per credit hour, billed only when opened. First CE on us.",
     url: "https://pulsereferrals.com/for-sales-teams",
     siteName: "Pulse",
     type: "website",
@@ -32,7 +32,7 @@ const steps = [
   {
     num: 2,
     title: "Sponsor a CE",
-    desc: "Pick a course, pick a professional, hit send. Or hand them a branded QR flyer. The course arrives in their inbox with your name and company on it.",
+    desc: "Pick a course that matches your in-service topic and put the branded QR flyer on the table — or send it to one professional, or bulk-send to the sign-in sheet afterward. The course arrives with your name and company on it.",
   },
   {
     num: 3,
@@ -42,6 +42,14 @@ const steps = [
 ];
 
 const faqs = [
+  {
+    q: "Can I use this at an in-service or lunch-and-learn?",
+    a: "Yes — it's the most common use. Pick a course on the same topic as your presentation, print the course QR flyer from your dashboard, and put it on the table. Every attendee who scans gets the course by email with your name on it. Collected a sign-in sheet instead? Bulk-send the course to up to 100 people at once.",
+  },
+  {
+    q: "Does my in-service itself earn CE credit?",
+    a: "No. Your presentation stays your presentation. The CE credit comes from the accredited online course you sponsor, which the professional completes on their own time and gets a certificate for. That keeps the education independent and the accreditation clean.",
+  },
   {
     q: "What does a sponsored CE cost?",
     a: `${PRICING.perHour} per credit hour, billed only when the professional opens the course. Sending, QR codes, flyers, and bulk sends are free, and every rep's first opened CE is free.`,
@@ -57,6 +65,10 @@ const faqs = [
   {
     q: "Can my whole team use it?",
     a: "Yes. Unlimited reps, no per-seat fees. Managers invite reps with a link and get team-wide visibility: CEs sponsored, opens, network size, last activity per rep.",
+  },
+  {
+    q: "What will our compliance team want to know?",
+    a: "Your compliance team sets the rules for what reps can offer referral sources, so loop them in. Pulse keeps a per-rep record of every course sponsored — who received it, when, and whether it was opened — which makes review straightforward.",
   },
   {
     q: "Who provides the courses?",
@@ -77,14 +89,16 @@ export default function ForSalesTeamsPage() {
                 For Hospice, Home Health &amp; Rehab Sales Teams
               </p>
               <h1 className="mt-4 font-serif text-[clamp(36px,5.5vw,64px)] font-black leading-[1.08] tracking-[-.03em]">
-                A $500 lunch buys a meeting.
+                Pair every in-service
                 <br />
-                A <em className="italic text-blue">{PRICING.perHour} sponsored CE</em> buys a reason to call back.
+                with an <em className="italic text-blue">accredited CE course</em>.
               </h1>
               <p className="mx-auto mt-6 max-w-[680px] text-[19px] leading-[1.7] text-ink-soft">
-                Every nurse, social worker, and case manager who refers to you needs continuing
-                education — and most facilities don&apos;t pay for it. Pulse lets your reps sponsor an
-                accredited CE in seconds, delivered with their name on it, and shows you who opened it.
+                Nurses, social workers, and case managers show up for the CE hours their license
+                renewal depends on — and most facilities don&apos;t pay for them. Pulse lets your reps
+                hand out an accredited course at the in-service by QR code, or send it after the visit.
+                It arrives with the rep&apos;s name on it, and you see who opened it. {PRICING.perHour} per
+                credit hour — a fraction of the lunch.
               </p>
               <div className="mt-9 flex flex-wrap justify-center gap-3.5">
                 <Link
@@ -119,6 +133,11 @@ export default function ForSalesTeamsPage() {
             </h2>
             <p className="mx-auto mb-14 mt-4 max-w-[600px] text-center text-[17px] text-ink-soft">
               The flyer program you already run — with a record of who actually used it.
+            </p>
+            <p className="-mt-8 mb-14 text-center text-[15px] font-semibold">
+              <Link href="/in-service-ideas" className="text-blue hover:underline">
+                Need a topic? Browse in-service ideas matched to accredited courses →
+              </Link>
             </p>
             <div className="mx-auto grid max-w-[1000px] gap-6 md:grid-cols-3">
               {steps.map((s) => (
