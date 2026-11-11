@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import LandingNav from "@/components/landing/LandingNav";
 import Footer from "@/components/landing/Footer";
+import { LiaisonCallout } from "@/components/seo/LiaisonCallout";
 import {
   DISCIPLINE_LABELS,
   getLiveDisciplines,
@@ -101,6 +102,8 @@ export default async function FreeCeDisciplineHub({ params }: Props) {
           </Link>
         </div>
       </section>
+
+      <LiaisonCallout />
 
       <div style={{ maxWidth: 860, margin: "40px auto 0", padding: "0 24px 44px", color: "#7a8ba8", fontSize: 13, lineHeight: 1.65, textAlign: "center" }}>
         This page is informational and not legal or licensing advice. Confirm all continuing-education requirements

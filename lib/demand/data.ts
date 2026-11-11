@@ -116,7 +116,15 @@ export async function getDemandData(): Promise<DemandData> {
     if (b.u.ts) return 1;
     return new Date(b.r.created_at).getTime() - new Date(a.r.created_at).getTime();
   });
-  const requests: PublicRequest[] = sorted.slice(0, 12).map((e) => ({
+  // One card per professional — a single person with several open requests
+  // should not fill the board.
+  const seenPros = new Set<string>();
+  const onePerPro = sorted.filter((e) => {
+    if (seenPros.has(e.r.professional_id)) return false;
+    seenPros.add(e.r.professional_id);
+    return true;
+  });
+  const requests: PublicRequest[] = onePerPro.slice(0, 12).map((e) => ({
     id: e.r.id,
     discipline: e.discipline,
     metro: metroLabel(e.metro),

@@ -232,6 +232,8 @@ export function InServiceLanding(p: Props) {
             siblings.map((a) => (
               <Link key={a.slug} href={`/${HUB.slug}/${a.slug}`}>{a.cardLabel} →</Link>
             ))}
+          <Link href="/ceu-sponsorship">How CEU sponsorship works →</Link>
+          <Link href="/how-to-offer-ceus">How to offer CEUs at an in-service →</Link>
           <Link href="/for-sales-teams">Pulse for sales teams →</Link>
           <Link href="/demand">CE demand in your market →</Link>
         </div>

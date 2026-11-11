@@ -143,7 +143,7 @@ function SignupForm() {
       <div className="w-full max-w-[400px] rounded-[var(--r-xl)] border border-[var(--border)] bg-white p-10 shadow-lg">
         <div className="mb-6 flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-2xl font-extrabold text-[var(--ink)]">
           <svg width={32} height={22} viewBox="0 0 36 24"><path className="heartbeat-path" d="M0 12 L8 12 L11 4 L15 20 L19 8 L22 14 L25 12 L36 12" fill="none" stroke="#2455FF" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"/></svg>
-          {isManager ? "Manager Sign Up" : isSales ? "Create Your Rep Account" : "Create Free Account"}
+          {isManager ? "Sales Manager Sign Up" : isSales ? "Create Your Rep Account" : "Create Free Account"}
         </div>
         <p className="mb-4 text-sm text-[var(--ink-muted)]">
           {isManager
@@ -159,10 +159,15 @@ function SignupForm() {
             onChange={(e) => setRole(e.target.value as "manager" | "rep" | "professional")}
             className="w-full rounded-[var(--r)] border-[1.5px] border-[var(--border)] px-3.5 py-2.5 text-sm focus:border-[var(--blue)] focus:outline-none"
           >
-            <option value="manager">Manager</option>
-            <option value="rep">Sales rep</option>
-            <option value="professional">Healthcare professional</option>
+            <option value="professional">Healthcare professional (nurse, social worker, case manager, therapist)</option>
+            <option value="rep">Sales rep or liaison</option>
+            <option value="manager">Sales team manager</option>
           </select>
+          {isManager && (
+            <p className="mt-1.5 text-xs leading-relaxed text-[var(--ink-muted)]">
+              For people who manage a sales or business development team. Nurse managers and case managers: choose Healthcare professional to get free CE.
+            </p>
+          )}
         </div>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <div>

@@ -70,3 +70,5 @@ The reps who win aren't charming their way into referrals. They're systematicall
 ---
 
 *Pulse gives hospice and home health BD reps a way to do step one at scale: send free, nationally accredited CE courses to the nurses, social workers, and case managers in your territory — from your phone, in about a minute. No lunch to cater, no budget approval. [See how it works](/how-it-works) or [create a free account](/signup).*
+
+**Related:** [How CEU sponsorship works](/ceu-sponsorship) · [In-service topic ideas with CE attached](/in-service-ideas) · [How to offer CEUs at an in-service](/how-to-offer-ceus)

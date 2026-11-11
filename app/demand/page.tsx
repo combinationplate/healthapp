@@ -6,8 +6,11 @@ import { getDemandData, type DemandData } from "@/lib/demand/data";
 import { DemandMap } from "@/components/demand/DemandMap";
 import { DemandCards } from "@/components/demand/DemandCards";
 
-// Statically generated, revalidated every 5 min — no per-visitor DB queries.
-export const revalidate = 300;
+// Rendered per request. With timed revalidation, the first visitor after a
+// quiet stretch was served the previous snapshot — on 2026-11-10 that copy was
+// five weeks old and showed only expired deadlines. Traffic here is low, so a
+// few queries per visit cost nothing.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Healthcare professionals near you are waiting for CE sponsors | Pulse",
@@ -111,7 +114,7 @@ export default async function DemandPage() {
           <div className="pd-hoursline">{ceHoursDelivered.toLocaleString()} CE hours delivered to professionals so far</div>
         )}
         <div className="pd-tiles">
-          <div className="pd-tile"><div className="t">50 states</div><div className="l">covered by our accreditation</div></div>
+          <div className="pd-tile"><div className="t">$15 per CE hour</div><div className="l">billed only when opened — your first is free</div></div>
           <div className="pd-tile"><div className="t">Nurses, social workers &amp; case managers</div><div className="l">request CE every week</div></div>
           <div className="pd-tile"><div className="t">Nationally accredited since 2007</div><div className="l">ANCC &amp; ASWB ACE</div></div>
           <div className="pd-tile"><div className="t">Always free</div><div className="l">for professionals</div></div>
@@ -132,7 +135,7 @@ export default async function DemandPage() {
 
       <section className="pd-section">
         <h2>Open requests</h2>
-        <div className="sub">Each is a licensed professional with a verified profile. Claim one to sponsor their CE and start the relationship.</div>
+        <div className="sub">Each request comes from a healthcare professional who signed up on Pulse with their discipline and location. Claim one to sponsor their CE and start the relationship.</div>
         <DemandCards requests={requests} />
       </section>
 

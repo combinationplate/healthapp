@@ -69,11 +69,27 @@ export async function POST(request: Request) {
         ? [courseId]
         : [];
 
-    if ((!professionalId && !isTest) || !repId || courseIdList.length === 0 || !discount) {
+    // A send needs a recipient: an existing network contact (professionalId),
+    // the rep themselves (isTest), or a new person typed into the send modal
+    // (recipient with an email and no professionalId).
+    const newRecipientEmail = !professionalId && !isTest ? (recipient?.email ?? "").trim().toLowerCase() : "";
+    const isNewRecipient = newRecipientEmail.length > 0;
+
+    if ((!professionalId && !isTest && !isNewRecipient) || !repId || courseIdList.length === 0 || !discount) {
       return NextResponse.json(
-        { error: "Missing professionalId, repId, course(s), or discount" },
+        { error: "Missing recipient, repId, course(s), or discount" },
         { status: 400 }
       );
+    }
+
+    if (isNewRecipient) {
+      const newName = (recipient?.name ?? "").trim();
+      if (!newName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newRecipientEmail)) {
+        return NextResponse.json(
+          { error: "Enter the professional's name and a valid email address." },
+          { status: 400 }
+        );
+      }
     }
 
     if (!DISCOUNTS.includes(discount as (typeof DISCOUNTS)[number])) {
@@ -84,6 +100,14 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user || user.id !== repId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // A real send to the rep's own inbox would use up their free first CE.
+    if (isNewRecipient && newRecipientEmail === (user.email ?? "").trim().toLowerCase()) {
+      return NextResponse.json(
+        { error: "That's your own email. Use the test send to see what a professional receives." },
+        { status: 400 }
+      );
     }
 
     // Look up all selected courses by UUID from the courses table
@@ -147,7 +171,7 @@ export async function POST(request: Request) {
       }
       ceSendProId = selfPro.id;
       pro = { id: selfPro.id, name: repName, email: selfEmail };
-    } else {
+    } else if (professionalId) {
       // 1. Try existing professionals table
       const { data: proFromProfessionals } = await supabase
         .from("professionals")
@@ -165,7 +189,7 @@ export async function POST(request: Request) {
         .from("professionals")
         .upsert({
           rep_id: repId,
-          name: recipient.name,
+          name: recipient.name.trim(),
           email,
           discipline: recipient.discipline ?? null,
           city: recipient.city ?? null,
@@ -177,7 +201,7 @@ export async function POST(request: Request) {
 
       if (upsertedPro) {
         ceSendProId = upsertedPro.id;
-        pro = { id: upsertedPro.id, name: recipient.name, email };
+        pro = { id: upsertedPro.id, name: recipient.name.trim(), email };
       }
     }
 

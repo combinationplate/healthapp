@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LandingNav from "@/components/landing/LandingNav";
 import Footer from "@/components/landing/Footer";
+import { LiaisonCallout } from "@/components/seo/LiaisonCallout";
 import { LANDINGS, type LandingConfig } from "@/lib/seo/landing";
 import { cleanCourseName, type SeoCourse } from "@/lib/seo/courses";
 
@@ -114,6 +115,8 @@ export function DisciplineLanding({ config, courses }: { config: LandingConfig; 
           <Link href="/">Pulse home</Link>
         </div>
       </section>
+
+      <LiaisonCallout />
 
       <div className="seo-finalcta">
         <h2>Start your free CE in under a minute</h2>

@@ -87,3 +87,5 @@ During the current launch period, CE distribution through Pulse is free for reps
 ---
 
 *Pulse is a CE distribution platform for healthcare business development teams. Courses are provided by [HIS Cornerstone](https://hiscornerstone.com), a nationally accredited CE provider. See our [accreditation details](/accreditation) or learn [how it works](/how-it-works).*
+
+**Related:** [How CEU sponsorship works](/ceu-sponsorship) · [In-service topic ideas with CE attached](/in-service-ideas) · [How to offer CEUs at an in-service](/how-to-offer-ceus)

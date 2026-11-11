@@ -79,3 +79,5 @@ None of this is complicated. It's just the discipline of being useful to busy pe
 ---
 
 *Pulse gives healthcare BD reps a fast way to do the "be useful" part: send free, nationally accredited CE courses to the case managers, discharge planners, nurses, and social workers in your territory — from your phone, in about a minute. [See how it works](/how-it-works) or [create a free account](/signup).*
+
+**Related:** [How CEU sponsorship works](/ceu-sponsorship) · [In-service topic ideas with CE attached](/in-service-ideas) · [How to offer CEUs at an in-service](/how-to-offer-ceus)

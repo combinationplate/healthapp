@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 import { getLiveDisciplines, getPublishableRequirements } from "@/lib/ce-requirements";
 import { AUDIENCES, HUB } from "@/lib/seo/in-service";
+import { SPONSOR_HUB_PATH, SPONSOR_LAST_MODIFIED, allSponsorPages } from "@/lib/seo/sponsorship";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://pulsereferrals.com";
@@ -11,6 +12,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pricingPass = new Date("2026-09-05");
   // 2026-10-02: in-service copy pass on /for-sales-teams + new /in-service-ideas hub and spokes.
   const inServicePass = new Date("2026-10-02");
+  // 2026-11-11: CEU-sponsorship hub, guides and industry pages; /about, /privacy, /terms;
+  // /demand now renders per request.
+  const sponsorPass = new Date(SPONSOR_LAST_MODIFIED);
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: pricingPass, changeFrequency: "weekly", priority: 1.0 },
@@ -26,12 +30,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
+    ...allSponsorPages().map((pg) => ({
+      url: `${base}${pg.path}`,
+      lastModified: sponsorPass,
+      changeFrequency: "monthly" as const,
+      priority: pg.path === SPONSOR_HUB_PATH ? 0.9 : 0.8,
+    })),
     { url: `${base}/pricing`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/how-it-works`, lastModified: pricingPass, changeFrequency: "monthly", priority: 0.8 },
     { url: `${base}/accreditation`, lastModified, changeFrequency: "monthly", priority: 0.8 },
-    { url: `${base}/demand`, lastModified, changeFrequency: "daily", priority: 0.8 },
+    { url: `${base}/demand`, lastModified: sponsorPass, changeFrequency: "daily", priority: 0.8 },
     { url: `${base}/blog`, lastModified, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${base}/about`, lastModified: sponsorPass, changeFrequency: "yearly", priority: 0.4 },
     { url: `${base}/contact`, lastModified, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/privacy`, lastModified: sponsorPass, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${base}/terms`, lastModified: sponsorPass, changeFrequency: "yearly", priority: 0.2 },
     { url: `${base}/signup`, lastModified, changeFrequency: "yearly", priority: 0.5 },
     { url: `${base}/login`, lastModified, changeFrequency: "yearly", priority: 0.2 },
   ];

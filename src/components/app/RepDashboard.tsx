@@ -242,6 +242,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
   const [sendCeError, setSendCeError] = useState<string | null>(null);
   const [sendCeSuccess, setSendCeSuccess] = useState(false);
   const [sendCeTestMode, setSendCeTestMode] = useState(false);
+  // New-recipient mode: the rep types who the CE is for right in the send
+  // modal, so a first send never requires a trip to the Network tab.
+  const [sendCeNewMode, setSendCeNewMode] = useState(false);
+  const [sendCeNewRecipient, setSendCeNewRecipient] = useState({ name: "", email: "", discipline: "" });
+  const [sendCeFirstSuccess, setSendCeFirstSuccess] = useState(false);
   const [repEmail, setRepEmail] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -419,6 +424,8 @@ export function RepDashboard({ repId }: { repId?: string }) {
     fetchRepProfile();
     setDiscoverLoading(true);
     fetchDiscover();
+    // Brand-new rep: go straight to the free first send while they're here.
+    if (repStats.cesSentAllTime === 0) openSendCeModal(null, false, true);
   }
 
   async function handleSaveTerritory() {
@@ -1152,7 +1159,11 @@ export function RepDashboard({ repId }: { repId?: string }) {
   // Deduplicated courses filtered to the selected professional's discipline
   const filteredCourses = useMemo(() => {
     if (!availableCourses.length) return [];
-    const mappedDiscipline = sendCePro ? mapDiscipline(sendCePro.discipline) : null;
+    const mappedDiscipline = sendCePro
+      ? mapDiscipline(sendCePro.discipline)
+      : sendCeNewMode
+        ? mapDiscipline(sendCeNewRecipient.discipline)
+        : null;
     const rows = mappedDiscipline
       ? availableCourses.filter((r) => r.profession === mappedDiscipline)
       : availableCourses;
@@ -1165,7 +1176,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
       }
     }
     return result;
-  }, [availableCourses, sendCePro]);
+  }, [availableCourses, sendCePro, sendCeNewMode, sendCeNewRecipient.discipline]);
 
   async function handleAddProfessional(e: React.FormEvent) {
     e.preventDefault();
@@ -1200,9 +1211,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
     fetchProfessionals();
   }
 
-  async function openSendCeModal(pro: ProfessionalRow | null, testMode = false) {
-    const resolvedPro = testMode ? null : pro ?? (professionals.length === 1 ? professionals[0] : null);
+  async function openSendCeModal(pro: ProfessionalRow | null, testMode = false, newRecipient = false) {
+    const resolvedPro = testMode || newRecipient ? null : pro ?? (professionals.length === 1 ? professionals[0] : null);
     setSendCeTestMode(testMode);
+    // With nobody in the network yet, go straight to "who is it for?".
+    setSendCeNewMode(!testMode && !resolvedPro && (newRecipient || professionals.length === 0));
+    setSendCeNewRecipient({ name: "", email: "", discipline: "" });
+    setSendCeFirstSuccess(false);
     setSendCePro(resolvedPro);
     setSendCeCourses([]);
     setSendCeDiscount(CE_DISCOUNTS[0]);
@@ -1311,6 +1326,75 @@ export function RepDashboard({ repId }: { repId?: string }) {
       return;
     }
 
+    // New-recipient mode — the rep typed who it's for in the modal. The API
+    // adds them to the network as part of the send.
+    if (sendCeNewMode && !sendCePro) {
+      const newName = sendCeNewRecipient.name.trim();
+      const newEmail = sendCeNewRecipient.email.trim().toLowerCase();
+      if (!newName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+        setSendCeError("Enter the professional's name and a valid email address.");
+        return;
+      }
+      if (repEmail && newEmail === repEmail.toLowerCase()) {
+        setSendCeError("That's your own email. To see what a professional receives, use the test send instead.");
+        return;
+      }
+      if (sendCeCourses.length === 0) {
+        setSendCeError("Please select at least one course.");
+        return;
+      }
+      if (!repId) {
+        setSendCeError("Not signed in.");
+        return;
+      }
+      const wasFirstSend = repStats.cesSentAllTime === 0;
+      setSendCeSaving(true);
+      setSendCeError(null);
+      try {
+        const res = await fetch("/api/ce/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            repId,
+            courseIds: sendCeCourses,
+            discount: sendCeDiscount,
+            personalMessage: sendCeMessage.trim() || undefined,
+            recipient: {
+              name: newName,
+              email: newEmail,
+              discipline: sendCeNewRecipient.discipline || undefined,
+            },
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setSendCeError(data.error ?? "Failed to send CE");
+          return;
+        }
+        fetchProfessionals();
+        fetchRepStats();
+        fetchCeHistory();
+        if (data.emailSent === false) {
+          setSendCeError("The CE was saved, but the email did not go out. Check the address, then use Send Reminder in the CE History tab.");
+          return;
+        }
+        setSendCeSuccess(true);
+        if (wasFirstSend) {
+          // Keep the modal open so the rep sees what happens next.
+          setSendCeFirstSuccess(true);
+        } else {
+          setTimeout(() => {
+            setSendCeOpen(false);
+            setSendCeSuccess(false);
+          }, 2000);
+        }
+      } finally {
+        setSendCeSaving(false);
+      }
+      return;
+    }
+
     if (professionals.length > 1 && !sendCePro) {
       setSendCeError("Select a professional.");
       return;
@@ -1353,6 +1437,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
         return;
       }
       setSendCeSuccess(true);
+      fetchRepStats();
       if (activeRequestId) {
         setRepRequests(prev => prev.filter(req => req.id !== activeRequestId));
         setActiveRequestId(null);
@@ -1444,12 +1529,13 @@ export function RepDashboard({ repId }: { repId?: string }) {
 
         {/* Onboarding checklist — shown for new reps */}
         {(() => {
-          // QR flyer first — it's the zero-friction path (no email addresses
-          // needed; nurses scan and claim on the spot).
+          // Send first (changed from QR-first on 2026-11-11): one free CE to
+          // someone the rep already knows shows the whole loop in a minute,
+          // and the send modal now takes the recipient inline.
           const onboardingSteps = [
-            { id: "qr", label: "Generate your QR flyer — leave it at your next facility visit", done: hasOpenedQr, action: () => { setTab("distribute"); setQrOpen(true); setHasOpenedQr(true); } },
-            { id: "network", label: "Add your first professional", done: professionals.length > 0, action: () => { setTab("network"); setAddOpen(true); } },
-            { id: "send", label: "Send your first CE", done: repStats.cesSentAllTime > 0, action: () => { if (professionals.length > 0) openSendCeModal(null); else { setTab("network"); setAddOpen(true); } } },
+            { id: "send", label: "Send your first CE to a professional you already know — it's free", done: repStats.cesSentAllTime > 0, action: () => { openSendCeModal(null); } },
+            { id: "qr", label: "Generate your QR flyer for your next in-service or facility visit", done: hasOpenedQr, action: () => { setTab("distribute"); setQrOpen(true); setHasOpenedQr(true); } },
+            { id: "network", label: "Add the rest of your contacts", done: professionals.length > 1, action: () => { setTab("network"); setAddOpen(true); } },
           ];
           const onboardingComplete = onboardingSteps.filter(s => s.done).length;
           const showOnboarding = !onboardingDismissed && onboardingComplete < 3 && !repOnboarding;
@@ -1482,7 +1568,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               }}>Welcome to Pulse!</h3>
             </div>
             <p style={{ fontSize: '13px', color: '#7a8ba8', marginBottom: '20px', marginLeft: '36px' }}>
-              Start with the flyer — nurses scan it and claim a free CE on the spot, no email addresses needed.
+              Start by sending one free CE to a case manager, social worker or nurse you already know. It takes about a minute, and you&apos;ll hear the moment they start it.
             </p>
 
             <div style={{
@@ -3797,10 +3883,45 @@ export function RepDashboard({ repId }: { repId?: string }) {
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-[var(--ink)]/50 backdrop-blur-sm" onClick={() => !sendCeSaving && setSendCeOpen(false)}>
             <div className="w-[92%] max-w-[520px] rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">{sendCeTestMode ? "Send Yourself a Test CE" : "Send CE Course"}</h3>
+                <h3 className="font-[family-name:var(--font-fraunces)] text-lg font-extrabold text-[var(--ink)]">{sendCeTestMode ? "Send Yourself a Test CE" : sendCeFirstSuccess ? "Your First CE Is Sent" : sendCeNewMode && repStats.cesSentAllTime === 0 ? "Send Your First CE — It's On Us" : "Send CE Course"}</h3>
                 <button type="button" className="rounded-full bg-[var(--cream)] w-8 h-8 flex items-center justify-center text-[var(--ink-soft)] hover:bg-[var(--border)]" onClick={() => !sendCeSaving && setSendCeOpen(false)} aria-label="Close">×</button>
               </div>
-              {sendCeSuccess ? (
+              {sendCeSuccess && sendCeFirstSuccess ? (
+                <div style={{ padding: '8px 0 4px' }}>
+                  <p style={{ fontSize: '15px', fontWeight: 700, color: '#0d9488', margin: '0 0 10px' }}>
+                    Sent. {sendCeNewRecipient.name.trim().split(/\s+/)[0] || "Your professional"} has an email from you with a one-click link to the course.
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#3b4963', lineHeight: 1.6, margin: '0 0 8px' }}>
+                    You&apos;ll get an email the moment they start it. That&apos;s a good time to call or stop by.
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#3b4963', lineHeight: 1.6, margin: '0 0 18px' }}>
+                    Have an in-service or lunch-and-learn coming up? Put a course on a QR flyer and everyone in the room can claim it from their phone.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      className={BTN_SECONDARY}
+                      onClick={() => { setSendCeOpen(false); setSendCeSuccess(false); setSendCeFirstSuccess(false); }}
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      className={BTN_PRIMARY}
+                      onClick={() => {
+                        setSendCeOpen(false);
+                        setSendCeSuccess(false);
+                        setSendCeFirstSuccess(false);
+                        setTab("distribute");
+                        setQrOpen(true);
+                        setHasOpenedQr(true);
+                      }}
+                    >
+                      Get my QR flyer
+                    </button>
+                  </div>
+                </div>
+              ) : sendCeSuccess ? (
                 <p className="py-4 font-semibold text-[var(--green)]">{sendCeTestMode ? "Test sent — check your inbox. That's exactly what a professional receives." : "CE sent successfully."}</p>
               ) : (
                 <form onSubmit={handleSendCe} className="grid gap-4">
@@ -3809,7 +3930,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                       This sends the real CE email to <strong className="text-[var(--ink)]">your inbox{repEmail ? ` (${repEmail})` : ""}</strong> so you can see exactly what a professional gets — course link and all. It doesn&apos;t count toward your stats or billing.
                     </p>
                   )}
-                  {!sendCeTestMode && !sendCePro && professionals.length > 1 && (
+                  {!sendCeTestMode && !sendCePro && !sendCeNewMode && professionals.length > 1 && (
                     <div>
                       <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Send to</label>
                       <select
@@ -3823,6 +3944,88 @@ export function RepDashboard({ repId }: { repId?: string }) {
                           <option key={p.id} value={p.id}>{p.name} · {p.email}</option>
                         ))}
                       </select>
+                      <button
+                        type="button"
+                        onClick={() => { setSendCeNewMode(true); setSendCeCourses([]); }}
+                        style={{
+                          background: 'none', border: 'none', padding: 0, marginTop: '6px',
+                          fontSize: '12px', fontWeight: 600, color: '#2455ff', cursor: 'pointer',
+                          textDecoration: 'underline', textUnderlineOffset: '2px',
+                          fontFamily: "'DM Sans', system-ui, sans-serif",
+                        }}
+                      >
+                        + Send to someone new
+                      </button>
+                    </div>
+                  )}
+                  {!sendCeTestMode && !sendCePro && sendCeNewMode && (
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                      <p style={{ fontSize: '13px', color: '#7a8ba8', lineHeight: 1.55, margin: 0 }}>
+                        Who is it for? Pick a case manager, social worker or nurse you already know. They get an email from you with a one-click link to the course, with no account or coupon code on their end.
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Their name</label>
+                          <input
+                            type="text"
+                            required
+                            value={sendCeNewRecipient.name}
+                            onChange={(e) => setSendCeNewRecipient((r) => ({ ...r, name: e.target.value }))}
+                            placeholder="Maria Lopez, RN"
+                            className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Their email</label>
+                          <input
+                            type="email"
+                            required
+                            value={sendCeNewRecipient.email}
+                            onChange={(e) => setSendCeNewRecipient((r) => ({ ...r, email: e.target.value }))}
+                            placeholder="maria@hospital.org"
+                            className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[var(--ink-soft)] mb-1">Their discipline</label>
+                        <select
+                          required
+                          value={sendCeNewRecipient.discipline}
+                          onChange={(e) => {
+                            const discipline = e.target.value;
+                            setSendCeNewRecipient((r) => ({ ...r, discipline }));
+                            // Courses are approved per discipline — start the pick over.
+                            setSendCeCourses([]);
+                          }}
+                          className="w-full rounded-[var(--r)] border border-[var(--border)] px-3 py-2 text-sm"
+                        >
+                          <option value="">Select…</option>
+                          <option value="Nursing">Nursing</option>
+                          <option value="Social Work">Social Work</option>
+                          <option value="Case Mgmt">Case Management</option>
+                          <option value="PT">Physical Therapy</option>
+                          <option value="OT">Occupational Therapy</option>
+                          <option value="SLP">Speech-Language Pathology</option>
+                        </select>
+                        <p style={{ fontSize: '11px', color: '#7a8ba8', margin: '4px 0 0' }}>
+                          The course list below only shows courses approved for their license.
+                        </p>
+                      </div>
+                      {professionals.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => { setSendCeNewMode(false); setSendCeCourses([]); if (professionals.length === 1) setSendCePro(professionals[0]); }}
+                          style={{
+                            background: 'none', border: 'none', padding: 0, justifySelf: 'start',
+                            fontSize: '12px', fontWeight: 600, color: '#2455ff', cursor: 'pointer',
+                            textDecoration: 'underline', textUnderlineOffset: '2px',
+                            fontFamily: "'DM Sans', system-ui, sans-serif",
+                          }}
+                        >
+                          ← Choose from my network instead
+                        </button>
+                      )}
                     </div>
                   )}
                   {!sendCeTestMode && sendCePro && (
@@ -3855,7 +4058,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
                         const q = courseSearch.toLowerCase();
                         return course.name.toLowerCase().includes(q) || (course.topic ?? "").toLowerCase().includes(q);
                       });
-                      const disciplineLabel = sendCePro?.discipline ?? "all disciplines";
+                      const disciplineLabel = sendCePro?.discipline ?? (sendCeNewMode && sendCeNewRecipient.discipline ? sendCeNewRecipient.discipline : "all disciplines");
                       const cleanCourseName = (name: string) => name.replace(/^\*NEW\*\s*/i, "").replace(/^\*[^*]+\*\s*/i, "");
 
                       return (
@@ -4737,7 +4940,7 @@ export function RepDashboard({ repId }: { repId?: string }) {
               />
             </div>
             <button type="submit" disabled={repOnboardingSaving} style={{ padding: "12px", borderRadius: "10px", border: "none", background: "var(--blue)", color: "white", fontSize: "14px", fontWeight: 600, cursor: "pointer", opacity: repOnboardingSaving ? 0.6 : 1 }}>
-              {repOnboardingSaving ? "Saving…" : "Get Started"}
+              {repOnboardingSaving ? "Saving…" : "Continue to your free CE"}
             </button>
           </form>
         </div>

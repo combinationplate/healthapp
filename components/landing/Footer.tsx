@@ -65,6 +65,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li className="mb-2">
+                <Link href="/ceu-sponsorship" className="text-[14px] text-white/65 hover:text-white">
+                  CEU Sponsorship
+                </Link>
+              </li>
+              <li className="mb-2">
                 <Link href="/in-service-ideas" className="text-[14px] text-white/65 hover:text-white">
                   In-Service Topics
                 </Link>
@@ -101,7 +106,7 @@ export default function Footer() {
             </h4>
             <ul className="list-none">
               <li className="mb-2">
-                <Link href="#" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/about" className="text-[14px] text-white/65 hover:text-white">
                   About
                 </Link>
               </li>
@@ -123,12 +128,12 @@ export default function Footer() {
             </h4>
             <ul className="list-none">
               <li className="mb-2">
-                <Link href="#" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/privacy" className="text-[14px] text-white/65 hover:text-white">
                   Privacy
                 </Link>
               </li>
               <li className="mb-2">
-                <Link href="#" className="text-[14px] text-white/65 hover:text-white">
+                <Link href="/terms" className="text-[14px] text-white/65 hover:text-white">
                   Terms
                 </Link>
               </li>

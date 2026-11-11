@@ -71,7 +71,7 @@ export function DemandCards({ requests }: { requests: PublicRequest[] }) {
             <div className="demand-card-topic">
               {formatRequestTopic(r.topic)} &middot; <strong>{r.hours} CE hr{r.hours !== 1 ? "s" : ""}</strong>
             </div>
-            <div className="demand-card-note">Licensed professional, verified profile</div>
+            <div className="demand-card-note">Requested by a professional on Pulse</div>
 
             {st === "claimed" ? (
               <div className="demand-status demand-ok">✓ Claimed — we&apos;ll introduce you once the CE is delivered.</div>
