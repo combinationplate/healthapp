@@ -3,8 +3,11 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { SEQUENCES } from "@/lib/drip/sequences";
 import { getEmailHtml } from "@/lib/drip/templates";
+import { runPilotInvites } from "@/lib/pilot/invites";
 
 export const dynamic = "force-dynamic";
+// Up to 100 drip emails plus the day's pilot invitations, sent one at a time.
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   // Vercel Cron sends "Authorization: Bearer $CRON_SECRET" automatically when
@@ -57,9 +60,16 @@ export async function GET(request: Request) {
 
     const { data: profile } = await admin
       .from("profiles")
-      .select("full_name, email")
+      .select("full_name, email, marketing_opt_out_at")
       .eq("id", enrollment.user_id)
       .single();
+
+    // Unsubscribed (see /api/email/unsubscribe): end the sequence, send nothing.
+    if (profile?.marketing_opt_out_at) {
+      await admin.from("drip_enrollments").update({ completed: true }).eq("id", enrollment.id);
+      skipped++;
+      continue;
+    }
 
     const { data: authUser } = await admin.auth.admin.getUserById(enrollment.user_id);
     const userEmail = profile?.email || authUser?.user?.email;
@@ -146,5 +156,9 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ processed: (pending ?? []).length, sent, skipped, completed });
+  // Pilot-test invitations for new H.I.S. Cornerstone courses. Does nothing
+  // unless PILOT_INVITES and HISC_PILOT_FEED_KEY are set (lib/pilot/invites.ts).
+  const pilot = await runPilotInvites(admin, resend);
+
+  return NextResponse.json({ processed: (pending ?? []).length, sent, skipped, completed, pilot });
 }

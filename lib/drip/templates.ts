@@ -1,6 +1,6 @@
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://pulsereferrals.com";
 
-function wrap(body: string): string {
+function wrap(body: string, footerExtra: string = ""): string {
   return `
 <div style="font-family:'DM Sans',system-ui,sans-serif;max-width:560px;margin:0 auto;color:#0b1222;">
   <div style="padding:32px;">
@@ -9,7 +9,7 @@ function wrap(body: string): string {
     </div>
     ${body}
     <div style="margin-top:32px;padding-top:20px;border-top:1px solid rgba(11,18,34,0.08);font-size:12px;color:#7a8ba8;">
-      Pulse · Free CE distribution for healthcare teams · <a href="${APP_URL}" style="color:#2455ff;text-decoration:none;">pulsereferrals.com</a>
+      Pulse · Free CE distribution for healthcare teams · <a href="${APP_URL}" style="color:#2455ff;text-decoration:none;">pulsereferrals.com</a>${footerExtra}
     </div>
   </div>
 </div>`;
@@ -19,7 +19,23 @@ function btn(text: string, href: string, color: string = "#2455ff"): string {
   return `<a href="${href}" style="display:inline-block;background:${color};color:#fff;font-weight:700;padding:14px 32px;border-radius:10px;font-size:15px;text-decoration:none;margin:8px 0;">${text}</a>`;
 }
 
-export function getEmailHtml(template: string, data: { name?: string; email?: string }): string {
+function esc(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+export type PilotInviteData = {
+  /** Titles of the courses open for pilot testing, from the hiscornerstone.com feed. */
+  courses: string[];
+  signupUrl: string;
+  /** Days a tester has to finish. */
+  days: number;
+  unsubscribeUrl: string;
+};
+
+export function getEmailHtml(
+  template: string,
+  data: { name?: string; email?: string; pilot?: PilotInviteData }
+): string {
   const firstName = data.name?.split(/\s+/)[0] || "there";
 
   switch (template) {
@@ -246,6 +262,44 @@ export function getEmailHtml(template: string, data: { name?: string; email?: st
   <p>If anything was confusing or didn't work the way you expected, just reply and tell me — I read every response.</p>
   <p>Zach<br/><span style="color:#7a8ba8;font-size:14px;">Pulse Team · pulsereferrals.com</span></p>
 </div>`;
+
+    // Invitation to pilot test a new H.I.S. Cornerstone course (lib/pilot/invites.ts).
+    // Sent only while hiscornerstone.com reports open spots; one per person, ever.
+    case "pilot-invite": {
+      const pilot = data.pilot;
+      if (!pilot) return "";
+      const courseList = pilot.courses
+        .map((c) => `<li style="margin-bottom:4px;">${esc(c)}</li>`)
+        .join("");
+      return wrap(
+        `
+        <h1 style="font-size:22px;font-weight:800;margin:0 0 12px;">A free CE course, in exchange for your opinion</h1>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          Hi ${firstName}, H.I.S. Cornerstone, the accredited provider behind the courses you get
+          through Pulse, needs a few social workers and counselors to try its newest courses and
+          say what they think. You take the course free, you keep the CE certificate, and your
+          feedback shapes the final version.
+        </p>
+        <ol style="font-size:14px;color:#3b4963;line-height:1.9;padding-left:20px;">
+          <li><strong>Pick a course</strong>: online and self-paced, about one to two hours</li>
+          <li><strong>Note your exact times</strong>: reading and posttest, in minutes (the accrediting body asks for them)</li>
+          <li><strong>Send a 5-minute feedback form</strong> when you finish</li>
+        </ol>
+        <p style="font-size:15px;color:#3b4963;line-height:1.7;">
+          You get access the moment you sign up and have ${pilot.days} days to finish.
+          Spots are limited.
+        </p>
+        ${btn("Claim a Spot →", pilot.signupUrl, "#0d9488")}
+        <p style="font-size:14px;color:#3b4963;font-weight:700;margin:20px 0 6px;">Open now</p>
+        <ul style="font-size:14px;color:#3b4963;line-height:1.6;padding-left:20px;margin:0;">${courseList}</ul>
+        <p style="font-size:13px;color:#7a8ba8;margin-top:16px;">
+          You will sign up and take the course on hiscornerstone.com, where Pulse courses are hosted.
+          Questions? Just reply to this email.
+        </p>
+      `,
+        `<br/>You are getting this because you have a Pulse account as a social worker. <a href="${pilot.unsubscribeUrl}" style="color:#7a8ba8;">Unsubscribe from offers like this</a>`
+      );
+    }
 
     default:
       return wrap(`
